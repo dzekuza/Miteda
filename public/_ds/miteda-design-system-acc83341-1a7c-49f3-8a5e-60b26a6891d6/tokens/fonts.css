@@ -1,0 +1,26 @@
+/* ============================================================
+   Miteda — Webfonts
+   Primary UI face: Tomato Grotesk (only the Light master was
+   supplied — see readme "Font substitution" caveat).
+   Display/secondary: BC Novatica CYR.
+   ============================================================ */
+
+@font-face {
+  font-family: "Tomato Grotesk";
+  src: url("../fonts/TomatoGrotesk-Light.otf") format("opentype");
+  /* The supplied file is the Light master. We map it across the
+     weight range the product actually uses (400–600) so the real
+     letterforms render everywhere; heavier weights are synthesised
+     by the browser until Regular/Medium binaries are provided. */
+  font-weight: 300 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "BC Novatica CYR";
+  src: url("../fonts/BCNovaticaCYR-Regular.otf") format("opentype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}

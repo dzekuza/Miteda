@@ -1,0 +1,30 @@
+/* ============================================================
+   Miteda — Typography tokens
+   Single neo-grotesk family (Tomato Grotesk). A compact,
+   functional scale: the product lives at 12/14/16, with 20/24
+   reserved for view titles and section headings.
+   ============================================================ */
+
+:root {
+  /* ---- Families ------------------------------------------- */
+  --font-sans: "Tomato Grotesk", -apple-system, BlinkMacSystemFont,
+               "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-display: "BC Novatica CYR", "Tomato Grotesk", sans-serif;
+
+  /* ---- Weights -------------------------------------------- */
+  --fw-regular: 400;  /* @kind font */
+  --fw-medium:  500;  /* @kind font */
+  --fw-semibold:600;  /* @kind font */
+
+  /* ---- Type scale  (size / line-height) ------------------- */
+  --text-display:    24px;   --lh-display:    28px;   /* view title */
+  --text-heading:    20px;   --lh-heading:    26px;   /* section heading */
+  --text-title:      16px;   --lh-title:      22px;   /* card title */
+  --text-body:       14px;   --lh-body:       20px;   /* default body */
+  --text-label:      14px;   --lh-label:      20px;   /* control labels */
+  --text-small:      12px;   --lh-small:      16px;   /* meta / captions */
+
+  /* ---- Tracking ------------------------------------------- */
+  --tracking-tight: -0.01em;   /* headings */
+  --tracking-normal: 0;
+}

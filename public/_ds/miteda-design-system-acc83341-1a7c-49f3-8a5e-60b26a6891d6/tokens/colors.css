@@ -1,0 +1,74 @@
+/* ============================================================
+   Miteda — Color tokens
+   Extracted from the Miteda Figma (property/community
+   management dashboard). Warm off-white surfaces, near-black
+   ink, a fresh signal green, deep evergreen navigation, and a
+   single warm orange for urgency.
+   ============================================================ */
+
+:root {
+  /* ---- Brand ---------------------------------------------- */
+  --brand-green:        #78bf3e;   /* primary signal green (logo / CTAs) */
+  --brand-green-strong: #6bab33;   /* hover / pressed green */
+  --brand-green-soft:   #d9eec7;   /* tint fill */
+  --brand-green-faint:  #eef6e6;   /* faintest tint (selected rows) */
+  --brand-forest:       #092d1a;   /* deep evergreen — sidebar / nav */
+  --brand-forest-700:   #0f3b24;   /* raised surface on forest */
+  --brand-forest-600:   #1c4a31;   /* hover row on forest */
+
+  /* ---- Ink (text) ----------------------------------------- */
+  --ink-900: #030302;   /* primary text, headings */
+  --ink-700: #373736;   /* strong body */
+  --ink-500: #696967;   /* secondary text */
+  --ink-400: #959492;   /* tertiary / muted */
+  --ink-300: #a3a29f;   /* placeholder / disabled */
+  --ink-200: #b7b6b4;   /* faint label */
+
+  /* ---- Surfaces & neutrals -------------------------------- */
+  --surface-page:    #eeedeb;   /* app canvas */
+  --surface-card:    #fffefc;   /* warm white card */
+  --surface-white:   #ffffff;   /* pure white */
+  --surface-sunken:  #f5f2ed;   /* sunken / nested panel */
+  --surface-fill:    #f2f0ee;   /* subtle fill chip */
+
+  /* ---- Lines ---------------------------------------------- */
+  --line-100: #f2f0ee;   /* hairline on white */
+  --line-200: #e4e3e0;   /* default border */
+  --line-300: #d1d0cd;   /* strong border */
+
+  /* ---- Signal: urgent / alert ----------------------------- */
+  --orange:        #ff601b;
+  --orange-soft:   rgba(255, 96, 27, 0.16);
+  --orange-faint:  rgba(255, 96, 27, 0.08);
+
+  /* ---- Event / category accent ---------------------------- */
+  --accent-pink:   #fdb3ca;   /* schedule & calendar event dots */
+
+  /* ---- Translucent overlays ------------------------------- */
+  --overlay-ink-04: rgba(3, 3, 2, 0.04);
+  --overlay-ink-08: rgba(3, 3, 2, 0.08);
+  --overlay-ink-12: rgba(3, 3, 2, 0.12);
+  --overlay-green-20: rgba(120, 191, 62, 0.2);
+  --overlay-green-25: rgba(120, 191, 62, 0.25);
+  --glass-card: rgba(255, 254, 252, 0.9);   /* blurred header */
+
+  /* ---- Semantic aliases ----------------------------------- */
+  --text-primary:    var(--ink-900);
+  --text-secondary:  var(--ink-500);
+  --text-tertiary:   var(--ink-400);
+  --text-placeholder:var(--ink-300);
+  --text-on-forest:  #fffefc;
+  --text-on-brand:   #ffffff;
+
+  --bg-app:          var(--surface-page);
+  --bg-card:         var(--surface-card);
+  --bg-nav:          var(--brand-forest);
+
+  --border-default:  var(--line-200);
+  --border-subtle:   var(--line-100);
+  --border-strong:   var(--line-300);
+
+  --action-primary:        var(--brand-green);
+  --action-primary-hover:  var(--brand-green-strong);
+  --focus-ring:            var(--brand-green);
+}
