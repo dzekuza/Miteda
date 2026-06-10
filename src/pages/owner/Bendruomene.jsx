@@ -21,7 +21,10 @@ export default function Bendruomene() {
 
   function ThreadCard({ t, onOpen }) {
     return (
-      <Card tone="flat" interactive style={{ borderRadius: 'var(--radius-md)', padding: 20, cursor: 'pointer' }} onClick={() => onOpen(t)}>
+      <Card tone="flat" interactive role="button" tabIndex={0}
+        style={{ borderRadius: 'var(--radius-md)', padding: 20, cursor: 'pointer' }}
+        onClick={() => onOpen(t)}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen(t) } }}>
         <div className="rowflex" style={{ gap: 10, marginBottom: 12 }}>
           <Badge tone="event">{t.cat}</Badge>
           {t.hot && <Badge tone="urgent" dot>Populiaru</Badge>}

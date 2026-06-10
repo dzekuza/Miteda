@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import Shell from '../../shared/Shell.jsx'
-import { useRepo, PanelHead, Stat, Tabs, PhotoTile } from '../../shared/UI.jsx'
+import { useRepo, PanelHead, Stat, Tabs, PhotoTile, Modal, Composer } from '../../shared/UI.jsx'
 
 export default function Objektas() {
   const DS = window.MitedaDesignSystem_acc833
@@ -34,6 +34,16 @@ export default function Objektas() {
     const [units, setUnits] = useState(() => makeUnits(P))
     const [sel, setSel] = useState({})
     const selCount = Object.values(sel).filter(Boolean).length
+    const allSelected = units.length > 0 && selCount === units.length
+    const toggleAll = () => {
+      if (allSelected) {
+        setSel({})
+      } else {
+        const all = {}
+        units.forEach((_, i) => { all[i] = true })
+        setSel(all)
+      }
+    }
     const markSold = () => { setUnits((us) => us.map((u, i) => sel[i] ? { ...u, st: 'sold' } : u)); setSel({}) }
     return (
       <div>
@@ -49,7 +59,7 @@ export default function Objektas() {
         <div style={{ overflowX: 'auto' }}>
           <table className="tbl">
             <thead><tr>
-              <th style={{ width: 36 }}></th><th>Butas</th><th>Aukštas</th><th>Plotas</th><th>Būsena</th><th></th>
+              <th style={{ width: 36 }}><Checkbox checked={allSelected} onChange={toggleAll} /></th><th>Butas</th><th>Aukštas</th><th>Plotas</th><th>Būsena</th><th></th>
             </tr></thead>
             <tbody>
               {units.map((u, i) => (
@@ -77,17 +87,43 @@ export default function Objektas() {
       { name: 'Rūta Kazlauskaitė', apt: 'A-7', role: 'Savininkė', phone: '+370 644 55009' },
       { name: 'Tomas Petraitis', apt: 'B-9', role: 'Savininkas', phone: '+370 655 11447' },
     ]
+    const [selected, setSelected] = useState(null)
+    const actions = [
+      { icon: 'ph ph-pencil-simple', label: 'Redaguoti gyventoją' },
+      { icon: 'ph ph-chat-circle', label: 'Siųsti žinutę' },
+      { icon: 'ph ph-phone', label: 'Skambinti' },
+      { icon: 'ph ph-user-minus', label: 'Pašalinti iš pastato', danger: true },
+    ]
     return (
-      <div className="stack-sm" style={{ gap: 10 }}>
-        {residents.map((r, i) => (
-          <div key={i} className="row">
-            <Avatar name={r.name} size={40} />
-            <div className="row__main"><span className="row__title">{r.name}</span><span className="row__meta">Butas {r.apt}<span className="dot">·</span>{r.phone}</span></div>
-            <Badge tone={r.role === 'Nuomininkas' ? 'neutral' : 'success'}>{r.role}</Badge>
-            <IconButton icon="ph ph-dots-three" variant="ghost" size="sm" ariaLabel="Daugiau" />
-          </div>
-        ))}
-      </div>
+      <>
+        <div className="stack-sm" style={{ gap: 4 }}>
+          {residents.map((r, i) => (
+            <div key={i} className="row">
+              <Avatar name={r.name} size={40} />
+              <div className="row__main"><span className="row__title">{r.name}</span><span className="row__meta">Butas {r.apt}<span className="dot">·</span>{r.phone}</span></div>
+              <Badge tone={r.role === 'Nuomininkas' ? 'neutral' : 'success'}>{r.role}</Badge>
+              <IconButton icon="ph ph-dots-three" variant="ghost" size="sm" ariaLabel="Daugiau" onClick={() => setSelected(r)} />
+            </div>
+          ))}
+        </div>
+        {selected && (
+          <Modal title={selected.name} subtitle={`Butas ${selected.apt} · ${selected.role}`} onClose={() => setSelected(null)} width={380}>
+            <div className="stack-sm" style={{ gap: 4 }}>
+              {actions.map((a) => (
+                <button key={a.label} onClick={() => setSelected(null)} style={{
+                  display: 'flex', alignItems: 'center', gap: 12, width: '100%', padding: '12px 4px',
+                  background: 'none', border: 'none', borderRadius: 'var(--radius-sm)', cursor: 'pointer',
+                  color: a.danger ? 'var(--orange)' : 'var(--ink-800)', fontFamily: 'var(--font-sans)',
+                  fontSize: 'var(--text-body)', textAlign: 'left',
+                }}>
+                  <i className={a.icon} style={{ fontSize: 20, width: 24, flexShrink: 0 }} aria-hidden="true" />
+                  {a.label}
+                </button>
+              ))}
+            </div>
+          </Modal>
+        )}
+      </>
     )
   }
 
@@ -104,7 +140,7 @@ export default function Objektas() {
     const [contactsData] = useRepo('listContacts')
     const contacts = contactsData || []
     return (
-      <div className="grid-2">
+      <div className="grid-2" style={{ alignItems: 'start' }}>
         {contacts.slice(0, 4).map((c, i) => (
           <div key={i} className="row">
             <Avatar name={c.name} size={40} />

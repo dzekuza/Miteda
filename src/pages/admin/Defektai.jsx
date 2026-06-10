@@ -1,16 +1,17 @@
 import React, { useState } from 'react'
 import Shell from '../../shared/Shell.jsx'
-import { useRepo, PanelHead, Stat, FilterChips, StatusBadge } from '../../shared/UI.jsx'
+import { useRepo, PanelHead, Stat, FilterChips, StatusBadge, Modal } from '../../shared/UI.jsx'
 import MD from '../../lib/data.js'
 
 export default function Defektai() {
   const DS = window.MitedaDesignSystem_acc833
-  const { Card, Button, IconButton } = DS
+  const { Card, Button, IconButton, KeyRow } = DS
 
   const ST = MD.defectStatuses
 
   const [b, setB] = useState('Visi')
   const [s, setS] = useState('Visos')
+  const [selected, setSelected] = useState(null)
   const [adRaw] = useRepo('listAdminDefects')
   const adminDefects = adRaw || []
   const buildings = ['Visi', ...new Set(adminDefects.map((d) => d.building))]
@@ -45,7 +46,10 @@ export default function Defektai() {
               </tr></thead>
               <tbody>
                 {rows.map((d, i) => (
-                  <tr key={i}>
+                  <tr key={i} style={{ cursor: 'pointer' }}
+                    onClick={() => setSelected(d)}
+                    onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && setSelected(d)}
+                    tabIndex={0}>
                     <td className="tbl__id">{d.id}</td>
                     <td style={{ color: 'var(--ink-900)' }}>{d.title}</td>
                     <td>{d.apt}</td>
@@ -53,7 +57,10 @@ export default function Defektai() {
                     <td>{d.author}</td>
                     <td className="muted">{d.date}</td>
                     <td><StatusBadge map={ST} value={d.status} /></td>
-                    <td style={{ textAlign: 'right' }}><IconButton icon="ph ph-arrow-up-right" variant="ghost" size="sm" ariaLabel="Atidaryti" /></td>
+                    <td style={{ textAlign: 'right' }}>
+                      <IconButton icon="ph ph-arrow-up-right" variant="ghost" size="sm" ariaLabel="Atidaryti"
+                        onClick={(e) => { e.stopPropagation(); setSelected(d) }} />
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -62,6 +69,25 @@ export default function Defektai() {
           </div>
         </Card>
       </div>
+      {selected && (
+        <Modal title={selected.title} subtitle={selected.id} onClose={() => setSelected(null)} width={480}>
+          <div className="stack" style={{ gap: 0 }}>
+            {[
+              { label: 'Objektas', value: selected.building },
+              { label: 'Butas', value: selected.apt },
+              { label: 'Pateikė', value: selected.author },
+              { label: 'Data', value: selected.date },
+              { label: 'Būsena', value: <StatusBadge map={ST} value={selected.status} /> },
+              ...(selected.description ? [{ label: 'Aprašymas', value: selected.description }] : []),
+            ].map(({ label, value }) => (
+              <div key={label} className="between" style={{ padding: '12px 0', borderBottom: '1px solid var(--line-100)' }}>
+                <span style={{ fontSize: 'var(--text-body)', color: 'var(--ink-400)' }}>{label}</span>
+                <span style={{ fontSize: 'var(--text-body)', color: 'var(--ink-900)', fontWeight: 'var(--fw-medium)' }}>{value}</span>
+              </div>
+            ))}
+          </div>
+        </Modal>
+      )}
     </Shell>
   )
 }

@@ -1,5 +1,5 @@
 import React from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 
 // DS components come from the globally loaded bundle
 const getDS = () => window.MitedaDesignSystem_acc833 || {}
@@ -17,6 +17,7 @@ const ROLES = {
       { key: 'kontaktai', icon: 'ph ph-address-book', label: 'Kontaktai', to: '/owner/kontaktai' },
       { key: 'tvarkarastis', icon: 'ph ph-calendar-dots', label: 'Tvarkaraštis', to: '/owner/tvarkarastis' },
       { key: 'skelbimai', icon: 'ph ph-megaphone', label: 'Skelbimų lenta', to: '/owner/skelbimai' },
+      { key: 'zinutes', icon: 'ph ph-chat-circle', label: 'Žinutės', to: '/owner/zinutes', group: 'bottom' },
       { key: 'bendruomene', icon: 'ph ph-users-three', label: 'Bendruomenė', to: '/owner/bendruomene', group: 'bottom' },
       { key: 'darbai', icon: 'ph ph-wrench', label: 'Remonto darbai', to: '/owner/darbai', group: 'bottom' },
       { key: 'nustatymai', icon: 'ph ph-gear', label: 'Nustatymai', to: '/owner/nustatymai', group: 'bottom' },
@@ -32,6 +33,7 @@ const ROLES = {
       { key: 'kontaktai', icon: 'ph ph-address-book', label: 'Kontaktai', to: '/admin/kontaktai' },
       { key: 'darbai', icon: 'ph ph-wrench', label: 'Remonto darbai', to: '/admin/darbai' },
       { key: 'darbu-eiga', icon: 'ph ph-megaphone', label: 'Darbų eiga', to: '/admin/darbu-eiga' },
+      { key: 'zinutes', icon: 'ph ph-chat-circle', label: 'Žinutės', to: '/admin/zinutes' },
     ],
   },
   statyba: {
@@ -138,10 +140,35 @@ function Sidebar({ role, nav, collapsed, onToggle }) {
   )
 }
 
-function Header({ title, subtitle, actions, onMenu }) {
+const NOTIFICATIONS = [
+  { id: 1, icon: 'ph ph-warning-octagon', tone: 'orange', title: 'Naujas defektas', body: 'B-12 · Lukas Petrauskas pranešė apie santechnikos gedimą.', time: 'Prieš 5 min', unread: true },
+  { id: 2, icon: 'ph ph-file-text', tone: 'green', title: 'Sutartis pasirašyta', body: 'A-4 · G. Janušienė pasirašė priežiūros sutartį.', time: 'Prieš 1 val', unread: true },
+  { id: 3, icon: 'ph ph-wrench', tone: 'green', title: 'Projektas atnaujintas', body: 'Vonios plytelės — pažanga atnaujinta iki 80%.', time: 'Prieš 3 val', unread: false },
+  { id: 4, icon: 'ph ph-megaphone', tone: 'neutral', title: 'Naujas skelbimas', body: 'Administracija paskelbė darbų eigos atnaujinimą.', time: 'Vakar', unread: false },
+  { id: 5, icon: 'ph ph-users-three', tone: 'neutral', title: 'Bendruomenės žinutė', body: 'C-21 · M. Šimkus parašė į bendruomenės forumą.', time: 'Vakar', unread: false },
+]
+
+function Header({ title, subtitle, actions, onMenu, role }) {
   const DS = getDS()
   const IconButton = DS.IconButton
   const Input = DS.Input
+  const navigate = useNavigate()
+  const [notifOpen, setNotifOpen] = React.useState(false)
+  const [read, setRead] = React.useState(new Set())
+  const notifRef = React.useRef(null)
+
+  const r = ROLES[role] || ROLES.gyventojas
+  const messagesPath = role === 'gyventojas' ? '/owner/zinutes' : '/admin/zinutes'
+  const unreadCount = NOTIFICATIONS.filter((n) => n.unread && !read.has(n.id)).length
+
+  React.useEffect(() => {
+    if (!notifOpen) return
+    const handler = (e) => { if (notifRef.current && !notifRef.current.contains(e.target)) setNotifOpen(false) }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [notifOpen])
+
+  const toneColor = { orange: 'var(--orange)', green: 'var(--brand-green)', neutral: 'var(--ink-300)' }
 
   return (
     <header className="hdr">
@@ -158,12 +185,54 @@ function Header({ title, subtitle, actions, onMenu }) {
         </div>
       </div>
       <div className="hdr__r">
-        {actions}
+        {actions && <div className="hdr__actions">{actions}</div>}
         {Input && <Input className="hdr__search" placeholder="Ieškoti…" iconLeft="ph ph-magnifying-glass" />}
         <span className="hdr__io">
           {IconButton && <>
-            <IconButton icon="ph ph-bell" variant="soft" dot ariaLabel="Pranešimai" />
-            <IconButton icon="ph ph-chat-circle" variant="soft" dot ariaLabel="Žinutės" />
+            <span ref={notifRef} style={{ position: 'relative' }}>
+              <IconButton icon="ph ph-bell" variant="soft" dot={unreadCount > 0} ariaLabel="Pranešimai"
+                onClick={() => { setNotifOpen((o) => !o); setRead(new Set(NOTIFICATIONS.map((n) => n.id))) }} />
+              {notifOpen && (
+                <div style={{
+                  position: 'absolute', top: 'calc(100% + 8px)', right: 0, zIndex: 200,
+                  width: 360, background: 'var(--surface-card)', borderRadius: 'var(--radius-md)',
+                  boxShadow: 'var(--shadow-lg)', border: '1px solid var(--line-200)', overflow: 'hidden',
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px 10px', borderBottom: '1px solid var(--line-100)' }}>
+                    <span style={{ fontSize: 'var(--text-title)', fontWeight: 'var(--fw-medium)', color: 'var(--ink-900)' }}>Pranešimai</span>
+                    {unreadCount > 0 && <span style={{ fontSize: 'var(--text-small)', color: 'var(--brand-green-strong)', fontWeight: 'var(--fw-medium)' }}>{unreadCount} naujų</span>}
+                  </div>
+                  <div style={{ maxHeight: 360, overflowY: 'auto' }}>
+                    {NOTIFICATIONS.map((n) => (
+                      <div key={n.id} style={{
+                        display: 'flex', gap: 12, padding: '12px 16px', cursor: 'pointer',
+                        background: n.unread && !read.has(n.id) ? 'var(--brand-green-faint)' : 'transparent',
+                        borderBottom: '1px solid var(--line-100)',
+                        transition: 'background 120ms',
+                      }}
+                        onMouseEnter={(e) => e.currentTarget.style.background = 'var(--surface-sunken)'}
+                        onMouseLeave={(e) => e.currentTarget.style.background = n.unread && !read.has(n.id) ? 'var(--brand-green-faint)' : 'transparent'}
+                      >
+                        <div style={{ width: 36, height: 36, borderRadius: 'var(--radius-sm)', background: 'var(--surface-sunken)', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: '0 0 auto' }}>
+                          <i className={n.icon} style={{ fontSize: 18, color: toneColor[n.tone] }} aria-hidden="true" />
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 'var(--text-body)', fontWeight: 'var(--fw-medium)', color: 'var(--ink-900)', marginBottom: 2 }}>{n.title}</div>
+                          <div style={{ fontSize: 'var(--text-small)', color: 'var(--ink-500)', lineHeight: 'var(--lh-body)', marginBottom: 4 }}>{n.body}</div>
+                          <div style={{ fontSize: 'var(--text-small)', color: 'var(--ink-300)' }}>{n.time}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{ padding: '10px 16px', borderTop: '1px solid var(--line-100)' }}>
+                    <button onClick={() => setNotifOpen(false)} style={{ width: '100%', padding: '8px', border: 'none', borderRadius: 'var(--radius-sm)', background: 'var(--surface-sunken)', color: 'var(--ink-500)', fontSize: 'var(--text-small)', cursor: 'pointer', fontFamily: 'var(--font-sans)' }}>
+                      Žiūrėti visus pranešimus
+                    </button>
+                  </div>
+                </div>
+              )}
+            </span>
+            <IconButton icon="ph ph-chat-circle" variant="soft" dot ariaLabel="Žinutės" onClick={() => navigate(messagesPath)} />
           </>}
         </span>
       </div>
@@ -186,7 +255,7 @@ export default function Shell({ role, nav, title, subtitle, headerActions, child
       <div className="sidebar-scrim" onClick={() => setOpen(false)} />
       <Sidebar role={role} nav={nav} collapsed={collapsed} onToggle={toggle} />
       <main className="main">
-        <Header title={title} subtitle={subtitle} actions={headerActions} onMenu={() => setOpen(true)} />
+        <Header title={title} subtitle={subtitle} actions={headerActions} onMenu={() => setOpen(true)} role={role} />
         {children}
       </main>
     </div>

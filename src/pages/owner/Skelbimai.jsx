@@ -1,6 +1,6 @@
 import React from 'react'
 import Shell from '../../shared/Shell.jsx'
-import { useRepo, PanelHead, FilterChips, Modal } from '../../shared/UI.jsx'
+import { useRepo, PanelHead, FilterChips, Modal, Composer } from '../../shared/UI.jsx'
 import repo from '../../lib/repo.js'
 import MD from '../../lib/data.js'
 
@@ -10,7 +10,7 @@ export default function Skelbimai() {
   const DS = window.MitedaDesignSystem_acc833
   const { Card, Button, IconButton, Badge, Avatar } = DS
 
-  function NoticeCard({ n }) {
+  function NoticeCard({ n, onContact }) {
     return (
       <Card tone="flat" style={{ borderRadius: 'var(--radius-md)', display: 'flex', flexDirection: 'column', gap: 12, padding: 20 }}>
         <div className="between">
@@ -26,7 +26,7 @@ export default function Skelbimai() {
             <Avatar name={n.who} size={28} />
             <span className="muted" style={{ fontSize: 'var(--text-small)' }}>{n.who} · {n.time}</span>
           </span>
-          <IconButton icon="ph ph-chat-circle" variant="ghost" size="sm" ariaLabel="Susisiekti" />
+          <IconButton icon="ph ph-chat-circle" variant="ghost" size="sm" ariaLabel="Susisiekti" onClick={() => onContact(n)} />
         </div>
       </Card>
     )
@@ -60,6 +60,7 @@ export default function Skelbimai() {
   const posts = postsData || []
   const [cat, setCat] = React.useState('Visi')
   const [post, setPost] = React.useState(false)
+  const [contact, setContact] = React.useState(null)
   const shown = cat === 'Visi' ? posts : posts.filter((p) => p.cat === cat)
   const add = (n) => { repo.addBulletin(n).then(() => { refresh(); setPost(false) }) }
 
@@ -70,10 +71,15 @@ export default function Skelbimai() {
       <div className="content stack">
         <Card padding={16}><FilterChips items={MD.bulletinCats} value={cat} onChange={setCat} /></Card>
         <div className="grid-3">
-          {shown.map((n, i) => <NoticeCard key={i} n={n} />)}
+          {shown.map((n, i) => <NoticeCard key={i} n={n} onContact={setContact} />)}
         </div>
       </div>
       {post && <PostModal onClose={() => setPost(false)} onSubmit={add} />}
+      {contact && (
+        <Modal title={`Susisiekti su ${contact.who}`} subtitle={contact.title} onClose={() => setContact(null)}>
+          <Composer placeholder={`Žinutė ${contact.who}…`} button="Siųsti" onSend={() => setContact(null)} />
+        </Modal>
+      )}
     </Shell>
   )
 }

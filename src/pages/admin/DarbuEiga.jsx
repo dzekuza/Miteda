@@ -1,11 +1,12 @@
 import React, { useState } from 'react'
 import Shell from '../../shared/Shell.jsx'
-import { useRepo, PanelHead, PhotoTile } from '../../shared/UI.jsx'
+import { useRepo, PanelHead, PhotoTile, Modal } from '../../shared/UI.jsx'
 import repo from '../../lib/repo.js'
 
 export default function DarbuEiga() {
   const DS = window.MitedaDesignSystem_acc833
   const { Card, Button, IconButton, Checkbox } = DS
+  const [selected, setSelected] = useState(null)
 
   const PHOTO = ['#9bb7a4', '#c2b59b', '#8fa6b8', '#b7a99b']
   const OWNERS = ['B-12 · L. Petrauskas', 'A-4 · G. Janušienė', 'C-21 · M. Šimkus', 'A-7 · R. Kazlauskaitė', 'B-9 · T. Petraitis']
@@ -61,17 +62,24 @@ export default function DarbuEiga() {
 
   function BroadcastItem({ b }) {
     return (
-      <div className="row" style={{ alignItems: 'flex-start', flexDirection: 'column', gap: 12 }}>
+      <div
+        className="row"
+        role="button"
+        tabIndex={0}
+        onClick={() => setSelected(b)}
+        onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && setSelected(b)}
+        style={{ alignItems: 'flex-start', flexDirection: 'column', gap: 12, cursor: 'pointer' }}
+      >
         <div className="between" style={{ width: '100%' }}>
           <div>
             <div style={{ fontSize: 'var(--text-title)', fontWeight: 'var(--fw-medium)', color: 'var(--ink-900)' }}>{b.title}</div>
             <div className="muted" style={{ fontSize: 'var(--text-small)', marginTop: 2 }}>{b.date} · {b.photos} nuotr.</div>
           </div>
-          <IconButton icon="ph ph-dots-three" variant="ghost" size="sm" ariaLabel="Daugiau" />
+          <IconButton icon="ph ph-dots-three" variant="ghost" size="sm" ariaLabel="Daugiau" onClick={(e) => { e.stopPropagation(); setSelected(b) }} />
         </div>
         {b.body && <p style={{ margin: 0, fontSize: 'var(--text-body)', color: 'var(--ink-500)', lineHeight: 'var(--lh-body)' }}>{b.body}</p>}
         <div className="chips">
-          {b.recipients.map((r, i) => <span key={i} className="chip" style={{ cursor: 'default', height: 26, fontSize: 'var(--text-small)' }}><i className="ph ph-bell" style={{ marginRight: 6 }} aria-hidden="true" />{r}</span>)}
+          {b.recipients.map((r, i) => <span key={i} className="chip" style={{ cursor: 'default', height: 26, fontSize: 'var(--text-small)', display: 'inline-flex', alignItems: 'center' }}><i className="ph ph-bell" style={{ marginRight: 6 }} aria-hidden="true" />{r}</span>)}
         </div>
       </div>
     )
@@ -92,6 +100,24 @@ export default function DarbuEiga() {
           </div>
         </Card>
       </div>
+      {selected && (
+        <Modal title={selected.title} onClose={() => setSelected(null)}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div className="muted" style={{ fontSize: 'var(--text-small)' }}>{selected.date} · {selected.photos} nuotr.</div>
+            {selected.body && <p style={{ margin: 0, fontSize: 'var(--text-body)', color: 'var(--ink-500)', lineHeight: 'var(--lh-body)' }}>{selected.body}</p>}
+            <div>
+              <span className="sec-sub" style={{ display: 'block', marginBottom: 8 }}>Gavėjai</span>
+              <div className="chips">
+                {selected.recipients.map((r, i) => (
+                  <span key={i} className="chip" style={{ height: 26, fontSize: 'var(--text-small)', display: 'inline-flex', alignItems: 'center' }}>
+                    <i className="ph ph-bell" style={{ marginRight: 6 }} aria-hidden="true" />{r}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+        </Modal>
+      )}
     </Shell>
   )
 }

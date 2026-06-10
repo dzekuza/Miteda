@@ -1,6 +1,6 @@
 import React from 'react'
 import Shell from '../../shared/Shell.jsx'
-import { useRepo, PanelHead, Stat, StatusBadge } from '../../shared/UI.jsx'
+import { useRepo, PanelHead, Stat, StatusBadge, Modal } from '../../shared/UI.jsx'
 import repo from '../../lib/repo.js'
 import MD from '../../lib/data.js'
 
@@ -10,7 +10,7 @@ export default function Sutartys() {
   const DS = window.MitedaDesignSystem_acc833
   const { Card, Button, IconButton } = DS
 
-  function ContractCard({ c, onSign }) {
+  function ContractCard({ c, onSign, onMore }) {
     const needsAction = c.status === 'pending' || c.status === 'action'
     return (
       <Card tone="flat" style={{ display: 'flex', flexDirection: 'column', gap: 16, borderRadius: 'var(--radius-md)' }}>
@@ -38,14 +38,41 @@ export default function Sutartys() {
           {needsAction
             ? <Button variant="accent" iconLeft="ph ph-signature" onClick={() => onSign(c.svc)} fullWidth>{c.status === 'action' ? 'Patvirtinti' : 'Pasirašyti'}</Button>
             : <Button variant="secondary" iconLeft="ph ph-file-arrow-down" fullWidth>Peržiūrėti sutartį</Button>}
-          <IconButton icon="ph ph-dots-three" variant="outline" ariaLabel="Daugiau" />
+          <IconButton icon="ph ph-dots-three" variant="outline" ariaLabel="Daugiau" onClick={() => onMore(c)} />
         </div>
       </Card>
     )
   }
 
+  function ContractMoreModal({ c, onClose }) {
+    const actions = [
+      { icon: 'ph ph-file-arrow-down', label: 'Atsisiųsti sutartį' },
+      { icon: 'ph ph-phone', label: 'Skambinti tiekėjui' },
+      { icon: 'ph ph-envelope', label: 'Rašyti tiekėjui' },
+      { icon: 'ph ph-x-circle', label: 'Nutraukti sutartį', danger: true },
+    ]
+    return (
+      <Modal title={c.svc} subtitle={c.provider + ' · ' + c.num} onClose={onClose} width={400}>
+        <div className="stack-sm" style={{ gap: 4 }}>
+          {actions.map((a) => (
+            <button key={a.label} onClick={onClose} style={{
+              display: 'flex', alignItems: 'center', gap: 12, width: '100%', padding: '12px 4px',
+              background: 'none', border: 'none', borderRadius: 'var(--radius-sm)', cursor: 'pointer',
+              color: a.danger ? 'var(--orange)' : 'var(--ink-800)', fontFamily: 'var(--font-sans)',
+              fontSize: 'var(--text-body)', textAlign: 'left',
+            }}>
+              <i className={a.icon} style={{ fontSize: 20, width: 24, flexShrink: 0 }} aria-hidden="true" />
+              {a.label}
+            </button>
+          ))}
+        </div>
+      </Modal>
+    )
+  }
+
   const [contractsData, refresh] = useRepo('listContracts')
   const contracts = contractsData || []
+  const [more, setMore] = React.useState(null)
   const sign = (svc) => repo.signContract(svc).then(refresh)
   const pending = contracts.filter((c) => c.status !== 'signed').length
   const monthly = contracts.reduce((s, c) => s + (parseFloat(String(c.sum).replace(/[^\d.,]/g, '').replace(',', '.')) || 0), 0)
@@ -62,10 +89,11 @@ export default function Sutartys() {
         <Card>
           <PanelHead title="Sutartys" subtitle="Pasirašykite arba patvirtinkite susitarimus" />
           <div className="grid-2">
-            {contracts.map((c, i) => <ContractCard key={i} c={c} onSign={sign} />)}
+            {contracts.map((c, i) => <ContractCard key={i} c={c} onSign={sign} onMore={setMore} />)}
           </div>
         </Card>
       </div>
+      {more && <ContractMoreModal c={more} onClose={() => setMore(null)} />}
     </Shell>
   )
 }

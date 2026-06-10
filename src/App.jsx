@@ -21,6 +21,7 @@ import OwnerSkelbimai from './pages/owner/Skelbimai.jsx'
 import OwnerBendruomene from './pages/owner/Bendruomene.jsx'
 import OwnerDarbai from './pages/owner/Darbai.jsx'
 import OwnerNustatymai from './pages/owner/Nustatymai.jsx'
+import OwnerZinutes from './pages/owner/Zinutes.jsx'
 
 // Admin pages
 import AdminObjektai from './pages/admin/Objektai.jsx'
@@ -29,6 +30,7 @@ import AdminDefektai from './pages/admin/Defektai.jsx'
 import AdminKontaktai from './pages/admin/Kontaktai.jsx'
 import AdminDarbai from './pages/admin/Darbai.jsx'
 import AdminDarbuEiga from './pages/admin/DarbuEiga.jsx'
+import AdminZinutes from './pages/admin/Zinutes.jsx'
 
 // Statyba pages
 import StatybaVadovas from './pages/statyba/Vadovas.jsx'
@@ -54,6 +56,7 @@ export default function App() {
         <Route path="/owner/bendruomene" element={<OwnerBendruomene />} />
         <Route path="/owner/darbai" element={<OwnerDarbai />} />
         <Route path="/owner/nustatymai" element={<OwnerNustatymai />} />
+        <Route path="/owner/zinutes" element={<OwnerZinutes />} />
 
         {/* Admin */}
         <Route path="/admin/objektai" element={<AdminObjektai />} />
@@ -62,6 +65,7 @@ export default function App() {
         <Route path="/admin/kontaktai" element={<AdminKontaktai />} />
         <Route path="/admin/darbai" element={<AdminDarbai />} />
         <Route path="/admin/darbu-eiga" element={<AdminDarbuEiga />} />
+        <Route path="/admin/zinutes" element={<AdminZinutes />} />
 
         {/* Statyba */}
         <Route path="/statyba/vadovas" element={<StatybaVadovas />} />

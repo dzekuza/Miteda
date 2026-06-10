@@ -934,7 +934,7 @@ function SidebarItem({
       fontFamily: "var(--font-sans)",
       fontSize: "var(--text-body)",
       fontWeight: "var(--fw-medium)",
-      lineHeight: 1,
+      lineHeight: 1.25,
       background: active ? "rgba(120,191,62,0.16)" : hover ? "rgba(255,255,255,0.05)" : "transparent",
       color: active ? "var(--text-on-forest)" : "rgba(255,254,252,0.7)",
       transition: "background var(--dur-fast) var(--ease-standard), color var(--dur-fast) var(--ease-standard)",
