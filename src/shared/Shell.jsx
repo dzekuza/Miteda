@@ -1,5 +1,6 @@
 import React from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
+import { runPageEnter } from '../lib/animations'
 
 // DS components come from the globally loaded bundle
 const getDS = () => window.MitedaDesignSystem_acc833 || {}
@@ -126,7 +127,6 @@ function Sidebar({ role, nav, collapsed, onToggle }) {
       <div className="sb__spacer" />
       <RoleSwitch role={role} />
       <div className="sb__foot">
-        <Chip {...r.chip} />
         <button type="button" className="sb__chip">
           {Avatar && <Avatar name={r.account.name} tone={r.account.tone} size={36} />}
           <span className="sb__chip-tx">
@@ -154,6 +154,7 @@ function Header({ title, subtitle, actions, onMenu, role }) {
   const Input = DS.Input
   const navigate = useNavigate()
   const [notifOpen, setNotifOpen] = React.useState(false)
+  const [popoverPos, setPopoverPos] = React.useState({ top: 0, left: 8, width: 360 })
   const [read, setRead] = React.useState(new Set())
   const notifRef = React.useRef(null)
 
@@ -167,6 +168,19 @@ function Header({ title, subtitle, actions, onMenu, role }) {
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
   }, [notifOpen])
+
+  const openNotif = () => {
+    if (notifRef.current && window.innerWidth <= 680) {
+      const rect = notifRef.current.getBoundingClientRect()
+      const w = Math.min(360, window.innerWidth - 16)
+      const left = Math.max(8, Math.min(rect.right - w, window.innerWidth - w - 8))
+      setPopoverPos({ mobile: true, top: rect.bottom + 8, left, width: w })
+    } else {
+      setPopoverPos({ mobile: false })
+    }
+    setNotifOpen((o) => !o)
+    setRead(new Set(NOTIFICATIONS.map((n) => n.id)))
+  }
 
   const toneColor = { orange: 'var(--orange)', green: 'var(--brand-green)', neutral: 'var(--ink-300)' }
 
@@ -191,12 +205,13 @@ function Header({ title, subtitle, actions, onMenu, role }) {
           {IconButton && <>
             <span ref={notifRef} style={{ position: 'relative' }}>
               <IconButton icon="ph ph-bell" variant="soft" dot={unreadCount > 0} ariaLabel="Pranešimai"
-                onClick={() => { setNotifOpen((o) => !o); setRead(new Set(NOTIFICATIONS.map((n) => n.id))) }} />
+                onClick={openNotif} />
               {notifOpen && (
-                <div style={{
-                  position: 'absolute', top: 'calc(100% + 8px)', right: 0, zIndex: 200,
-                  width: 360, background: 'var(--surface-card)', borderRadius: 'var(--radius-md)',
-                  boxShadow: 'var(--shadow-lg)', border: '1px solid var(--line-200)', overflow: 'hidden',
+                <div style={popoverPos.mobile
+                  ? { position: 'fixed', top: popoverPos.top, left: popoverPos.left, width: popoverPos.width, zIndex: 200, background: 'var(--surface-card)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-lg)', border: '1px solid var(--line-200)', overflow: 'hidden' }
+                  : { position: 'absolute', top: 'calc(100% + 8px)', right: 0, width: 360, zIndex: 200, background: 'var(--surface-card)',
+                  borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-lg)',
+                  border: '1px solid var(--line-200)', overflow: 'hidden',
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px 10px', borderBottom: '1px solid var(--line-100)' }}>
                     <span style={{ fontSize: 'var(--text-title)', fontWeight: 'var(--fw-medium)', color: 'var(--ink-900)' }}>Pranešimai</span>
@@ -245,6 +260,8 @@ export default function Shell({ role, nav, title, subtitle, headerActions, child
   const [collapsed, setCollapsed] = React.useState(() => {
     try { return localStorage.getItem('miteda-sb-collapsed') === '1' } catch (e) { return false }
   })
+  const location = useLocation()
+  React.useLayoutEffect(() => { runPageEnter() }, [location.pathname])
   const toggle = () => setCollapsed((c) => {
     const n = !c
     try { localStorage.setItem('miteda-sb-collapsed', n ? '1' : '0') } catch (e) {}

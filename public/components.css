@@ -131,6 +131,9 @@ h1, h2, h3,
   gap: 16px; margin-bottom: 18px;
 }
 .panel-head__tx { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+@media (max-width: 680px) {
+  .panel-head { flex-direction: column; gap: 10px; }
+}
 
 /* ---- Stat tiles -------------------------------------------- */
 .stat {
@@ -178,6 +181,7 @@ h1, h2, h3,
 /* ---- Chips (filters) --------------------------------------- */
 .chips { display: flex; flex-wrap: wrap; gap: 8px; }
 .chip {
+  display: inline-flex; align-items: center; text-align: left;
   height: 32px; padding: 0 14px; border: none; border-radius: var(--radius-pill);
   cursor: pointer; font-family: var(--font-sans); font-size: var(--text-body);
   font-weight: var(--fw-medium); color: var(--ink-700);

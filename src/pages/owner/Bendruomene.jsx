@@ -19,7 +19,7 @@ export default function Bendruomene() {
     )
   }
 
-  function ThreadCard({ t, onOpen }) {
+  function ThreadCard({ t, onOpen, liked, onLike }) {
     return (
       <Card tone="flat" interactive role="button" tabIndex={0}
         style={{ borderRadius: 'var(--radius-md)', padding: 20, cursor: 'pointer' }}
@@ -39,7 +39,7 @@ export default function Bendruomene() {
           </span>
           <span className="rowflex" style={{ gap: 16, color: 'var(--ink-400)', fontSize: 'var(--text-small)' }}>
             <span className="rowflex" style={{ gap: 6 }}><i className="ph ph-chat-circle" style={{ fontSize: 18 }} aria-hidden="true" />{t.replies}</span>
-            <span className="rowflex" style={{ gap: 6 }}><i className="ph ph-heart" style={{ fontSize: 18 }} aria-hidden="true" />{t.likes}</span>
+            <LikeBtn liked={liked} count={t.likes + (liked ? 1 : 0)} onToggle={onLike} />
             <span className="rowflex" style={{ gap: 6 }}><i className="ph ph-eye" style={{ fontSize: 18 }} aria-hidden="true" />{t.views}</span>
           </span>
         </div>
@@ -78,7 +78,7 @@ export default function Bendruomene() {
       headerActions={<Button variant="primary" iconLeft="ph ph-plus">Nauja diskusija</Button>}>
       <div className="content grid-aside">
         <div className="stack">
-          {threads.map((t, i) => <ThreadCard key={i} t={t} onOpen={setOpen} />)}
+          {threads.map((t, i) => <ThreadCard key={i} t={t} onOpen={setOpen} liked={!!likes[i]} onLike={() => toggle(i)} />)}
         </div>
         <div className="stack">
           <Card>

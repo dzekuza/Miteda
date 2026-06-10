@@ -82,9 +82,9 @@ export default function Sutartys() {
       title="Paslaugų sutartys" subtitle="Su jūsų butu susietos komunalinių paslaugų sutartys.">
       <div className="content stack">
         <div className="grid-3">
-          <Stat icon="ph ph-file-text" label="Sutartys" value={contracts.length} />
-          <Stat icon="ph ph-clock" label="Laukia veiksmo" value={pending} />
-          <Stat icon="ph ph-wallet" label="Iš viso per mėn." value={'€' + monthly.toFixed(2)} />
+          <Stat label="Sutartys" value={contracts.length} />
+          <Stat label="Laukia veiksmo" value={pending} />
+          <Stat label="Iš viso per mėn." value={'€' + monthly.toFixed(2)} />
         </div>
         <Card>
           <PanelHead title="Sutartys" subtitle="Pasirašykite arba patvirtinkite susitarimus" />

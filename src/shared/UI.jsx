@@ -1,4 +1,5 @@
 import React from 'react'
+import ReactDOM from 'react-dom'
 import repo from '../lib/repo.js'
 
 // DS components come from the globally loaded bundle
@@ -59,7 +60,17 @@ function Modal({ title, subtitle, onClose, children, footer, width }) {
   const DS = getDS()
   const IconButton = DS.IconButton
 
-  return (
+  const portalRoot = React.useMemo(() => {
+    let el = document.getElementById('miteda-portal')
+    if (!el) {
+      el = document.createElement('div')
+      el.id = 'miteda-portal'
+      document.getElementById('root').appendChild(el)
+    }
+    return el
+  }, [])
+
+  return ReactDOM.createPortal(
     <div className="modal-scrim" onClick={onClose}>
       <div className="modal" style={width ? { maxWidth: width } : undefined} onClick={(e) => e.stopPropagation()}>
         <div className="modal__head">
@@ -75,7 +86,8 @@ function Modal({ title, subtitle, onClose, children, footer, width }) {
         {children}
         {footer && <div className="between" style={{ marginTop: 8, justifyContent: 'flex-end', gap: 10 }}>{footer}</div>}
       </div>
-    </div>
+    </div>,
+    portalRoot
   )
 }
 
