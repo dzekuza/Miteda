@@ -14,16 +14,12 @@ function PropertyCard({ p, i }) {
   const coverColor = COVER_COLORS[i % COVER_COLORS.length]
   return (
     <Link className="plain" to={`/admin/objektas?b=${i}`}>
-      <Card interactive style={{ display: 'flex', flexDirection: 'column', gap: 16, padding: 0, overflow: 'hidden' }}>
-        <div style={{ height: 140, background: p.coverImage ? `url(${p.coverImage}) center/cover no-repeat` : coverColor, display: 'flex', alignItems: 'flex-end', padding: '12px 16px', flexShrink: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 36, height: 36, borderRadius: 'var(--radius-md)', background: 'rgba(255,255,255,0.18)', backdropFilter: 'blur(6px)' }}>
-            <i className="ph ph-buildings" style={{ fontSize: 18, color: '#fff' }} aria-hidden="true" />
-          </div>
-        </div>
+      <Card interactive style={{ display: 'flex', flexDirection: 'column', gap: 0, padding: 0, overflow: 'hidden' }}>
+        <div style={{ aspectRatio: '1 / 1', background: p.coverImage ? `url(${p.coverImage}) center/cover no-repeat` : coverColor, flexShrink: 0, borderRadius: 'var(--radius-lg)', margin: 8 }} />
         <div style={{ padding: '0 16px 16px', display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div>
             <div style={{ fontSize: 'var(--text-heading)', fontWeight: 'var(--fw-medium)', color: 'var(--ink-900)', letterSpacing: 'var(--tracking-tight)' }}>{p.name}</div>
-            <div className="muted rowflex" style={{ fontSize: 'var(--text-body)', gap: 6, marginTop: 2 }}><i className="ph ph-map-pin" aria-hidden="true" />{p.address}</div>
+            <div className="muted rowflex" style={{ fontSize: 'var(--text-body)', gap: 6, marginTop: 8 }}><i className="ph ph-map-pin" aria-hidden="true" />{p.address}</div>
           </div>
           <div>
             <div className="between" style={{ marginBottom: 8 }}>
@@ -77,7 +73,7 @@ export default function Objektai() {
           <Stat label="Iš viso butų" value={totalUnits} />
           <Stat label="Parduota" value={totalSold + ' / ' + totalUnits} accent />
         </div>
-        <div className="grid-4">
+        <div className="grid-4" style={{ gap: 4 }}>
           {props.map((p, i) => <PropertyCard key={i} p={p} i={i} />)}
         </div>
       </div>

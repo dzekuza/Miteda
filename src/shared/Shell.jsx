@@ -176,9 +176,9 @@ const SEARCH_INDEX = Object.entries(ROLES).flatMap(([rk, r]) =>
 
 function HeaderSearch({ role }) {
   const navigate = useNavigate()
-  const [query, setQuery] = React.useState('')
   const [open, setOpen] = React.useState(false)
-  const wrapRef = React.useRef(null)
+  const [query, setQuery] = React.useState('')
+  const inputRef = React.useRef(null)
 
   const results = React.useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -187,65 +187,79 @@ function HeaderSearch({ role }) {
       item.label.toLowerCase().includes(q) ||
       (item.sub && item.sub.toLowerCase().includes(q)) ||
       item.role.toLowerCase().includes(q)
-    ).slice(0, 7)
+    ).slice(0, 8)
   }, [query])
 
+  const openModal = () => { setOpen(true); setTimeout(() => inputRef.current?.focus(), 50) }
+  const closeModal = () => { setOpen(false); setQuery('') }
+  const go = (item) => { closeModal(); navigate(item.to) }
+
   React.useEffect(() => {
-    const handler = (e) => { if (wrapRef.current && !wrapRef.current.contains(e.target)) setOpen(false) }
-    document.addEventListener('mousedown', handler)
-    return () => document.removeEventListener('mousedown', handler)
-  }, [])
-
-  const go = (item) => { setOpen(false); setQuery(''); navigate(item.to) }
-
-  const onKeyDown = (e) => {
-    if (e.key === 'Escape') { setOpen(false); setQuery('') }
-  }
+    const handler = (e) => { if (e.key === 'Escape') closeModal() }
+    if (open) document.addEventListener('keydown', handler)
+    return () => document.removeEventListener('keydown', handler)
+  }, [open])
 
   return (
-    <div ref={wrapRef} style={{ position: 'relative' }} className="hdr__search">
-      <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-        <i className="ph ph-magnifying-glass" style={{ position: 'absolute', left: 10, fontSize: 16, color: 'var(--ink-400)', pointerEvents: 'none' }} />
-        <input
-          type="text"
-          value={query}
-          onChange={(e) => { setQuery(e.target.value); setOpen(true) }}
-          onFocus={() => { if (query) setOpen(true) }}
-          onKeyDown={onKeyDown}
-          placeholder="Ieškoti…"
-          style={{ width: '100%', paddingLeft: 34, paddingRight: query ? 30 : 10, paddingTop: 8, paddingBottom: 8, border: '1px solid var(--line-200)', borderRadius: 'var(--radius-md)', fontSize: 'var(--text-body)', background: 'var(--surface-card)', color: 'var(--ink-900)', outline: 'none', fontFamily: 'var(--font-sans)', boxSizing: 'border-box', boxShadow: open && results.length ? '0 0 0 2px var(--brand-green-faint)' : 'none', borderColor: open && results.length ? 'var(--brand-green)' : 'var(--line-200)', transition: 'border-color 0.15s, box-shadow 0.15s' }}
-        />
-        {query && (
-          <button type="button" onClick={() => { setQuery(''); setOpen(false) }} style={{ position: 'absolute', right: 6, background: 'none', border: 'none', cursor: 'pointer', padding: 2, color: 'var(--ink-400)', display: 'flex', alignItems: 'center' }}>
-            <i className="ph ph-x" style={{ fontSize: 14 }} />
-          </button>
-        )}
-      </div>
-      {open && results.length > 0 && (
-        <div style={{ position: 'absolute', top: 'calc(100% + 6px)', left: 0, width: '100%', minWidth: 300, background: 'var(--surface-card)', border: '1px solid var(--line-200)', borderRadius: 'var(--radius-lg)', boxShadow: '0 8px 24px rgba(0,0,0,0.10)', zIndex: 9999, overflow: 'hidden' }}>
-          {results.map((item, idx) => (
-            <button key={idx} type="button" onMouseDown={() => go(item)}
-              style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '9px 14px', border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left', borderBottom: idx < results.length - 1 ? '1px solid var(--line-100)' : 'none' }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--overlay-ink-04)' }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = 'none' }}>
-              <span style={{ width: 30, height: 30, borderRadius: 'var(--radius-sm)', background: 'var(--overlay-ink-04)', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: '0 0 auto' }}>
-                <i className={item.icon} style={{ fontSize: 16, color: 'var(--ink-600)' }} />
-              </span>
-              <span style={{ flex: 1, minWidth: 0 }}>
-                <span style={{ display: 'block', fontSize: 'var(--text-body)', color: 'var(--ink-900)', fontWeight: 'var(--fw-medium)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.label}</span>
-                {item.sub && <span style={{ display: 'block', fontSize: 'var(--text-small)', color: 'var(--ink-400)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.sub}</span>}
-              </span>
-              <span style={{ fontSize: 11, color: 'var(--ink-300)', flex: '0 0 auto' }}>{item.role}</span>
-            </button>
-          ))}
-        </div>
+    <>
+      <button type="button" onClick={openModal} className="hdr__search"
+        style={{ width: 36, height: 36, border: 'none', borderRadius: 'var(--radius-md)', background: 'var(--overlay-ink-04)', color: 'var(--ink-500)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.15s, color 0.15s' }}
+        onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--overlay-ink-08)'; e.currentTarget.style.color = 'var(--ink-900)' }}
+        onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--overlay-ink-04)'; e.currentTarget.style.color = 'var(--ink-500)' }}>
+        <i className="ph ph-magnifying-glass" style={{ fontSize: 20 }} />
+      </button>
+
+      {open && ReactDOM.createPortal(
+        <div onMouseDown={closeModal} style={{ position: 'fixed', inset: 0, zIndex: 10000, background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(4px)', display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: '10vh' }}>
+          <div onMouseDown={(e) => e.stopPropagation()} style={{ width: '100%', maxWidth: 640, margin: '0 16px', display: 'flex', flexDirection: 'column', gap: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, background: 'var(--surface-card)', borderRadius: results.length > 0 ? 'var(--radius-lg) var(--radius-lg) 0 0' : 'var(--radius-lg)', padding: '0 16px', boxShadow: '0 20px 60px rgba(0,0,0,0.25)', borderBottom: results.length > 0 ? '1px solid var(--line-100)' : 'none' }}>
+              <i className="ph ph-magnifying-glass" style={{ fontSize: 20, color: 'var(--ink-400)', flexShrink: 0 }} />
+              <input
+                ref={inputRef}
+                type="text"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Ieškoti…"
+                style={{ flex: 1, height: 56, border: 'none', outline: 'none', fontSize: 18, fontFamily: 'var(--font-sans)', color: 'var(--ink-900)', background: 'transparent' }}
+              />
+              {query && (
+                <button type="button" onClick={() => setQuery('')} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--ink-400)', display: 'flex', alignItems: 'center' }}>
+                  <i className="ph ph-x" style={{ fontSize: 16 }} />
+                </button>
+              )}
+              <button type="button" onClick={closeModal} style={{ background: 'var(--overlay-ink-04)', border: 'none', borderRadius: 'var(--radius-sm)', cursor: 'pointer', padding: '3px 8px', color: 'var(--ink-400)', fontSize: 11, fontFamily: 'var(--font-sans)', flexShrink: 0 }}>Esc</button>
+            </div>
+
+            {results.length > 0 && (
+              <div style={{ background: 'var(--surface-card)', borderRadius: '0 0 var(--radius-lg) var(--radius-lg)', boxShadow: '0 20px 60px rgba(0,0,0,0.25)', overflow: 'hidden' }}>
+                {results.map((item, idx) => (
+                  <button key={idx} type="button" onMouseDown={() => go(item)}
+                    style={{ display: 'flex', alignItems: 'center', gap: 12, width: '100%', padding: '11px 16px', border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left', borderBottom: idx < results.length - 1 ? '1px solid var(--line-100)' : 'none' }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--overlay-ink-04)' }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = 'none' }}>
+                    <span style={{ width: 34, height: 34, borderRadius: 'var(--radius-sm)', background: 'var(--overlay-ink-04)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <i className={item.icon} style={{ fontSize: 17, color: 'var(--ink-600)' }} />
+                    </span>
+                    <span style={{ flex: 1, minWidth: 0 }}>
+                      <span style={{ display: 'block', fontSize: 'var(--text-body)', color: 'var(--ink-900)', fontWeight: 'var(--fw-medium)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.label}</span>
+                      {item.sub && <span style={{ display: 'block', fontSize: 'var(--text-small)', color: 'var(--ink-400)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.sub}</span>}
+                    </span>
+                    <span style={{ fontSize: 11, color: 'var(--ink-300)', flexShrink: 0 }}>{item.role}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {query.trim().length > 0 && results.length === 0 && (
+              <div style={{ background: 'var(--surface-card)', borderRadius: '0 0 var(--radius-lg) var(--radius-lg)', boxShadow: '0 20px 60px rgba(0,0,0,0.25)', padding: '24px 16px', textAlign: 'center' }}>
+                <span style={{ fontSize: 'var(--text-body)', color: 'var(--ink-400)' }}>Nieko nerasta pagal „{query}"</span>
+              </div>
+            )}
+          </div>
+        </div>,
+        document.body
       )}
-      {open && query.trim().length > 0 && results.length === 0 && (
-        <div style={{ position: 'absolute', top: 'calc(100% + 6px)', left: 0, width: '100%', background: 'var(--surface-card)', border: '1px solid var(--line-200)', borderRadius: 'var(--radius-lg)', boxShadow: '0 8px 24px rgba(0,0,0,0.10)', zIndex: 9999, padding: '18px 14px', textAlign: 'center' }}>
-          <span style={{ fontSize: 'var(--text-body)', color: 'var(--ink-400)' }}>Nieko nerasta pagal „{query}"</span>
-        </div>
-      )}
-    </div>
+    </>
   )
 }
 
