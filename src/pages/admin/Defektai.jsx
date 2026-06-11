@@ -120,6 +120,7 @@ function DefectDetailModal({ defect, onClose, onUpdate }) {
   const [worker, setWorker] = useState(defect.worker)
   const [thread, setThread] = useState(defect.thread || seedThread(defect))
   const [pickingWorker, setPickingWorker] = useState(false)
+  const [pickingStatus, setPickingStatus] = useState(false)
 
   const hasChanges = status !== defect.status || worker !== defect.worker
 
@@ -156,19 +157,7 @@ function DefectDetailModal({ defect, onClose, onUpdate }) {
           <span style={{ fontSize: 'var(--text-small)', color: 'var(--ink-400)' }}>Būsena:</span>
           {Badge && <Badge tone={ST[status].tone}>{ST[status].label}</Badge>}
         </div>
-        <div style={{ display: 'flex', gap: 6 }}>
-          {Object.entries(ST).map(([key, { label }]) => (
-            <button key={key} onClick={() => setStatus(key)} style={{
-              height: 28, padding: '0 12px', border: 'none', borderRadius: 'var(--radius-pill)',
-              cursor: 'pointer', fontFamily: 'var(--font-sans)', fontSize: 'var(--text-small)',
-              fontWeight: status === key ? 'var(--fw-medium)' : undefined,
-              background: status === key ? 'var(--overlay-ink-04)' : 'transparent',
-              color: status === key ? 'var(--ink-900)' : 'var(--ink-400)',
-              outline: status === key ? '1.5px solid var(--line-300)' : 'none',
-              transition: 'all 120ms',
-            }}>{label}</button>
-          ))}
-        </div>
+        {Button && <Button variant="secondary" iconLeft="ph ph-pencil-simple" size="sm" onClick={() => setPickingStatus(true)}>Keisti</Button>}
       </div>
 
       {/* Tabs */}
@@ -249,6 +238,29 @@ function DefectDetailModal({ defect, onClose, onUpdate }) {
             <Composer placeholder="Rašyti žinutę apie defektą…" onSend={sendMsg} button="Siųsti" />
           </div>
         </div>
+      )}
+
+      {pickingStatus && (
+        <Modal title="Keisti būseną" onClose={() => setPickingStatus(false)} width={340}
+          footer={<><Button variant="ghost" onClick={() => setPickingStatus(false)}>Atšaukti</Button><Button variant="accent" onClick={() => setPickingStatus(false)}>Išsaugoti</Button></>}
+        >
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {Object.entries(ST).map(([key, { label, tone }]) => (
+              <button key={key} onClick={() => setStatus(key)} style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                padding: '10px 14px', borderRadius: 'var(--radius-md)', cursor: 'pointer',
+                border: status === key ? '1.5px solid var(--line-300)' : '1.5px solid transparent',
+                background: status === key ? 'var(--overlay-ink-04)' : 'var(--surface-sunken)',
+                fontFamily: 'var(--font-sans)', fontSize: 'var(--text-body)',
+                fontWeight: status === key ? 'var(--fw-medium)' : undefined,
+                color: 'var(--ink-900)', transition: 'all 120ms',
+              }}>
+                <span>{label}</span>
+                {status === key && <i className="ph ph-check" style={{ fontSize: 16, color: 'var(--brand-green)' }} />}
+              </button>
+            ))}
+          </div>
+        </Modal>
       )}
     </Modal>
   )

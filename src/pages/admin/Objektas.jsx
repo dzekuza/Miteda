@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import Shell from '../../shared/Shell.jsx'
-import { useRepo, PanelHead, Stat, Tabs, PhotoTile, Modal, Composer } from '../../shared/UI.jsx'
+import { useRepo, PanelHead, Stat, Tabs, PhotoTile, Modal, Composer, DSSelect } from '../../shared/UI.jsx'
 
 const UNIT_STATUS = {
   sold: { label: 'Parduotas', tone: 'success' },
@@ -75,6 +75,8 @@ function UnitDetailModal({ unit, idx, onClose, onSaveUnit }) {
     ownerPhone: owner?.phone || '',
     ownerEmail: owner?.email || '',
     ownerSince: owner?.since || '',
+    photos: unit.photos || [],
+    contracts: unit.contracts || contracts,
   })
 
   const [form, setForm] = useState(initForm)
@@ -95,12 +97,28 @@ function UnitDetailModal({ unit, idx, onClose, onSaveUnit }) {
       year: form.year,
       energyClass: form.energyClass,
       owner: form.ownerName ? { name: form.ownerName, phone: form.ownerPhone, email: form.ownerEmail, since: form.ownerSince } : null,
+      photos: form.photos,
+      contracts: form.contracts,
     }
     onSaveUnit(updated)
     setIsEditing(false)
   }
 
+  const photoInputRef = React.useRef()
+  const contractInputRef = React.useRef()
+  const addPhotos = (e) => {
+    const files = Array.from(e.target.files)
+    set('photos', [...form.photos, ...files.map((f) => ({ name: f.name, url: URL.createObjectURL(f), file: f }))])
+    e.target.value = ''
+  }
+  const addContracts = (e) => {
+    const files = Array.from(e.target.files)
+    set('contracts', [...form.contracts, ...files.map((f) => ({ id: `SUT-${Date.now()}`, type: f.name.replace(/\.[^.]+$/, ''), date: new Date().toISOString().slice(0, 10), status: 'signed', tone: 'positive', file: f }))])
+    e.target.value = ''
+  }
+
   const fld = { height: 36, padding: '0 10px', border: 'none', borderRadius: 'var(--radius-sm)', background: 'var(--surface-card)', boxShadow: 'inset 0 0 0 1px var(--line-200)', fontFamily: 'var(--font-sans)', fontSize: 'var(--text-body)', color: 'var(--ink-900)', outline: 'none', width: '100%', boxSizing: 'border-box' }
+  const selFld = { ...fld, paddingRight: 30 }
 
   const ReadRow = ({ label, value }) => (
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', borderRadius: 'var(--radius-sm)', background: 'var(--surface-sunken)', margin: '2px 0' }}>
@@ -173,29 +191,21 @@ function UnitDetailModal({ unit, idx, onClose, onSaveUnit }) {
             <input style={fld} type="number" min="10" value={form.area} onChange={(e) => set('area', e.target.value)} />
           </EditRow>
           <EditRow label="Orientacija">
-            <select style={fld} value={form.orientation} onChange={(e) => set('orientation', e.target.value)}>
-              {ORIENTATIONS.map((o) => <option key={o}>{o}</option>)}
-            </select>
+            <DSSelect value={form.orientation} onChange={(v) => set('orientation', v)} options={ORIENTATIONS} />
           </EditRow>
           <EditRow label="Šildymas">
-            <select style={fld} value={form.heating} onChange={(e) => set('heating', e.target.value)}>
-              {HEATINGS.map((h) => <option key={h}>{h}</option>)}
-            </select>
+            <DSSelect value={form.heating} onChange={(v) => set('heating', v)} options={HEATINGS} />
           </EditRow>
           <EditRow label="Statybos metai">
             <input style={fld} type="number" min="1900" max="2100" value={form.year} onChange={(e) => set('year', e.target.value)} />
           </EditRow>
           <EditRow label="Energetinė klasė">
-            <select style={fld} value={form.energyClass} onChange={(e) => set('energyClass', e.target.value)}>
-              {ENERGY_CLASSES.map((c) => <option key={c}>{c}</option>)}
-            </select>
+            <DSSelect value={form.energyClass} onChange={(v) => set('energyClass', v)} options={ENERGY_CLASSES} />
           </EditRow>
           <EditRow label="Būsena">
-            <select style={fld} value={form.st} onChange={(e) => set('st', e.target.value)}>
-              {Object.entries(UNIT_STATUS).map(([k, { label }]) => <option key={k} value={k}>{label}</option>)}
-            </select>
+            <DSSelect value={form.st} onChange={(v) => set('st', v)} options={Object.entries(UNIT_STATUS).map(([k, { label }]) => ({ value: k, label }))} />
           </EditRow>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, paddingTop: 4 }}>
+          <div style={{ gridColumn: '1 / -1', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
             <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', borderRadius: 'var(--radius-sm)', background: 'var(--surface-sunken)', cursor: 'pointer' }}>
               <span style={{ fontSize: 'var(--text-body)', color: 'var(--ink-700)' }}>Automobilio stovėjimas</span>
               <input type="checkbox" checked={form.hasParking} onChange={(e) => set('hasParking', e.target.checked)} style={{ width: 16, height: 16, accentColor: 'var(--brand-green)', cursor: 'pointer' }} />
@@ -209,11 +219,52 @@ function UnitDetailModal({ unit, idx, onClose, onSaveUnit }) {
       )}
 
       {/* Photos tab */}
-      {tab === 'photos' && (
+      {tab === 'photos' && !isEditing && (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 8 }}>
-          {PHOTO_COLS.map((col, i) => (
-            <PhotoTile key={i} color={col} label={['Svetainė', 'Miegamasis', 'Virtuvė', 'Vonios kambarys', 'Balkonas', 'Koridorius', 'Vaizdas', 'Planas'][i % 8]} />
-          ))}
+          {(unit.photos && unit.photos.length > 0)
+            ? unit.photos.map((p, i) => (
+              <div key={i} style={{ aspectRatio: '1', borderRadius: 'var(--radius-sm)', overflow: 'hidden', background: 'var(--surface-sunken)' }}>
+                <img src={p.url} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              </div>
+            ))
+            : PHOTO_COLS.map((col, i) => (
+              <PhotoTile key={i} color={col} label={['Svetainė', 'Miegamasis', 'Virtuvė', 'Vonios kambarys', 'Balkonas', 'Koridorius', 'Vaizdas', 'Planas'][i % 8]} />
+            ))
+          }
+        </div>
+      )}
+      {tab === 'photos' && isEditing && (
+        <div>
+          <input ref={photoInputRef} type="file" accept="image/*" multiple style={{ display: 'none' }} onChange={addPhotos} />
+          {form.photos.length === 0
+            ? (
+              <button type="button" onClick={() => photoInputRef.current?.click()} style={{
+                width: '100%', border: '1.5px dashed var(--line-300)', borderRadius: 'var(--radius-md)',
+                padding: '32px 0', background: 'var(--surface-sunken)', cursor: 'pointer',
+                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,
+              }}>
+                <i className="ph ph-image" style={{ fontSize: 32, color: 'var(--ink-300)' }} />
+                <span style={{ fontSize: 'var(--text-body)', color: 'var(--ink-400)' }}>Pasirinkite nuotraukas</span>
+                <span style={{ fontSize: 'var(--text-small)', color: 'var(--ink-300)' }}>JPG, PNG, WEBP</span>
+              </button>
+            ) : (
+              <div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 8, marginBottom: 12 }}>
+                  {form.photos.map((p, i) => (
+                    <div key={i} style={{ position: 'relative', aspectRatio: '1', borderRadius: 'var(--radius-sm)', overflow: 'hidden', background: 'var(--surface-sunken)' }}>
+                      <img src={p.url} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      <button onClick={() => set('photos', form.photos.filter((_, j) => j !== i))} style={{
+                        position: 'absolute', top: 4, right: 4, width: 22, height: 22, borderRadius: '50%',
+                        border: 'none', background: 'rgba(0,0,0,0.55)', color: '#fff', cursor: 'pointer',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12,
+                      }}><i className="ph ph-x" /></button>
+                    </div>
+                  ))}
+                </div>
+                <Button variant="secondary" size="sm" iconLeft="ph ph-plus" onClick={() => photoInputRef.current?.click()}>Pridėti daugiau</Button>
+              </div>
+            )
+          }
         </div>
       )}
 
@@ -265,12 +316,12 @@ function UnitDetailModal({ unit, idx, onClose, onSaveUnit }) {
       )}
 
       {/* Contracts tab */}
-      {tab === 'contracts' && (
+      {tab === 'contracts' && !isEditing && (
         <div className="stack-sm" style={{ gap: 8 }}>
           {unit.st === 'free'
             ? <p style={{ color: 'var(--ink-400)', fontSize: 'var(--text-body)', padding: '16px 0' }}>Nėra aktyvių sutarčių — butas laisvas.</p>
             : contracts.map((c) => (
-              <div key={c.id} className="row">
+              <div key={c.id} className="row" style={{ marginTop: 0 }}>
                 <div style={{ width: 36, height: 36, borderRadius: 'var(--radius-sm)', background: 'var(--surface-sunken)', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: '0 0 auto' }}>
                   <i className="ph ph-file-text" style={{ fontSize: 18, color: 'var(--ink-400)' }} aria-hidden="true" />
                 </div>
@@ -282,6 +333,35 @@ function UnitDetailModal({ unit, idx, onClose, onSaveUnit }) {
               </div>
             ))
           }
+        </div>
+      )}
+      {tab === 'contracts' && isEditing && (
+        <div>
+          <input ref={contractInputRef} type="file" multiple style={{ display: 'none' }} onChange={addContracts} />
+          <div className="stack-sm" style={{ gap: 8, marginBottom: form.contracts.length ? 12 : 0 }}>
+            {form.contracts.map((c, i) => (
+              <div key={c.id} className="row" style={{ marginTop: 0 }}>
+                <div style={{ width: 36, height: 36, borderRadius: 'var(--radius-sm)', background: 'var(--surface-sunken)', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: '0 0 auto' }}>
+                  <i className="ph ph-file-text" style={{ fontSize: 18, color: 'var(--ink-400)' }} aria-hidden="true" />
+                </div>
+                <div className="row__main">
+                  <span className="row__title">{c.type}</span>
+                  <span className="row__meta">{c.id}<span className="dot">·</span>{c.date}</span>
+                </div>
+                <button onClick={() => set('contracts', form.contracts.filter((_, j) => j !== i))} style={{
+                  border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--ink-300)', padding: 4,
+                }}><i className="ph ph-x" style={{ fontSize: 14 }} /></button>
+              </div>
+            ))}
+          </div>
+          <button type="button" onClick={() => contractInputRef.current?.click()} style={{
+            width: '100%', border: '1.5px dashed var(--line-300)', borderRadius: 'var(--radius-md)',
+            padding: '20px 0', background: 'var(--surface-sunken)', cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+          }}>
+            <i className="ph ph-upload-simple" style={{ fontSize: 18, color: 'var(--ink-300)' }} />
+            <span style={{ fontSize: 'var(--text-body)', color: 'var(--ink-400)' }}>Įkelti sutartį</span>
+          </button>
         </div>
       )}
     </Modal>
@@ -392,7 +472,7 @@ function AddUnitModal({ units, onAdd, onClose, initial, onSave }) {
   })
 
   const selectFld = {
-    height: 40, padding: '0 12px', border: 'none', borderRadius: 'var(--radius-sm)',
+    height: 40, padding: '0 32px 0 12px', border: 'none', borderRadius: 'var(--radius-sm)',
     background: 'var(--surface-card)', boxShadow: 'inset 0 0 0 1px var(--line-200)',
     fontFamily: 'var(--font-sans)', fontSize: 'var(--text-body)', color: 'var(--ink-900)',
     outline: 'none', width: '100%', boxSizing: 'border-box', cursor: 'pointer',
@@ -485,21 +565,15 @@ function AddUnitModal({ units, onAdd, onClose, initial, onSave }) {
           </div>
           <div className="field" style={{ marginBottom: 0 }}>
             <label>Orientacija</label>
-            <select style={selectFld} value={form.orientation} onChange={(e) => set('orientation', e.target.value)}>
-              {ORIENTATIONS.map((o) => <option key={o}>{o}</option>)}
-            </select>
+            <DSSelect value={form.orientation} onChange={(v) => set('orientation', v)} options={ORIENTATIONS} />
           </div>
           <div className="field" style={{ marginBottom: 0 }}>
             <label>Šildymas</label>
-            <select style={selectFld} value={form.heating} onChange={(e) => set('heating', e.target.value)}>
-              {HEATINGS.map((h) => <option key={h}>{h}</option>)}
-            </select>
+            <DSSelect value={form.heating} onChange={(v) => set('heating', v)} options={HEATINGS} />
           </div>
           <div className="field" style={{ marginBottom: 0 }}>
             <label>Energetinė klasė</label>
-            <select style={selectFld} value={form.energyClass} onChange={(e) => set('energyClass', e.target.value)}>
-              {ENERGY_CLASSES.map((c) => <option key={c}>{c}</option>)}
-            </select>
+            <DSSelect value={form.energyClass} onChange={(v) => set('energyClass', v)} options={ENERGY_CLASSES} />
           </div>
           <div className="field" style={{ marginBottom: 0 }}>
             <label>Statybos metai</label>
@@ -679,8 +753,8 @@ function UnitsTab({ P }) {
   return (
     <div>
       <div className="between" style={{ marginBottom: 12, gap: 12 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1 }}>
-          <div style={{ position: 'relative', flex: 1, maxWidth: 280 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, overflowX: 'auto', minWidth: 0, scrollbarWidth: 'none' }}>
+          <div style={{ position: 'relative', flexShrink: 0, width: 200 }}>
             <i className="ph ph-magnifying-glass" style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--ink-400)', fontSize: 16, pointerEvents: 'none' }} />
             <input
               type="text"
@@ -695,21 +769,21 @@ function UnitsTab({ P }) {
               </button>
             )}
           </div>
-          <div style={{ display: 'flex', gap: 4 }}>
+          <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
             {TYPE_FILTERS.map(({ value, label }) => (
               <button key={value} type="button" onClick={() => setFilterType(value)} style={{ padding: '6px 12px', borderRadius: 'var(--radius-md)', border: '1px solid', borderColor: filterType === value ? 'var(--brand-green)' : 'var(--line-200)', background: filterType === value ? 'var(--brand-green-faint)' : 'var(--surface-card)', color: filterType === value ? 'var(--brand-green-dark, var(--brand-green))' : 'var(--ink-600)', fontFamily: 'var(--font-sans)', fontSize: 'var(--text-small)', cursor: 'pointer', fontWeight: filterType === value ? 'var(--fw-medium)' : 'var(--fw-regular)' }}>
                 {label}
               </button>
             ))}
           </div>
-          <div style={{ display: 'flex', gap: 4 }}>
+          <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
             {RESIDENTS_FILTERS.map(({ value, label }) => (
               <button key={value} type="button" onClick={() => setFilterResidents(value)} style={{ padding: '6px 12px', borderRadius: 'var(--radius-md)', border: '1px solid', borderColor: filterResidents === value ? 'var(--brand-green)' : 'var(--line-200)', background: filterResidents === value ? 'var(--brand-green-faint)' : 'var(--surface-card)', color: filterResidents === value ? 'var(--brand-green-dark, var(--brand-green))' : 'var(--ink-600)', fontFamily: 'var(--font-sans)', fontSize: 'var(--text-small)', cursor: 'pointer', fontWeight: filterResidents === value ? 'var(--fw-medium)' : 'var(--fw-regular)' }}>
                 {label}
               </button>
             ))}
           </div>
-          <div style={{ display: 'flex', gap: 4 }}>
+          <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
             {PHOTOS_FILTERS.map(({ value, label }) => (
               <button key={value} type="button" onClick={() => setFilterPhotos(value)} style={{ padding: '6px 12px', borderRadius: 'var(--radius-md)', border: '1px solid', borderColor: filterPhotos === value ? 'var(--brand-green)' : 'var(--line-200)', background: filterPhotos === value ? 'var(--brand-green-faint)' : 'var(--surface-card)', color: filterPhotos === value ? 'var(--brand-green-dark, var(--brand-green))' : 'var(--ink-600)', fontFamily: 'var(--font-sans)', fontSize: 'var(--text-small)', cursor: 'pointer', fontWeight: filterPhotos === value ? 'var(--fw-medium)' : 'var(--fw-regular)' }}>
                 {label}
@@ -865,6 +939,7 @@ function ResidentDetailModal({ resident, onClose, onSave }) {
   const saveEdit = () => { onSave({ ...resident, ...form }); setIsEditing(false) }
 
   const fld = { height: 36, padding: '0 10px', border: 'none', borderRadius: 'var(--radius-sm)', background: 'var(--surface-card)', boxShadow: 'inset 0 0 0 1px var(--line-200)', fontFamily: 'var(--font-sans)', fontSize: 'var(--text-body)', color: 'var(--ink-900)', outline: 'none', width: '100%', boxSizing: 'border-box' }
+  const selFld = { ...fld, paddingRight: 30 }
 
   const EditRow = ({ label, children }) => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
@@ -954,9 +1029,7 @@ function ResidentDetailModal({ resident, onClose, onSave }) {
             <input style={fld} value={form.apt} onChange={(e) => set('apt', e.target.value)} />
           </EditRow>
           <EditRow label="Rolė">
-            <select style={fld} value={form.role} onChange={(e) => set('role', e.target.value)}>
-              {['Savininkas', 'Savininkė', 'Nuomininkas', 'Nuomininkė'].map((r) => <option key={r}>{r}</option>)}
-            </select>
+            <DSSelect value={form.role} onChange={(v) => set('role', v)} options={['Savininkas', 'Savininkė', 'Nuomininkas', 'Nuomininkė']} />
           </EditRow>
         </div>
       )}

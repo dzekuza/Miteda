@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import Shell from '../../shared/Shell.jsx'
+import { Tabs, DSSelect } from '../../shared/UI.jsx'
 
 // ── shared mock data ────────────────────────────────────────────────────────
 const PHOTO_COLS = ['#9bb7a4', '#c2b59b', '#8fa6b8', '#b7a99b', '#aeb8a0', '#a0aeb8', '#b7c4a0', '#a8b8c4']
@@ -66,7 +67,7 @@ const CONTRACTS = [
 ]
 
 const DEFECT_STATUS = {
-  open: { label: 'Atviras', tone: 'error' },
+  open: { label: 'Atviras', tone: 'urgent' },
   in_progress: { label: 'Vykdoma', tone: 'event' },
   closed: { label: 'Uždaryta', tone: 'success' },
 }
@@ -93,23 +94,12 @@ function InfoCard({ icon, label, value }) {
   )
 }
 
-function Tabs({ tabs, value, onChange }) {
-  return (
-    <div style={{ display: 'flex', gap: 2, borderBottom: '1px solid var(--line-100)', marginBottom: 20 }}>
-      {tabs.map((t) => (
-        <button key={t.key} type="button" onClick={() => onChange(t.key)}
-          style={{ padding: '8px 14px', border: 'none', background: 'none', cursor: 'pointer', fontFamily: 'var(--font-sans)', fontSize: 'var(--text-body)', color: value === t.key ? 'var(--brand-green)' : 'var(--ink-500)', fontWeight: value === t.key ? 'var(--fw-medium)' : 'var(--fw-regular)', borderBottom: value === t.key ? '2px solid var(--brand-green)' : '2px solid transparent', marginBottom: -1 }}>
-          {t.label}
-        </button>
-      ))}
-    </div>
-  )
-}
 
 export default function Gyventojas() {
   const { slug } = useParams()
   const navigate = useNavigate()
   const [tab, setTab] = useState('info')
+  const [isEditing, setIsEditing] = useState(false)
 
   const DS = window.MitedaDesignSystem_acc833
   const { Avatar, Badge, Button, Card } = DS
@@ -132,6 +122,10 @@ export default function Gyventojas() {
   const defects = DEFECTS_BY_PERSON[slug] || []
   const posts = POSTS_BY_PERSON[slug] || []
   const rooms = person.area <= 53 ? 1 : person.area <= 75 ? 2 : 3
+
+  const [form, setForm] = useState({ name: person.name, phone: person.phone, email: person.email, role: person.role, apt: person.apt, since: person.since })
+  const fld = { height: 36, padding: '0 10px', border: 'none', borderRadius: 'var(--radius-sm)', background: 'var(--surface-card)', boxShadow: 'inset 0 0 0 1px var(--line-200)', fontFamily: 'var(--font-sans)', fontSize: 'var(--text-body)', color: 'var(--ink-900)', outline: 'none', width: '100%', boxSizing: 'border-box' }
+  const selFld = { ...fld, paddingRight: 30 }
 
   const aptRows = [
     { label: 'Butas', value: person.apt },
@@ -175,41 +169,49 @@ export default function Gyventojas() {
                 </a>
               </div>
             </div>
-            <div style={{ display: 'flex', gap: 8 }}>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
               {Button && <>
                 <Button variant="secondary" iconLeft="ph ph-chat-circle" size="sm" onClick={() => navigate('/admin/zinutes')}>Žinutė</Button>
                 <Button variant="secondary" iconLeft="ph ph-phone" size="sm">Skambinti</Button>
+                {!isEditing
+                  ? <Button variant="secondary" iconLeft="ph ph-pencil-simple" size="sm" onClick={() => { setTab('info'); setIsEditing(true) }}>Redaguoti</Button>
+                  : <Button variant="accent" iconLeft="ph ph-floppy-disk" size="sm" onClick={() => setIsEditing(false)}>Išsaugoti</Button>
+                }
               </>}
             </div>
           </div>
 
-          {/* Stats strip */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 24 }}>
-            {[
-              { icon: 'ph ph-warning-octagon', label: 'Defektai', value: defects.length, sub: `${defects.filter((d) => d.status === 'open').length} atviri` },
-              { icon: 'ph ph-file-text', label: 'Sutartys', value: CONTRACTS.length, sub: 'Galiojančios' },
-              { icon: 'ph ph-images', label: 'Nuotraukos', value: PHOTO_COLS.length, sub: 'Buto foto' },
-              { icon: 'ph ph-megaphone', label: 'Skelbimai', value: posts.length, sub: 'Skelbimų lenta' },
-            ].map((s) => (
-              <div key={s.label} style={{ padding: '14px 16px', borderRadius: 'var(--radius-md)', background: 'var(--surface-sunken)', textAlign: 'center' }}>
-                <i className={s.icon} style={{ fontSize: 20, color: 'var(--ink-400)', marginBottom: 4, display: 'block' }} />
-                <span style={{ display: 'block', fontSize: 'var(--text-heading)', fontWeight: 'var(--fw-semibold)', color: 'var(--ink-900)', lineHeight: 1.2 }}>{s.value}</span>
-                <span style={{ display: 'block', fontSize: 11, color: 'var(--ink-400)', marginTop: 2 }}>{s.sub}</span>
-              </div>
-            ))}
-          </div>
-
-          <Tabs tabs={TABS} value={tab} onChange={setTab} />
+          <div style={{ marginBottom: 20 }}><Tabs tabs={TABS} value={tab} onChange={setTab} /></div>
 
           {/* ── Informacija ── */}
-          {tab === 'info' && (
+          {tab === 'info' && !isEditing && (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 10 }}>
-              <InfoCard icon="ph ph-user" label="Vardas, pavardė" value={person.name} />
-              <InfoCard icon="ph ph-identification-card" label="Rolė" value={person.role} />
-              <InfoCard icon="ph ph-door" label="Butas" value={person.apt} />
-              <InfoCard icon="ph ph-phone" label="Telefonas" value={person.phone} />
-              <InfoCard icon="ph ph-envelope" label="El. paštas" value={person.email} />
-              <InfoCard icon="ph ph-calendar" label="Gyventojas nuo" value={person.since} />
+              <InfoCard icon="ph ph-user" label="Vardas, pavardė" value={form.name} />
+              <InfoCard icon="ph ph-identification-card" label="Rolė" value={form.role} />
+              <InfoCard icon="ph ph-door" label="Butas" value={form.apt} />
+              <InfoCard icon="ph ph-phone" label="Telefonas" value={form.phone} />
+              <InfoCard icon="ph ph-envelope" label="El. paštas" value={form.email} />
+              <InfoCard icon="ph ph-calendar" label="Gyventojas nuo" value={form.since} />
+            </div>
+          )}
+          {tab === 'info' && isEditing && (
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              {[
+                { label: 'Vardas, pavardė', key: 'name' },
+                { label: 'Telefonas', key: 'phone' },
+                { label: 'El. paštas', key: 'email' },
+                { label: 'Gyventojas nuo', key: 'since' },
+                { label: 'Butas', key: 'apt' },
+              ].map(({ label, key }) => (
+                <div key={key} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  <span style={{ fontSize: 'var(--text-small)', color: 'var(--ink-400)' }}>{label}</span>
+                  <input style={fld} value={form[key]} onChange={(e) => setForm((f) => ({ ...f, [key]: e.target.value }))} />
+                </div>
+              ))}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <span style={{ fontSize: 'var(--text-small)', color: 'var(--ink-400)' }}>Rolė</span>
+                <DSSelect value={form.role} onChange={(v) => setForm((f) => ({ ...f, role: v }))} options={['Savininkas', 'Savininkė', 'Nuomininkas', 'Nuomininkė']} />
+              </div>
             </div>
           )}
 
@@ -228,6 +230,11 @@ export default function Gyventojas() {
           {/* ── Dokumentai ── */}
           {tab === 'docs' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {Button && (
+                <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 4 }}>
+                  <Button variant="secondary" iconLeft="ph ph-download-simple" size="sm" onClick={() => CONTRACTS.forEach((c, i) => { const a = document.createElement('a'); a.href = '#'; a.download = `${c.id}-${c.type}.pdf`; setTimeout(() => a.click(), i * 50) })}>Atsisiųsti visus</Button>
+                </div>
+              )}
               {CONTRACTS.map((c) => (
                 <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', borderRadius: 'var(--radius-md)', background: 'var(--surface-sunken)' }}>
                   <div style={{ width: 36, height: 36, borderRadius: 'var(--radius-sm)', background: 'var(--surface-card)', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: '0 0 auto' }}>

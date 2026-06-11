@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import Shell from '../../shared/Shell.jsx'
+import { Tabs } from '../../shared/UI.jsx'
 import MD from '../../lib/data.js'
 
 const PHOTO_COLS = ['#9bb7a4', '#c2b59b', '#8fa6b8', '#b7a99b', '#aeb8a0', '#a0aeb8']
@@ -31,18 +32,6 @@ function toSlug(name) {
     .replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
 }
 
-function Tabs({ tabs, value, onChange }) {
-  return (
-    <div style={{ display: 'flex', gap: 2, borderBottom: '1px solid var(--line-100)', marginBottom: 20 }}>
-      {tabs.map((t) => (
-        <button key={t.key} type="button" onClick={() => onChange(t.key)}
-          style={{ padding: '8px 14px', border: 'none', background: 'none', cursor: 'pointer', fontFamily: 'var(--font-sans)', fontSize: 'var(--text-body)', color: value === t.key ? 'var(--brand-green)' : 'var(--ink-500)', fontWeight: value === t.key ? 'var(--fw-medium)' : 'var(--fw-regular)', borderBottom: value === t.key ? '2px solid var(--brand-green)' : '2px solid transparent', marginBottom: -1 }}>
-          {t.label}
-        </button>
-      ))}
-    </div>
-  )
-}
 
 function InfoCard({ icon, label, value }) {
   return (
@@ -134,7 +123,7 @@ export default function Specialistas() {
             ))}
           </div>
 
-          <Tabs tabs={TABS} value={tab} onChange={setTab} />
+          <div style={{ marginBottom: 20 }}><Tabs tabs={TABS} value={tab} onChange={setTab} /></div>
 
           {/* Info */}
           {tab === 'info' && (

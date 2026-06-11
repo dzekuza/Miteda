@@ -157,7 +157,8 @@
 .tile--orange { background: var(--orange-soft); color: var(--orange); }
 
 /* ---- Tabs --------------------------------------------------- */
-.tabs { display: inline-flex; gap: 4px; padding: 4px; background: var(--overlay-ink-04); border-radius: var(--radius-pill); }
+.tabs { display: flex; gap: 4px; padding: 4px; background: var(--overlay-ink-04); border-radius: var(--radius-pill); max-width: 100%; overflow-x: auto; scrollbar-width: none; }
+.tabs::-webkit-scrollbar { display: none; }
 .tabs__btn {
   height: 36px; padding: 0 16px; border: none; border-radius: var(--radius-pill);
   cursor: pointer; font-family: var(--font-sans); font-size: var(--text-body);

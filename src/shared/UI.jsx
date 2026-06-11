@@ -179,4 +179,73 @@ function useRepo(method, ...args) {
   return [data, load]
 }
 
-export { PanelHead, Stat, Tabs, FilterChips, Modal, Thread, Composer, StatusBadge, PhotoTile, useRepo }
+function DSSelect({ value, onChange, options, style }) {
+  const [open, setOpen] = React.useState(false)
+  const [rect, setRect] = React.useState(null)
+  const triggerRef = React.useRef(null)
+
+  const toggle = () => {
+    if (!open && triggerRef.current) setRect(triggerRef.current.getBoundingClientRect())
+    setOpen((v) => !v)
+  }
+
+  React.useEffect(() => {
+    if (!open) return
+    const close = (e) => { if (triggerRef.current && !triggerRef.current.contains(e.target)) setOpen(false) }
+    document.addEventListener('mousedown', close)
+    return () => document.removeEventListener('mousedown', close)
+  }, [open])
+
+  const selected = options.find((o) => (o.value ?? o) === value) || options[0]
+  const selectedLabel = selected?.label ?? selected
+
+  const portalRoot = React.useMemo(() => {
+    return document.getElementById('miteda-portal') || document.getElementById('root')
+  }, [])
+
+  return (
+    <div ref={triggerRef} style={{ position: 'relative', width: '100%', ...style }}>
+      <button type="button" onClick={toggle} style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        height: 36, padding: '0 10px', width: '100%', cursor: 'pointer',
+        border: 'none', borderRadius: 'var(--radius-sm)', background: 'var(--surface-card)',
+        boxShadow: `inset 0 0 0 1px ${open ? 'var(--line-300)' : 'var(--line-200)'}`,
+        fontFamily: 'var(--font-sans)', fontSize: 'var(--text-body)', color: 'var(--ink-900)',
+        outline: 'none', boxSizing: 'border-box', gap: 6,
+      }}>
+        <span style={{ flex: 1, textAlign: 'left', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{selectedLabel}</span>
+        <i className={`ph ph-caret-${open ? 'up' : 'down'}`} style={{ fontSize: 14, color: 'var(--ink-400)', flexShrink: 0 }} />
+      </button>
+      {open && rect && ReactDOM.createPortal(
+        <div style={{
+          position: 'fixed', top: rect.bottom + 4, left: rect.left, width: rect.width, zIndex: 9999,
+          background: 'var(--surface-card)', borderRadius: 'var(--radius-md)',
+          boxShadow: '0 4px 16px rgba(0,0,0,0.12)', border: '1px solid var(--line-200)',
+          padding: 4, display: 'flex', flexDirection: 'column',
+        }}>
+          {options.map((o) => {
+            const val = o.value ?? o
+            const lbl = o.label ?? o
+            const active = val === value
+            return (
+              <button key={val} type="button" onClick={() => { onChange(val); setOpen(false) }} style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                padding: '8px 10px', border: 'none', borderRadius: 'var(--radius-sm)',
+                background: active ? 'var(--overlay-ink-04)' : 'transparent',
+                fontFamily: 'var(--font-sans)', fontSize: 'var(--text-body)',
+                fontWeight: active ? 'var(--fw-medium)' : undefined,
+                color: 'var(--ink-900)', cursor: 'pointer', width: '100%', textAlign: 'left',
+              }}>
+                <span>{lbl}</span>
+                {active && <i className="ph ph-check" style={{ fontSize: 14, color: 'var(--brand-green)' }} />}
+              </button>
+            )
+          })}
+        </div>,
+        portalRoot
+      )}
+    </div>
+  )
+}
+
+export { PanelHead, Stat, Tabs, FilterChips, Modal, Thread, Composer, StatusBadge, PhotoTile, useRepo, DSSelect }
