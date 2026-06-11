@@ -1,4 +1,5 @@
 import React from 'react'
+import ReactDOM from 'react-dom'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { runPageEnter } from '../lib/animations'
 
@@ -247,40 +248,122 @@ function HeaderSearch({ role }) {
   )
 }
 
+function NotifDrawer({ open, onClose, read }) {
+  const [tab, setTab] = React.useState('all')
+  const toneColor = { orange: 'var(--orange)', green: 'var(--brand-green)', neutral: 'var(--ink-300)' }
+
+  const filtered = NOTIFICATIONS.filter((n) => {
+    if (tab === 'unread') return n.unread && !read.has(n.id)
+    return true
+  })
+  const unreadCount = NOTIFICATIONS.filter((n) => n.unread && !read.has(n.id)).length
+
+  React.useEffect(() => {
+    if (!open) return
+    const handler = (e) => { if (e.key === 'Escape') onClose() }
+    document.addEventListener('keydown', handler)
+    return () => document.removeEventListener('keydown', handler)
+  }, [open, onClose])
+
+  return ReactDOM.createPortal(
+    <>
+      {open && (
+        <div onClick={onClose} style={{
+          position: 'fixed', inset: 0, zIndex: 299,
+          background: 'rgba(0,0,0,0.18)',
+          animation: 'notif-backdrop-in 180ms ease',
+        }} />
+      )}
+      <div role="dialog" aria-label="Pranešimai" aria-modal="true" style={{
+        position: 'fixed', top: 0, right: 0, bottom: 0, width: 380, maxWidth: '100vw',
+        background: 'var(--surface-card)', zIndex: 300,
+        boxShadow: '-4px 0 32px rgba(0,0,0,0.12)',
+        display: 'flex', flexDirection: 'column',
+        transform: open ? 'translateX(0)' : 'translateX(100%)',
+        transition: 'transform 240ms cubic-bezier(0.32,0,0.15,1)',
+        pointerEvents: open ? 'auto' : 'none',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 20px 14px', borderBottom: '1px solid var(--line-100)', flexShrink: 0 }}>
+          <span style={{ fontSize: 'var(--text-title)', fontWeight: 'var(--fw-semibold)', color: 'var(--ink-900)' }}>Pranešimai</span>
+          <button onClick={onClose} aria-label="Uždaryti" style={{ width: 32, height: 32, border: 'none', borderRadius: 'var(--radius-sm)', background: 'transparent', color: 'var(--ink-500)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <i className="ph ph-x" style={{ fontSize: 18 }} />
+          </button>
+        </div>
+
+        <div style={{ display: 'flex', gap: 4, padding: '10px 20px', borderBottom: '1px solid var(--line-100)', flexShrink: 0 }}>
+          {[
+            { key: 'all', label: 'Visi', count: NOTIFICATIONS.length },
+            { key: 'unread', label: 'Neskaityti', count: unreadCount },
+          ].map(({ key, label, count }) => (
+            <button key={key} onClick={() => setTab(key)} style={{
+              display: 'flex', alignItems: 'center', gap: 6, padding: '5px 12px',
+              border: 'none', borderRadius: 'var(--radius-sm)', cursor: 'pointer', fontFamily: 'var(--font-sans)',
+              fontSize: 'var(--text-small)', fontWeight: tab === key ? 'var(--fw-medium)' : 'var(--fw-regular)',
+              color: tab === key ? 'var(--ink-900)' : 'var(--ink-400)',
+              background: tab === key ? 'var(--surface-sunken)' : 'transparent',
+              transition: 'background 120ms, color 120ms',
+            }}>
+              {label}
+              {count > 0 && (
+                <span style={{ minWidth: 18, height: 18, borderRadius: 9, padding: '0 5px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 'var(--fw-semibold)', background: tab === key ? 'var(--brand-green)' : 'var(--overlay-ink-08)', color: tab === key ? '#fff' : 'var(--ink-500)' }}>
+                  {count}
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+
+        <div style={{ flex: 1, overflowY: 'auto' }}>
+          {filtered.length === 0 && (
+            <div style={{ padding: '48px 20px', textAlign: 'center', color: 'var(--ink-300)', fontSize: 'var(--text-small)' }}>
+              Pranešimų nėra
+            </div>
+          )}
+          {filtered.map((n) => (
+            <div key={n.id} style={{
+              display: 'flex', gap: 12, padding: '14px 20px', cursor: 'pointer',
+              borderBottom: '1px solid var(--line-100)',
+              position: 'relative',
+              transition: 'background 120ms',
+            }}
+              onMouseEnter={(e) => e.currentTarget.style.background = 'var(--surface-sunken)'}
+              onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+            >
+              <div style={{ width: 38, height: 38, borderRadius: 'var(--radius-sm)', background: 'var(--surface-sunken)', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: '0 0 auto' }}>
+                <i className={n.icon} style={{ fontSize: 18, color: toneColor[n.tone] }} aria-hidden="true" />
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 'var(--text-body)', fontWeight: 'var(--fw-medium)', color: 'var(--ink-900)', marginBottom: 2 }}>{n.title}</div>
+                <div style={{ fontSize: 'var(--text-small)', color: 'var(--ink-500)', lineHeight: 'var(--lh-body)', marginBottom: 4 }}>{n.body}</div>
+                <div style={{ fontSize: 'var(--text-small)', color: 'var(--ink-300)' }}>{n.time}</div>
+              </div>
+              {n.unread && !read.has(n.id) && (
+                <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--brand-green)', flex: '0 0 auto', marginTop: 5 }} />
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    </>,
+    document.body
+  )
+}
+
 function Header({ title, subtitle, actions, onMenu, role, breadcrumbs }) {
   const DS = getDS()
   const IconButton = DS.IconButton
   const navigate = useNavigate()  // eslint-disable-line
   const [notifOpen, setNotifOpen] = React.useState(false)
-  const [popoverPos, setPopoverPos] = React.useState({ top: 0, left: 8, width: 360 })
   const [read, setRead] = React.useState(new Set())
-  const notifRef = React.useRef(null)
 
   const r = ROLES[role] || ROLES.gyventojas
   const messagesPath = role === 'gyventojas' ? '/owner/zinutes' : '/admin/zinutes'
   const unreadCount = NOTIFICATIONS.filter((n) => n.unread && !read.has(n.id)).length
 
-  React.useEffect(() => {
-    if (!notifOpen) return
-    const handler = (e) => { if (notifRef.current && !notifRef.current.contains(e.target)) setNotifOpen(false) }
-    document.addEventListener('mousedown', handler)
-    return () => document.removeEventListener('mousedown', handler)
-  }, [notifOpen])
-
   const openNotif = () => {
-    if (notifRef.current && window.innerWidth <= 680) {
-      const rect = notifRef.current.getBoundingClientRect()
-      const w = Math.min(360, window.innerWidth - 16)
-      const left = Math.max(8, Math.min(rect.right - w, window.innerWidth - w - 8))
-      setPopoverPos({ mobile: true, top: rect.bottom + 8, left, width: w })
-    } else {
-      setPopoverPos({ mobile: false })
-    }
-    setNotifOpen((o) => !o)
+    setNotifOpen(true)
     setRead(new Set(NOTIFICATIONS.map((n) => n.id)))
   }
-
-  const toneColor = { orange: 'var(--orange)', green: 'var(--brand-green)', neutral: 'var(--ink-300)' }
 
   return (
     <header className="hdr">
@@ -313,54 +396,13 @@ function Header({ title, subtitle, actions, onMenu, role, breadcrumbs }) {
         <HeaderSearch role={role} />
         <span className="hdr__io">
           {IconButton && <>
-            <span ref={notifRef} style={{ position: 'relative' }}>
-              <IconButton icon="ph ph-bell" variant="soft" dot={unreadCount > 0} ariaLabel="Pranešimai"
-                onClick={openNotif} />
-              {notifOpen && (
-                <div style={popoverPos.mobile
-                  ? { position: 'fixed', top: popoverPos.top, left: popoverPos.left, width: popoverPos.width, zIndex: 200, background: 'var(--surface-card)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-lg)', border: '1px solid var(--line-200)', overflow: 'hidden' }
-                  : { position: 'absolute', top: 'calc(100% + 8px)', right: 0, width: 360, zIndex: 200, background: 'var(--surface-card)',
-                  borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-lg)',
-                  border: '1px solid var(--line-200)', overflow: 'hidden',
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px 10px', borderBottom: '1px solid var(--line-100)' }}>
-                    <span style={{ fontSize: 'var(--text-title)', fontWeight: 'var(--fw-medium)', color: 'var(--ink-900)' }}>Pranešimai</span>
-                    {unreadCount > 0 && <span style={{ fontSize: 'var(--text-small)', color: 'var(--brand-green-strong)', fontWeight: 'var(--fw-medium)' }}>{unreadCount} naujų</span>}
-                  </div>
-                  <div style={{ maxHeight: 360, overflowY: 'auto' }}>
-                    {NOTIFICATIONS.map((n) => (
-                      <div key={n.id} style={{
-                        display: 'flex', gap: 12, padding: '12px 16px', cursor: 'pointer',
-                        background: n.unread && !read.has(n.id) ? 'var(--brand-green-faint)' : 'transparent',
-                        borderBottom: '1px solid var(--line-100)',
-                        transition: 'background 120ms',
-                      }}
-                        onMouseEnter={(e) => e.currentTarget.style.background = 'var(--surface-sunken)'}
-                        onMouseLeave={(e) => e.currentTarget.style.background = n.unread && !read.has(n.id) ? 'var(--brand-green-faint)' : 'transparent'}
-                      >
-                        <div style={{ width: 36, height: 36, borderRadius: 'var(--radius-sm)', background: 'var(--surface-sunken)', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: '0 0 auto' }}>
-                          <i className={n.icon} style={{ fontSize: 18, color: toneColor[n.tone] }} aria-hidden="true" />
-                        </div>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontSize: 'var(--text-body)', fontWeight: 'var(--fw-medium)', color: 'var(--ink-900)', marginBottom: 2 }}>{n.title}</div>
-                          <div style={{ fontSize: 'var(--text-small)', color: 'var(--ink-500)', lineHeight: 'var(--lh-body)', marginBottom: 4 }}>{n.body}</div>
-                          <div style={{ fontSize: 'var(--text-small)', color: 'var(--ink-300)' }}>{n.time}</div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  <div style={{ padding: '10px 16px', borderTop: '1px solid var(--line-100)' }}>
-                    <button onClick={() => setNotifOpen(false)} style={{ width: '100%', padding: '8px', border: 'none', borderRadius: 'var(--radius-sm)', background: 'var(--surface-sunken)', color: 'var(--ink-500)', fontSize: 'var(--text-small)', cursor: 'pointer', fontFamily: 'var(--font-sans)' }}>
-                      Žiūrėti visus pranešimus
-                    </button>
-                  </div>
-                </div>
-              )}
-            </span>
+            <IconButton icon="ph ph-bell" variant="soft" dot={unreadCount > 0} ariaLabel="Pranešimai"
+              onClick={openNotif} />
             <IconButton icon="ph ph-chat-circle" variant="soft" dot ariaLabel="Žinutės" onClick={() => navigate(messagesPath)} />
           </>}
         </span>
       </div>
+      <NotifDrawer open={notifOpen} onClose={() => setNotifOpen(false)} read={read} />
     </header>
   )
 }

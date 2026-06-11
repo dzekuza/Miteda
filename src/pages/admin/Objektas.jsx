@@ -2,6 +2,29 @@ import React, { useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import Shell from '../../shared/Shell.jsx'
 import { useRepo, PanelHead, Stat, Tabs, PhotoTile, Modal, Composer, DSSelect } from '../../shared/UI.jsx'
+function ConfirmDialog({ title, message, confirmLabel = 'Ištrinti', onConfirm, onCancel }) {
+  const { Button } = window.MitedaDesignSystem_acc833
+  return (
+    <Modal title={title} onClose={onCancel} width={400}
+      footer={
+        <>
+          <Button variant="ghost" onClick={onCancel}>Atšaukti</Button>
+          <button type="button" onClick={onConfirm} style={{
+            display: 'inline-flex', alignItems: 'center', gap: 6,
+            height: 36, padding: '0 16px', borderRadius: 'var(--radius-md)',
+            border: 'none', background: 'var(--orange)', color: '#fff',
+            fontFamily: 'var(--font-sans)', fontSize: 'var(--text-body)',
+            fontWeight: 'var(--fw-medium)', cursor: 'pointer',
+          }}>
+            <i className="ph ph-trash" style={{ fontSize: 15 }} />
+            {confirmLabel}
+          </button>
+        </>
+      }>
+      <p style={{ margin: 0, fontSize: 'var(--text-body)', color: 'var(--ink-700)', lineHeight: 1.5 }}>{message}</p>
+    </Modal>
+  )
+}
 
 const UNIT_STATUS = {
   sold: { label: 'Parduotas', tone: 'success' },
@@ -69,6 +92,7 @@ function UnitDetailModal({ unit, idx, onClose, onSaveUnit }) {
     orientation,
     heating,
     hasParking,
+    parkingNr: unit.parkingNr || '',
     hasStorage,
     year: unit.year || '2024',
     energyClass: unit.energyClass || 'A+',
@@ -102,6 +126,7 @@ function UnitDetailModal({ unit, idx, onClose, onSaveUnit }) {
       orientation: form.orientation,
       heating: form.heating,
       hasParking: form.hasParking,
+      parkingNr: form.parkingNr,
       hasStorage: form.hasStorage,
       year: form.year,
       energyClass: form.energyClass,
@@ -254,7 +279,13 @@ function UnitDetailModal({ unit, idx, onClose, onSaveUnit }) {
             <span style={pillLbl}>Automobilio stovėjimas</span>
             {isEditing
               ? <input type="checkbox" checked={form.hasParking} onChange={(e) => set('hasParking', e.target.checked)} onClick={(e) => e.stopPropagation()} style={{ width: 16, height: 16, accentColor: 'var(--brand-green)', cursor: 'pointer', flexShrink: 0 }} />
-              : <span style={pillVal}>{hasParking ? 'Taip (1 vieta)' : 'Ne'}</span>}
+              : <span style={pillVal}>{(unit.hasParking !== undefined ? unit.hasParking : hasParking) ? 'Taip' : 'Ne'}</span>}
+          </div>
+          <div style={pill((unit.hasParking !== undefined ? unit.hasParking : hasParking) || isEditing)}>
+            <span style={pillLbl}>Stovėjimo aikštelės Nr.</span>
+            {isEditing
+              ? <input style={{ ...inp, opacity: form.hasParking ? 1 : 0.35 }} disabled={!form.hasParking} placeholder="pvz. P-12" value={form.parkingNr} onChange={(e) => set('parkingNr', e.target.value)} onClick={(e) => e.stopPropagation()} />
+              : <span style={{ ...pillVal, color: unit.parkingNr ? 'var(--ink-900)' : 'var(--ink-300)' }}>{unit.parkingNr || '—'}</span>}
           </div>
           <div style={{ ...pill(), cursor: isEditing ? 'pointer' : 'default' }} onClick={isEditing ? () => set('hasStorage', !form.hasStorage) : undefined}>
             <span style={pillLbl}>Sandėliukas</span>
@@ -364,21 +395,48 @@ function UnitDetailModal({ unit, idx, onClose, onSaveUnit }) {
 
       {/* Contracts tab */}
       {tab === 'contracts' && !isEditing && (
-        <div className="stack-sm" style={{ gap: 8 }}>
+        <div>
           {unit.st === 'free'
             ? <p style={{ color: 'var(--ink-400)', fontSize: 'var(--text-body)', padding: '16px 0' }}>Nėra aktyvių sutarčių — butas laisvas.</p>
-            : contracts.map((c) => (
-              <div key={c.id} className="row" style={{ marginTop: 0 }}>
-                <div style={{ width: 36, height: 36, borderRadius: 'var(--radius-sm)', background: 'var(--surface-sunken)', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: '0 0 auto' }}>
-                  <i className="ph ph-file-text" style={{ fontSize: 18, color: 'var(--ink-400)' }} aria-hidden="true" />
+            : <>
+                <div className="between" style={{ marginBottom: 12 }}>
+                  <span style={{ fontSize: 'var(--text-small)', color: 'var(--ink-400)' }}>{contracts.length} dokumentai</span>
+                  <button type="button"
+                    onClick={() => contracts.forEach((c, idx) => {
+                      const a = document.createElement('a')
+                      a.href = c.url || '#'
+                      a.download = `${c.id}-${c.type}.pdf`
+                      if (!c.url) { a.setAttribute('data-no-file', '1') }
+                      setTimeout(() => { if (!c.url) return; document.body.appendChild(a); a.click(); document.body.removeChild(a) }, idx * 120)
+                    })}
+                    style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', border: '1px solid var(--line-200)', borderRadius: 'var(--radius-md)', background: 'var(--surface-card)', cursor: 'pointer', fontFamily: 'var(--font-sans)', fontSize: 'var(--text-small)', color: 'var(--ink-700)' }}
+                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--brand-green)'; e.currentTarget.style.color = 'var(--brand-green)' }}
+                    onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--line-200)'; e.currentTarget.style.color = 'var(--ink-700)' }}>
+                    <i className="ph ph-download-simple" style={{ fontSize: 15 }} />
+                    Atsisiųsti visus
+                  </button>
                 </div>
-                <div className="row__main">
-                  <span className="row__title">{c.type}</span>
-                  <span className="row__meta">{c.id}<span className="dot">·</span>{c.date}</span>
+                <div className="stack-sm" style={{ gap: 8 }}>
+                  {contracts.map((c) => (
+                    <div key={c.id} className="row" style={{ marginTop: 0 }}>
+                      <div style={{ width: 36, height: 36, borderRadius: 'var(--radius-sm)', background: 'var(--surface-sunken)', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: '0 0 auto' }}>
+                        <i className="ph ph-file-text" style={{ fontSize: 18, color: 'var(--ink-400)' }} aria-hidden="true" />
+                      </div>
+                      <div className="row__main">
+                        <span className="row__title">{c.type}</span>
+                        <span className="row__meta">{c.id}<span className="dot">·</span>{c.date}</span>
+                      </div>
+                      <Badge tone={c.tone}>{c.status === 'signed' ? 'Pasirašyta' : 'Galioja'}</Badge>
+                      <a href={c.url || '#'} download={`${c.id}-${c.type}.pdf`}
+                        onClick={!c.url ? (e) => e.preventDefault() : undefined}
+                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 30, height: 30, borderRadius: 'var(--radius-sm)', color: c.url ? 'var(--ink-500)' : 'var(--ink-200)', flexShrink: 0, textDecoration: 'none' }}
+                        title={c.url ? 'Atsisiųsti' : 'Failas nepasiekiamas'}>
+                        <i className="ph ph-download-simple" style={{ fontSize: 16 }} />
+                      </a>
+                    </div>
+                  ))}
                 </div>
-                <Badge tone={c.tone}>{c.status === 'signed' ? 'Pasirašyta' : 'Galioja'}</Badge>
-              </div>
-            ))
+              </>
           }
         </div>
       )}
@@ -481,6 +539,8 @@ function AddUnitModal({ units, onAdd, onClose, initial, onSave }) {
     documents: [],
   })
   const [errors, setErrors] = useState({})
+  const [ownerSearch, setOwnerSearch] = useState('')
+  const [ownerDropOpen, setOwnerDropOpen] = useState(false)
 
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }))
 
@@ -510,28 +570,16 @@ function AddUnitModal({ units, onAdd, onClose, initial, onSave }) {
     onClose()
   }
 
-  const fld = (err) => ({
-    height: 40, padding: '0 12px', border: 'none', borderRadius: 'var(--radius-sm)',
-    background: 'var(--surface-card)',
-    boxShadow: err ? 'inset 0 0 0 1.5px var(--orange)' : 'inset 0 0 0 1px var(--line-200)',
-    fontFamily: 'var(--font-sans)', fontSize: 'var(--text-body)', color: 'var(--ink-900)',
-    outline: 'none', width: '100%', boxSizing: 'border-box',
+  const pill = (editable = true, err = false) => ({
+    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+    padding: '10px 12px', borderRadius: 'var(--radius-sm)', margin: '2px 0', minHeight: 38,
+    background: editable ? 'var(--surface-card)' : 'var(--surface-sunken)',
+    boxShadow: err ? 'inset 0 0 0 1.5px var(--orange)' : editable ? 'inset 0 0 0 1.5px var(--brand-green)' : 'inset 0 0 0 1px var(--line-100)',
   })
-
-  const selectFld = {
-    height: 40, padding: '0 32px 0 12px', border: 'none', borderRadius: 'var(--radius-sm)',
-    background: 'var(--surface-card)', boxShadow: 'inset 0 0 0 1px var(--line-200)',
-    fontFamily: 'var(--font-sans)', fontSize: 'var(--text-body)', color: 'var(--ink-900)',
-    outline: 'none', width: '100%', boxSizing: 'border-box', cursor: 'pointer',
-  }
-
-  const toggleRow = (label, checked, onChange) => (
-    <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', borderRadius: 'var(--radius-sm)', background: 'var(--surface-sunken)', cursor: 'pointer' }}>
-      <span style={{ fontSize: 'var(--text-body)', color: 'var(--ink-700)' }}>{label}</span>
-      <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)}
-        style={{ width: 18, height: 18, accentColor: 'var(--brand-green)', cursor: 'pointer' }} />
-    </label>
-  )
+  const pillLbl = { fontSize: 'var(--text-small)', color: 'var(--ink-400)', flexShrink: 0 }
+  const pillVal = { fontSize: 'var(--text-body)', fontWeight: 'var(--fw-medium)', color: 'var(--ink-900)' }
+  const inp = { border: 'none', background: 'transparent', textAlign: 'right', fontSize: 'var(--text-body)', fontWeight: 'var(--fw-medium)', color: 'var(--ink-900)', outline: 'none', fontFamily: 'var(--font-sans)', width: 140, minWidth: 0 }
+  const inlSel = { border: 'none', background: 'transparent', fontSize: 'var(--text-body)', fontWeight: 'var(--fw-medium)', color: 'var(--ink-900)', outline: 'none', cursor: 'pointer', fontFamily: 'var(--font-sans)', maxWidth: 200 }
 
   const photoInputRef = React.useRef()
   const docInputRef = React.useRef()
@@ -560,33 +608,34 @@ function AddUnitModal({ units, onAdd, onClose, initial, onSave }) {
 
       {/* --- Pagrindinis --- */}
       {tab === 'basic' && (
-        <div className="stack-sm" style={{ gap: 14 }}>
-          <div className="field" style={{ marginBottom: 0 }}>
-            <label>Buto numeris</label>
-            <input style={fld(errors.id)} value={form.id} placeholder="pvz. A-12"
-              onChange={(e) => set('id', e.target.value)} />
-            {errors.id && <span style={{ fontSize: 'var(--text-small)', color: 'var(--orange)' }}>{errors.id}</span>}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2px 8px' }}>
+          <div style={{ ...pill(true, !!errors.id), gridColumn: '1 / -1', flexDirection: errors.id ? 'column' : 'row', alignItems: errors.id ? 'flex-start' : 'center', gap: errors.id ? 4 : 0 }}>
+            <span style={pillLbl}>Buto numeris</span>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+              <input style={inp} value={form.id} placeholder="pvz. A-12" onChange={(e) => set('id', e.target.value)} />
+              {errors.id && <span style={{ fontSize: 'var(--text-small)', color: 'var(--orange)' }}>{errors.id}</span>}
+            </div>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-            <div className="field" style={{ marginBottom: 0 }}>
-              <label>Aukštas</label>
-              <input style={fld(errors.floor)} type="number" min="1" value={form.floor}
-                onChange={(e) => set('floor', e.target.value)} />
+          <div style={{ ...pill(true, !!errors.floor), flexDirection: errors.floor ? 'column' : 'row', alignItems: errors.floor ? 'flex-start' : 'center', gap: errors.floor ? 4 : 0 }}>
+            <span style={pillLbl}>Aukštas</span>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+              <input style={inp} type="number" min="1" value={form.floor} onChange={(e) => set('floor', e.target.value)} />
               {errors.floor && <span style={{ fontSize: 'var(--text-small)', color: 'var(--orange)' }}>{errors.floor}</span>}
             </div>
-            <div className="field" style={{ marginBottom: 0 }}>
-              <label>Plotas (m²)</label>
-              <input style={fld(errors.area)} type="number" min="10" value={form.area}
-                onChange={(e) => set('area', e.target.value)} />
+          </div>
+          <div style={{ ...pill(true, !!errors.area), flexDirection: errors.area ? 'column' : 'row', alignItems: errors.area ? 'flex-start' : 'center', gap: errors.area ? 4 : 0 }}>
+            <span style={pillLbl}>Plotas (m²)</span>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+              <input style={inp} type="number" min="10" value={form.area} onChange={(e) => set('area', e.target.value)} />
               {errors.area && <span style={{ fontSize: 'var(--text-small)', color: 'var(--orange)' }}>{errors.area}</span>}
             </div>
           </div>
-          <div className="field" style={{ marginBottom: 0 }}>
-            <label>Būsena</label>
-            <div style={{ display: 'flex', gap: 6 }}>
+          <div style={{ ...pill(false), gridColumn: '1 / -1', flexDirection: 'column', alignItems: 'flex-start', gap: 8 }}>
+            <span style={pillLbl}>Būsena</span>
+            <div style={{ display: 'flex', gap: 6, width: '100%' }}>
               {Object.entries(UNIT_STATUS).map(([key, { label, tone }]) => (
                 <button key={key} type="button" onClick={() => set('st', key)} style={{
-                  flex: 1, height: 36, border: 'none', borderRadius: 'var(--radius-sm)', cursor: 'pointer',
+                  flex: 1, height: 32, border: 'none', borderRadius: 'var(--radius-sm)', cursor: 'pointer',
                   fontFamily: 'var(--font-sans)', fontSize: 'var(--text-small)',
                   fontWeight: form.st === key ? 'var(--fw-medium)' : undefined,
                   background: form.st === key ? 'var(--overlay-ink-04)' : 'transparent',
@@ -604,58 +653,106 @@ function AddUnitModal({ units, onAdd, onClose, initial, onSave }) {
 
       {/* --- Techniniai duomenys --- */}
       {tab === 'tech' && (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-          <div className="field" style={{ marginBottom: 0 }}>
-            <label>Kambariai</label>
-            <input style={fld()} type="number" min="1" max="10" value={form.rooms}
-              onChange={(e) => set('rooms', e.target.value)} />
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2px 8px' }}>
+          <div style={pill()}>
+            <span style={pillLbl}>Kambariai</span>
+            <input style={inp} type="number" min="1" max="10" value={form.rooms} onChange={(e) => set('rooms', e.target.value)} />
           </div>
-          <div className="field" style={{ marginBottom: 0 }}>
-            <label>Orientacija</label>
-            <DSSelect value={form.orientation} onChange={(v) => set('orientation', v)} options={ORIENTATIONS} />
+          <div style={pill()}>
+            <span style={pillLbl}>Orientacija</span>
+            <select style={inlSel} value={form.orientation} onChange={(e) => set('orientation', e.target.value)}>
+              {ORIENTATIONS.map(o => <option key={o} value={o}>{o}</option>)}
+            </select>
           </div>
-          <div className="field" style={{ marginBottom: 0 }}>
-            <label>Šildymas</label>
-            <DSSelect value={form.heating} onChange={(v) => set('heating', v)} options={HEATINGS} />
+          <div style={pill()}>
+            <span style={pillLbl}>Šildymas</span>
+            <select style={inlSel} value={form.heating} onChange={(e) => set('heating', e.target.value)}>
+              {HEATINGS.map(h => <option key={h} value={h}>{h}</option>)}
+            </select>
           </div>
-          <div className="field" style={{ marginBottom: 0 }}>
-            <label>Energetinė klasė</label>
-            <DSSelect value={form.energyClass} onChange={(v) => set('energyClass', v)} options={ENERGY_CLASSES} />
+          <div style={pill()}>
+            <span style={pillLbl}>Energetinė klasė</span>
+            <select style={inlSel} value={form.energyClass} onChange={(e) => set('energyClass', e.target.value)}>
+              {ENERGY_CLASSES.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
           </div>
-          <div className="field" style={{ marginBottom: 0 }}>
-            <label>Statybos metai</label>
-            <input style={fld()} type="number" min="1900" max="2100" value={form.year}
-              onChange={(e) => set('year', e.target.value)} />
+          <div style={pill()}>
+            <span style={pillLbl}>Statybos metai</span>
+            <input style={inp} type="number" min="1900" max="2100" value={form.year} onChange={(e) => set('year', e.target.value)} />
           </div>
-          <div style={{ gridColumn: '1 / -1', display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {toggleRow('Automobilio stovėjimas', form.hasParking, (v) => set('hasParking', v))}
-            {toggleRow('Sandėliukas', form.hasStorage, (v) => set('hasStorage', v))}
-          </div>
+          <label style={{ ...pill(), cursor: 'pointer' }} onClick={() => set('hasParking', !form.hasParking)}>
+            <span style={pillLbl}>Automobilio stovėjimas</span>
+            <input type="checkbox" checked={form.hasParking} onChange={(e) => set('hasParking', e.target.checked)} onClick={(e) => e.stopPropagation()}
+              style={{ width: 16, height: 16, accentColor: 'var(--brand-green)', cursor: 'pointer', flexShrink: 0 }} />
+          </label>
+          <label style={{ ...pill(), cursor: 'pointer' }} onClick={() => set('hasStorage', !form.hasStorage)}>
+            <span style={pillLbl}>Sandėliukas</span>
+            <input type="checkbox" checked={form.hasStorage} onChange={(e) => set('hasStorage', e.target.checked)} onClick={(e) => e.stopPropagation()}
+              style={{ width: 16, height: 16, accentColor: 'var(--brand-green)', cursor: 'pointer', flexShrink: 0 }} />
+          </label>
         </div>
       )}
 
       {/* --- Savininkas --- */}
       {tab === 'owner' && (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-          <div className="field" style={{ marginBottom: 0, gridColumn: '1 / -1' }}>
-            <label>Vardas Pavardė</label>
-            <input style={fld()} value={form.ownerName} placeholder="Lukas Petrauskas"
-              onChange={(e) => set('ownerName', e.target.value)} />
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2px 8px' }}>
+          {/* Searchable existing owner picker */}
+          <div style={{ gridColumn: '1 / -1', marginBottom: 4 }}>
+            <div style={{ position: 'relative' }}>
+              <i className="ph ph-magnifying-glass" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 15, color: 'var(--ink-400)', pointerEvents: 'none' }} />
+              <input
+                type="text"
+                placeholder="Ieškoti esamo savininko…"
+                value={ownerSearch}
+                onFocus={() => setOwnerDropOpen(true)}
+                onChange={(e) => { setOwnerSearch(e.target.value); setOwnerDropOpen(true) }}
+                onBlur={() => setTimeout(() => setOwnerDropOpen(false), 120)}
+                style={{ width: '100%', paddingLeft: 36, paddingRight: 12, height: 38, border: 'none', borderRadius: 'var(--radius-sm)', background: 'var(--surface-sunken)', boxShadow: 'inset 0 0 0 1px var(--line-200)', fontFamily: 'var(--font-sans)', fontSize: 'var(--text-body)', color: 'var(--ink-900)', outline: 'none', boxSizing: 'border-box' }}
+              />
+              {ownerDropOpen && (
+                <div style={{
+                  position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0, zIndex: 200,
+                  background: 'var(--surface-card)', border: '1px solid var(--line-200)',
+                  borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-lg)',
+                  overflow: 'hidden',
+                }}>
+                  {OWNERS.filter((o) => o.name.toLowerCase().includes(ownerSearch.toLowerCase())).map((o) => (
+                    <button key={o.name} type="button"
+                      onMouseDown={() => { set('ownerName', o.name); set('ownerPhone', o.phone); set('ownerEmail', o.email); set('ownerSince', o.since); setOwnerSearch(o.name); setOwnerDropOpen(false) }}
+                      style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '10px 14px', border: 'none', background: 'transparent', cursor: 'pointer', fontFamily: 'var(--font-sans)', textAlign: 'left' }}
+                      onMouseEnter={(e) => e.currentTarget.style.background = 'var(--surface-sunken)'}
+                      onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
+                      <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--surface-sunken)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 'var(--fw-medium)', color: 'var(--ink-500)', flex: '0 0 auto' }}>
+                        {o.name.split(' ').map((n) => n[0]).join('').slice(0, 2)}
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column' }}>
+                        <span style={{ fontSize: 'var(--text-body)', color: 'var(--ink-900)', fontWeight: 'var(--fw-medium)' }}>{o.name}</span>
+                        <span style={{ fontSize: 'var(--text-small)', color: 'var(--ink-400)' }}>{o.phone}</span>
+                      </div>
+                    </button>
+                  ))}
+                  {OWNERS.filter((o) => o.name.toLowerCase().includes(ownerSearch.toLowerCase())).length === 0 && (
+                    <div style={{ padding: '12px 14px', fontSize: 'var(--text-body)', color: 'var(--ink-400)' }}>Nerasta. Įveskite duomenis žemiau.</div>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
-          <div className="field" style={{ marginBottom: 0 }}>
-            <label>Telefonas</label>
-            <input style={fld()} value={form.ownerPhone} placeholder="+370 600 00000"
-              onChange={(e) => set('ownerPhone', e.target.value)} />
+          <div style={{ ...pill(), gridColumn: '1 / -1' }}>
+            <span style={pillLbl}>Vardas Pavardė</span>
+            <input style={{ ...inp, width: 240 }} value={form.ownerName} placeholder="Lukas Petrauskas" onChange={(e) => { set('ownerName', e.target.value); setOwnerSearch(e.target.value) }} />
           </div>
-          <div className="field" style={{ marginBottom: 0 }}>
-            <label>El. paštas</label>
-            <input style={fld()} type="email" value={form.ownerEmail} placeholder="vardas@gmail.com"
-              onChange={(e) => set('ownerEmail', e.target.value)} />
+          <div style={pill()}>
+            <span style={pillLbl}>Telefonas</span>
+            <input style={inp} value={form.ownerPhone} placeholder="+370 600 00000" onChange={(e) => set('ownerPhone', e.target.value)} />
           </div>
-          <div className="field" style={{ marginBottom: 0 }}>
-            <label>Savininkas nuo</label>
-            <input style={fld()} type="date" value={form.ownerSince}
-              onChange={(e) => set('ownerSince', e.target.value)} />
+          <div style={pill()}>
+            <span style={pillLbl}>El. paštas</span>
+            <input style={inp} type="email" value={form.ownerEmail} placeholder="vardas@gmail.com" onChange={(e) => set('ownerEmail', e.target.value)} />
+          </div>
+          <div style={pill()}>
+            <span style={pillLbl}>Savininkas nuo</span>
+            <input style={inp} type="date" value={form.ownerSince} onChange={(e) => set('ownerSince', e.target.value)} />
           </div>
         </div>
       )}
@@ -741,10 +838,12 @@ function UnitsTab({ P }) {
   const [adding, setAdding] = useState(false)
   const [editing, setEditing] = useState(null)
   const [popover, setPopover] = useState(null)
+  const [confirmDelete, setConfirmDelete] = useState(null)
   const [search, setSearch] = useState('')
   const [filterType, setFilterType] = useState('all')
   const [filterResidents, setFilterResidents] = useState('all')
   const [filterPhotos, setFilterPhotos] = useState('all')
+  const [openDropdown, setOpenDropdown] = useState(null)
 
   React.useEffect(() => {
     if (popover === null) return
@@ -752,6 +851,13 @@ function UnitsTab({ P }) {
     document.addEventListener('mousedown', close)
     return () => document.removeEventListener('mousedown', close)
   }, [popover])
+
+  React.useEffect(() => {
+    if (openDropdown === null) return
+    const close = (e) => { if (!e.target.closest('[data-filter-dropdown]')) setOpenDropdown(null) }
+    document.addEventListener('mousedown', close)
+    return () => document.removeEventListener('mousedown', close)
+  }, [openDropdown])
 
   const selCount = Object.values(sel).filter(Boolean).length
   const allSelected = units.length > 0 && selCount === units.length
@@ -799,45 +905,62 @@ function UnitsTab({ P }) {
 
   return (
     <div>
-      <div className="between" style={{ marginBottom: 12, gap: 12 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, overflowX: 'auto', minWidth: 0, scrollbarWidth: 'none' }}>
-          <div style={{ position: 'relative', flexShrink: 0, width: 200 }}>
-            <i className="ph ph-magnifying-glass" style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--ink-400)', fontSize: 16, pointerEvents: 'none' }} />
-            <input
-              type="text"
-              placeholder="Ieškoti buto, savininko…"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              style={{ width: '100%', paddingLeft: 32, paddingRight: search ? 28 : 10, paddingTop: 7, paddingBottom: 7, border: '1px solid var(--line-200)', borderRadius: 'var(--radius-md)', fontSize: 'var(--text-body)', background: 'var(--surface-card)', color: 'var(--ink-900)', outline: 'none', fontFamily: 'var(--font-sans)', boxSizing: 'border-box' }}
-            />
-            {search && (
-              <button type="button" onClick={() => setSearch('')} style={{ position: 'absolute', right: 6, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', padding: 2, color: 'var(--ink-400)', display: 'flex', alignItems: 'center' }}>
-                <i className="ph ph-x" style={{ fontSize: 14 }} />
-              </button>
-            )}
-          </div>
-          <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
-            {TYPE_FILTERS.map(({ value, label }) => (
-              <button key={value} type="button" onClick={() => setFilterType(value)} style={{ padding: '6px 12px', borderRadius: 'var(--radius-md)', border: '1px solid', borderColor: filterType === value ? 'var(--brand-green)' : 'var(--line-200)', background: filterType === value ? 'var(--brand-green-faint)' : 'var(--surface-card)', color: filterType === value ? 'var(--brand-green-dark, var(--brand-green))' : 'var(--ink-600)', fontFamily: 'var(--font-sans)', fontSize: 'var(--text-small)', cursor: 'pointer', fontWeight: filterType === value ? 'var(--fw-medium)' : 'var(--fw-regular)' }}>
-                {label}
-              </button>
-            ))}
-          </div>
-          <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
-            {RESIDENTS_FILTERS.map(({ value, label }) => (
-              <button key={value} type="button" onClick={() => setFilterResidents(value)} style={{ padding: '6px 12px', borderRadius: 'var(--radius-md)', border: '1px solid', borderColor: filterResidents === value ? 'var(--brand-green)' : 'var(--line-200)', background: filterResidents === value ? 'var(--brand-green-faint)' : 'var(--surface-card)', color: filterResidents === value ? 'var(--brand-green-dark, var(--brand-green))' : 'var(--ink-600)', fontFamily: 'var(--font-sans)', fontSize: 'var(--text-small)', cursor: 'pointer', fontWeight: filterResidents === value ? 'var(--fw-medium)' : 'var(--fw-regular)' }}>
-                {label}
-              </button>
-            ))}
-          </div>
-          <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
-            {PHOTOS_FILTERS.map(({ value, label }) => (
-              <button key={value} type="button" onClick={() => setFilterPhotos(value)} style={{ padding: '6px 12px', borderRadius: 'var(--radius-md)', border: '1px solid', borderColor: filterPhotos === value ? 'var(--brand-green)' : 'var(--line-200)', background: filterPhotos === value ? 'var(--brand-green-faint)' : 'var(--surface-card)', color: filterPhotos === value ? 'var(--brand-green-dark, var(--brand-green))' : 'var(--ink-600)', fontFamily: 'var(--font-sans)', fontSize: 'var(--text-small)', cursor: 'pointer', fontWeight: filterPhotos === value ? 'var(--fw-medium)' : 'var(--fw-regular)' }}>
-                {label}
-              </button>
-            ))}
-          </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
+        <div style={{ position: 'relative', flexShrink: 0, width: 200 }}>
+          <i className="ph ph-magnifying-glass" style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--ink-400)', fontSize: 16, pointerEvents: 'none' }} />
+          <input
+            type="text"
+            placeholder="Ieškoti buto, savininko…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            style={{ width: '100%', paddingLeft: 32, paddingRight: search ? 28 : 10, paddingTop: 7, paddingBottom: 7, border: '1px solid var(--line-200)', borderRadius: 'var(--radius-md)', fontSize: 'var(--text-body)', background: 'var(--surface-card)', color: 'var(--ink-900)', outline: 'none', fontFamily: 'var(--font-sans)', boxSizing: 'border-box' }}
+          />
+          {search && (
+            <button type="button" onClick={() => setSearch('')} style={{ position: 'absolute', right: 6, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', padding: 2, color: 'var(--ink-400)', display: 'flex', alignItems: 'center' }}>
+              <i className="ph ph-x" style={{ fontSize: 14 }} />
+            </button>
+          )}
         </div>
+        {[
+          { key: 'type', value: filterType, set: setFilterType, options: TYPE_FILTERS },
+          { key: 'residents', value: filterResidents, set: setFilterResidents, options: RESIDENTS_FILTERS },
+          { key: 'photos', value: filterPhotos, set: setFilterPhotos, options: PHOTOS_FILTERS },
+        ].map(({ key, value, set, options }) => {
+          const active = value !== 'all'
+          const currentLabel = options.find(o => o.value === value)?.label || options[0].label
+          const isOpen = openDropdown === key
+          const btnStyle = {
+            display: 'flex', alignItems: 'center', gap: 6,
+            padding: '6px 12px', borderRadius: 'var(--radius-md)',
+            border: `1.5px solid ${active ? 'var(--brand-green)' : 'var(--line-200)'}`,
+            background: active ? 'var(--brand-green-faint)' : 'var(--surface-card)',
+            color: active ? 'var(--brand-green-dark, var(--brand-green))' : 'var(--ink-600)',
+            fontFamily: 'var(--font-sans)', fontSize: 'var(--text-small)',
+            cursor: 'pointer', fontWeight: active ? 'var(--fw-medium)' : 'var(--fw-regular)',
+            whiteSpace: 'nowrap',
+          }
+          return (
+            <div key={key} data-filter-dropdown style={{ position: 'relative' }}>
+              <button type="button" style={btnStyle} onClick={() => setOpenDropdown(isOpen ? null : key)}>
+                {currentLabel}
+                <i className={`ph ph-caret-${isOpen ? 'up' : 'down'}`} style={{ fontSize: 11, opacity: 0.7 }} />
+              </button>
+              {isOpen && (
+                <div style={{ position: 'absolute', top: 'calc(100% + 4px)', left: 0, zIndex: 200, background: 'var(--surface-card)', borderRadius: 'var(--radius-md)', boxShadow: '0 4px 20px rgba(0,0,0,0.12)', border: '1px solid var(--line-100)', minWidth: 150, padding: 4 }}>
+                  {options.map(o => (
+                    <button key={o.value} type="button"
+                      onClick={() => { set(o.value); setOpenDropdown(null) }}
+                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', textAlign: 'left', padding: '8px 12px', borderRadius: 'var(--radius-sm)', border: 'none', background: value === o.value ? 'var(--brand-green-faint)' : 'transparent', color: value === o.value ? 'var(--brand-green-dark, var(--brand-green))' : 'var(--ink-700)', fontFamily: 'var(--font-sans)', fontSize: 'var(--text-small)', cursor: 'pointer', fontWeight: value === o.value ? 'var(--fw-medium)' : 'var(--fw-regular)' }}>
+                      {o.label}
+                      {value === o.value && <i className="ph ph-check" style={{ fontSize: 13 }} />}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )
+        })}
+        <div style={{ flex: 1 }} />
         <Button variant="accent" size="sm" iconLeft="ph ph-plus" onClick={() => setAdding(true)}>Pridėti</Button>
       </div>
       <div style={{ marginBottom: 12 }}>
@@ -909,7 +1032,7 @@ function UnitsTab({ P }) {
                           }}>
                             {[
                               { icon: 'ph ph-pencil', label: 'Redaguoti', action: () => { setEditing({ idx: i, unit: u }); setPopover(null) } },
-                              { icon: 'ph ph-trash', label: 'Ištrinti', danger: true, action: () => { deleteUnit(i); setPopover(null) } },
+                              { icon: 'ph ph-trash', label: 'Ištrinti', danger: true, action: () => { setConfirmDelete(i); setPopover(null) } },
                             ].map(({ icon, label, action, danger }) => (
                               <button key={label} type="button" onClick={action} style={{
                                 display: 'flex', alignItems: 'center', gap: 10, width: '100%',
@@ -949,6 +1072,14 @@ function UnitsTab({ P }) {
           idx={detail.idx}
           onClose={() => setDetail(null)}
           onSaveUnit={(updated) => { setUnits((us) => us.map((u, i) => i === detail.idx ? updated : u)) }}
+        />
+      )}
+      {confirmDelete !== null && (
+        <ConfirmDialog
+          title="Ištrinti butą"
+          message={`Ar tikrai norite ištrinti butą ${units[confirmDelete]?.id}? Šio veiksmo atšaukti negalėsite.`}
+          onConfirm={() => { deleteUnit(confirmDelete); setConfirmDelete(null) }}
+          onCancel={() => setConfirmDelete(null)}
         />
       )}
     </div>
@@ -1109,9 +1240,71 @@ function ResidentDetailModal({ resident, onClose, onSave }) {
   )
 }
 
-function ResidentsTab() {
+function AddResidentModal({ onClose, onAdd, units = [] }) {
+  const { Button } = window.MitedaDesignSystem_acc833
+  const fld = { height: 36, padding: '0 10px', border: 'none', borderRadius: 'var(--radius-sm)', background: 'var(--surface-card)', boxShadow: 'inset 0 0 0 1px var(--line-200)', fontFamily: 'var(--font-sans)', fontSize: 'var(--text-body)', color: 'var(--ink-900)', outline: 'none', width: '100%', boxSizing: 'border-box' }
+  const [form, setForm] = useState({ name: '', phone: '', email: '', apt: '', role: 'Savininkas' })
+  const [aptSearch, setAptSearch] = useState('')
+  const [aptOpen, setAptOpen] = useState(false)
+  const set = (k, v) => setForm((f) => ({ ...f, [k]: v }))
+  const submit = () => { if (!form.name.trim() || !form.apt.trim()) return; onAdd(form); onClose() }
+  const Row = ({ label, children }) => (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+      <span style={{ fontSize: 'var(--text-small)', color: 'var(--ink-400)' }}>{label}</span>
+      {children}
+    </div>
+  )
+  const filteredUnits = units.filter((id) => id.toLowerCase().includes(aptSearch.toLowerCase()))
+  return (
+    <Modal title="Pridėti gyventoją" onClose={onClose} width={520}
+      footer={<><Button variant="ghost" onClick={onClose}>Atšaukti</Button><Button variant="accent" iconLeft="ph ph-plus" onClick={submit}>Pridėti</Button></>}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+        <Row label="Vardas, pavardė"><input style={fld} value={form.name} onChange={(e) => set('name', e.target.value)} placeholder="Vardas Pavardė" /></Row>
+        <Row label="Butas">
+          {units.length > 0 ? (
+            <div style={{ position: 'relative' }}>
+              <input style={{ ...fld, paddingRight: 28 }} value={aptSearch || form.apt} placeholder="Ieškoti buto…"
+                onFocus={() => setAptOpen(true)}
+                onChange={(e) => { setAptSearch(e.target.value); set('apt', ''); setAptOpen(true) }}
+              />
+              {form.apt && !aptSearch && (
+                <i className="ph ph-check" style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', fontSize: 14, color: 'var(--brand-green)', pointerEvents: 'none' }} />
+              )}
+              {aptOpen && filteredUnits.length > 0 && (
+                <div onMouseDown={(e) => e.preventDefault()} style={{
+                  position: 'absolute', top: 'calc(100% + 2px)', left: 0, right: 0, zIndex: 200,
+                  background: 'var(--surface-card)', border: '1px solid var(--line-200)',
+                  borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-lg)',
+                  maxHeight: 180, overflowY: 'auto',
+                }}>
+                  {filteredUnits.map((id) => (
+                    <button key={id} type="button" onMouseDown={() => { set('apt', id); setAptSearch(''); setAptOpen(false) }}
+                      style={{ display: 'block', width: '100%', textAlign: 'left', padding: '8px 12px', border: 'none',
+                        background: form.apt === id ? 'var(--brand-green-faint)' : 'transparent',
+                        color: form.apt === id ? 'var(--brand-green-dark, var(--brand-green))' : 'var(--ink-800)',
+                        fontFamily: 'var(--font-sans)', fontSize: 'var(--text-body)', cursor: 'pointer',
+                      }}>
+                      {id}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          ) : (
+            <input style={fld} value={form.apt} onChange={(e) => set('apt', e.target.value)} placeholder="A-1" />
+          )}
+        </Row>
+        <Row label="Telefonas"><input style={fld} value={form.phone} onChange={(e) => set('phone', e.target.value)} placeholder="+370 6xx xxxxx" /></Row>
+        <Row label="El. paštas"><input style={fld} value={form.email} onChange={(e) => set('email', e.target.value)} placeholder="vardas@gmail.com" /></Row>
+        <Row label="Rolė"><DSSelect value={form.role} onChange={(v) => set('role', v)} options={['Savininkas', 'Savininkė', 'Nuomininkas', 'Nuomininkė']} /></Row>
+      </div>
+    </Modal>
+  )
+}
+
+function ResidentsTab({ P }) {
   const DS = window.MitedaDesignSystem_acc833
-  const { Avatar, Badge, IconButton } = DS
+  const { Avatar, Badge, IconButton, Button } = DS
 
   const [residents, setResidents] = useState([
     { name: 'Lukas Petrauskas', apt: 'B-12', role: 'Savininkas', phone: '+370 612 34567' },
@@ -1121,14 +1314,21 @@ function ResidentsTab() {
     { name: 'Tomas Petraitis', apt: 'B-9', role: 'Savininkas', phone: '+370 655 11447' },
   ])
   const [selected, setSelected] = useState(null)
+  const [adding, setAdding] = useState(false)
 
   const saveResident = (updated) => {
     setResidents((rs) => rs.map((r) => r.name === selected.name && r.apt === selected.apt ? updated : r))
     setSelected(updated)
   }
+  const addResident = (r) => setResidents((rs) => [...rs, r])
+  const unitIds = P ? makeUnits(P).map((u) => u.id) : []
 
   return (
     <>
+      <div className="between" style={{ marginBottom: 12 }}>
+        <span />
+        <Button variant="accent" size="sm" iconLeft="ph ph-plus" onClick={() => setAdding(true)}>Pridėti gyventoją</Button>
+      </div>
       <div className="stack-sm" style={{ gap: 4 }}>
         {residents.map((r, i) => (
           <div key={i} className="row" style={{ cursor: 'pointer' }} onClick={() => setSelected(r)}>
@@ -1150,34 +1350,142 @@ function ResidentsTab() {
           onSave={saveResident}
         />
       )}
+      {adding && <AddResidentModal units={unitIds} onClose={() => setAdding(false)} onAdd={addResident} />}
     </>
   )
 }
 
 function PhotosTab() {
+  const { Button } = window.MitedaDesignSystem_acc833
+  const fileRef = React.useRef()
+  const [photos, setPhotos] = useState(PHOTO_COLS)
+  const addPhotos = (e) => {
+    const files = Array.from(e.target.files || [])
+    const urls = files.map((f) => URL.createObjectURL(f))
+    setPhotos((p) => [...p, ...urls])
+    e.target.value = ''
+  }
   return (
-    <div className="grid-auto" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 12 }}>
-      {PHOTO_COLS.map((col, i) => <PhotoTile key={i} color={col} />)}
+    <div>
+      <div className="between" style={{ marginBottom: 12 }}>
+        <span />
+        <Button variant="accent" size="sm" iconLeft="ph ph-plus" onClick={() => fileRef.current?.click()}>Pridėti nuotrauką</Button>
+        <input ref={fileRef} type="file" accept="image/*" multiple style={{ display: 'none' }} onChange={addPhotos} />
+      </div>
+      <div className="grid-auto" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 12 }}>
+        {photos.map((col, i) => <PhotoTile key={i} color={col} />)}
+      </div>
     </div>
+  )
+}
+
+function AddContactModal({ onClose, onAdd }) {
+  const { Button } = window.MitedaDesignSystem_acc833
+  const fld = { height: 36, padding: '0 10px', border: 'none', borderRadius: 'var(--radius-sm)', background: 'var(--surface-card)', boxShadow: 'inset 0 0 0 1px var(--line-200)', fontFamily: 'var(--font-sans)', fontSize: 'var(--text-body)', color: 'var(--ink-900)', outline: 'none', width: '100%', boxSizing: 'border-box' }
+  const [form, setForm] = useState({ name: '', role: '', company: '', phone: '' })
+  const set = (k, v) => setForm((f) => ({ ...f, [k]: v }))
+  const submit = () => { if (!form.name.trim()) return; onAdd(form); onClose() }
+  const Row = ({ label, children }) => (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+      <span style={{ fontSize: 'var(--text-small)', color: 'var(--ink-400)' }}>{label}</span>
+      {children}
+    </div>
+  )
+  return (
+    <Modal title="Pridėti kontaktą" onClose={onClose} width={480}
+      footer={<><Button variant="ghost" onClick={onClose}>Atšaukti</Button><Button variant="accent" iconLeft="ph ph-plus" onClick={submit}>Pridėti</Button></>}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+        <Row label="Vardas, pavardė"><input style={fld} value={form.name} onChange={(e) => set('name', e.target.value)} placeholder="Vardas Pavardė" /></Row>
+        <Row label="Telefonas"><input style={fld} value={form.phone} onChange={(e) => set('phone', e.target.value)} placeholder="+370 6xx xxxxx" /></Row>
+        <Row label="Rolė"><input style={fld} value={form.role} onChange={(e) => set('role', e.target.value)} placeholder="Vadybininkas" /></Row>
+        <Row label="Įmonė"><input style={fld} value={form.company} onChange={(e) => set('company', e.target.value)} placeholder="UAB Įmonė" /></Row>
+      </div>
+    </Modal>
   )
 }
 
 function ContactsTab() {
   const DS = window.MitedaDesignSystem_acc833
-  const { Avatar, IconButton } = DS
+  const { Avatar, IconButton, Button } = DS
 
   const [contactsData] = useRepo('listContacts')
-  const contacts = contactsData || []
+  const [extra, setExtra] = useState([])
+  const [adding, setAdding] = useState(false)
+  const contacts = [...(contactsData || []), ...extra]
   return (
-    <div className="grid-2" style={{ alignItems: 'start' }}>
-      {contacts.slice(0, 4).map((c, i) => (
-        <div key={i} className="row">
-          <Avatar name={c.name} size={40} />
-          <div className="row__main"><span className="row__title">{c.name}</span><span className="row__meta">{c.role}<span className="dot">·</span>{c.company}</span></div>
-          <IconButton icon="ph ph-phone" variant="solid" size="sm" ariaLabel="Skambinti" />
-        </div>
-      ))}
+    <div>
+      <div className="between" style={{ marginBottom: 12 }}>
+        <span />
+        <Button variant="accent" size="sm" iconLeft="ph ph-plus" onClick={() => setAdding(true)}>Pridėti kontaktą</Button>
+      </div>
+      <div className="grid-2" style={{ alignItems: 'stretch' }}>
+        {contacts.slice(0, 4 + extra.length).map((c, i) => (
+          <div key={i} className="row" style={{ marginTop: 0, alignItems: 'center' }}>
+            <Avatar name={c.name} size={40} />
+            <div className="row__main"><span className="row__title">{c.name}</span><span className="row__meta">{c.role}<span className="dot">·</span>{c.company}</span></div>
+            <IconButton icon="ph ph-phone" variant="solid" size="sm" ariaLabel="Skambinti" />
+          </div>
+        ))}
+      </div>
+      {adding && <AddContactModal onClose={() => setAdding(false)} onAdd={(c) => setExtra((e) => [...e, c])} />}
     </div>
+  )
+}
+
+function EditObjektasModal({ P, onSave, onClose }) {
+  const { Button } = window.MitedaDesignSystem_acc833
+  const [form, setForm] = useState({ name: P.name, address: P.address, units: String(P.units), coverImage: P.coverImage || null })
+  const set = (k, v) => setForm((f) => ({ ...f, [k]: v }))
+  const fileRef = React.useRef()
+  const fld = { height: 40, padding: '0 12px', border: 'none', borderRadius: 'var(--radius-sm)', background: 'var(--surface-card)', boxShadow: 'inset 0 0 0 1px var(--line-200)', fontFamily: 'var(--font-sans)', fontSize: 'var(--text-body)', color: 'var(--ink-900)', outline: 'none', width: '100%', boxSizing: 'border-box' }
+
+  const handleFile = (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    set('coverImage', URL.createObjectURL(file))
+    e.target.value = ''
+  }
+
+  return (
+    <Modal title="Redaguoti objektą" subtitle={P.name} onClose={onClose} width={480}
+      footer={<><Button variant="ghost" onClick={onClose}>Atšaukti</Button><Button variant="accent" iconLeft="ph ph-floppy-disk" onClick={() => { onSave({ ...P, name: form.name.trim() || P.name, address: form.address.trim() || P.address, units: +form.units || P.units, coverImage: form.coverImage }); onClose() }}>Išsaugoti</Button></>}>
+      <div className="stack-sm" style={{ gap: 14 }}>
+        <div className="field" style={{ marginBottom: 0 }}>
+          <label>Viršelio nuotrauka</label>
+          <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleFile} />
+          <div onClick={() => fileRef.current?.click()} style={{ position: 'relative', height: 140, borderRadius: 'var(--radius-md)', overflow: 'hidden', background: form.coverImage ? `url(${form.coverImage}) center/cover no-repeat` : 'var(--surface-sunken)', border: '1.5px dashed var(--line-200)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+            {!form.coverImage
+              ? <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, color: 'var(--ink-300)' }}>
+                  <i className="ph ph-image" style={{ fontSize: 32 }} />
+                  <span style={{ fontSize: 'var(--text-small)' }}>Pasirinkite nuotrauką</span>
+                </div>
+              : <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <span style={{ color: '#fff', fontSize: 'var(--text-small)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <i className="ph ph-pencil-simple" style={{ fontSize: 16 }} /> Keisti nuotrauką
+                  </span>
+                </div>
+            }
+          </div>
+          {form.coverImage && (
+            <button type="button" onClick={() => set('coverImage', null)} style={{ marginTop: 6, border: 'none', background: 'none', cursor: 'pointer', fontSize: 'var(--text-small)', color: 'var(--ink-400)', display: 'flex', alignItems: 'center', gap: 4, padding: 0 }}>
+              <i className="ph ph-x" style={{ fontSize: 13 }} /> Pašalinti nuotrauką
+            </button>
+          )}
+        </div>
+        <div className="field" style={{ marginBottom: 0 }}>
+          <label>Objekto pavadinimas</label>
+          <input style={fld} value={form.name} onChange={(e) => set('name', e.target.value)} placeholder="pvz. Vilniaus g. 12" />
+        </div>
+        <div className="field" style={{ marginBottom: 0 }}>
+          <label>Adresas</label>
+          <input style={fld} value={form.address} onChange={(e) => set('address', e.target.value)} placeholder="pvz. Vilniaus g. 12, Vilnius" />
+        </div>
+        <div className="field" style={{ marginBottom: 0 }}>
+          <label>Butų skaičius</label>
+          <input style={fld} type="number" min="1" value={form.units} onChange={(e) => set('units', e.target.value)} />
+        </div>
+      </div>
+    </Modal>
   )
 }
 
@@ -1191,7 +1499,10 @@ export default function Objektas() {
   const [tab, setTab] = useState('units')
   const [propsData] = useRepo('listProperties')
   const props = propsData || []
-  const P = props[idx] || props[0]
+  const baseP = props[idx] || props[0]
+  const [localP, setLocalP] = useState(null)
+  const [editingObj, setEditingObj] = useState(false)
+  const P = localP || baseP
   if (!P) return null
   const pct = Math.round((P.sold / P.units) * 100)
   const tabs = [
@@ -1202,6 +1513,7 @@ export default function Objektas() {
   ]
 
   return (
+    <>
     <Shell role="admin" nav="objektai"
       title={P.name} subtitle={P.address}
       breadcrumbs={[
@@ -1209,7 +1521,12 @@ export default function Objektas() {
         { label: 'Objektai', href: '/admin/objektai' },
         { label: P.name },
       ]}
-      headerActions={<Link className="plain" to="/admin/objektai"><Button variant="secondary" iconLeft="ph ph-arrow-left">Į objektus</Button></Link>}>
+      headerActions={
+        <div style={{ display: 'flex', gap: 8 }}>
+          <Button variant="secondary" iconLeft="ph ph-pencil-simple" onClick={() => setEditingObj(true)}>Redaguoti</Button>
+          <Link className="plain" to="/admin/objektai"><Button variant="secondary" iconLeft="ph ph-arrow-left">Į objektus</Button></Link>
+        </div>
+      }>
       <div className="content stack">
         <div className="grid-3">
           <Stat icon="ph ph-door" label="Butai" value={P.units} />
@@ -1217,13 +1534,15 @@ export default function Objektas() {
           <Stat icon="ph ph-users-three" label="Gyventojai" value={P.sold} />
         </div>
         <Card>
-          <PanelHead title="Pastato valdymas" action={<Tabs tabs={tabs} value={tab} onChange={setTab} />} />
+          <PanelHead title="Pastato valdymas" description="Valdykite butus, gyventojus, nuotraukas ir kontaktus." action={<Tabs tabs={tabs} value={tab} onChange={setTab} />} />
           {tab === 'units' && <UnitsTab P={P} />}
-          {tab === 'residents' && <ResidentsTab />}
+          {tab === 'residents' && <ResidentsTab P={P} />}
           {tab === 'photos' && <PhotosTab />}
           {tab === 'contacts' && <ContactsTab />}
         </Card>
       </div>
     </Shell>
+    {editingObj && <EditObjektasModal P={P} onSave={(updated) => setLocalP(updated)} onClose={() => setEditingObj(false)} />}
+    </>
   )
 }

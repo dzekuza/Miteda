@@ -6,27 +6,33 @@ import repo from '../../lib/repo.js'
 
 const getDS = () => window.MitedaDesignSystem_acc833 || {}
 
+const COVER_COLORS = ['#9bb7a4', '#c2b59b', '#8fa6b8', '#b7a99b', '#aeb8a0', '#a0aeb8']
+
 function PropertyCard({ p, i }) {
-  const { Card, IconButton } = getDS()
+  const { Card } = getDS()
   const pct = Math.round((p.sold / p.units) * 100)
+  const coverColor = COVER_COLORS[i % COVER_COLORS.length]
   return (
     <Link className="plain" to={`/admin/objektas?b=${i}`}>
-      <Card interactive style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-        <div className="between">
-          <span className="tile lg" style={{ background: 'var(--brand-forest)', color: '#fff' }}><i className="ph ph-buildings" aria-hidden="true" /></span>
-          {IconButton && <IconButton icon="ph ph-arrow-up-right" variant="ghost" size="sm" ariaLabel="Atidaryti" />}
-        </div>
-        <div>
-          <div style={{ fontSize: 'var(--text-heading)', fontWeight: 'var(--fw-medium)', color: 'var(--ink-900)', letterSpacing: 'var(--tracking-tight)' }}>{p.name}</div>
-          <div className="muted rowflex" style={{ fontSize: 'var(--text-body)', gap: 6, marginTop: 2 }}><i className="ph ph-map-pin" aria-hidden="true" />{p.address}</div>
-        </div>
-        <div>
-          <div className="between" style={{ marginBottom: 8 }}>
-            <span className="muted" style={{ fontSize: 'var(--text-small)' }}>Parduota {p.sold} iš {p.units} butų</span>
-            <span style={{ fontSize: 'var(--text-small)', fontWeight: 'var(--fw-medium)', color: 'var(--brand-green-strong)' }}>{pct}%</span>
+      <Card interactive style={{ display: 'flex', flexDirection: 'column', gap: 16, padding: 0, overflow: 'hidden' }}>
+        <div style={{ height: 140, background: p.coverImage ? `url(${p.coverImage}) center/cover no-repeat` : coverColor, display: 'flex', alignItems: 'flex-end', padding: '12px 16px', flexShrink: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 36, height: 36, borderRadius: 'var(--radius-md)', background: 'rgba(255,255,255,0.18)', backdropFilter: 'blur(6px)' }}>
+            <i className="ph ph-buildings" style={{ fontSize: 18, color: '#fff' }} aria-hidden="true" />
           </div>
-          <div style={{ height: 8, borderRadius: '999px', background: 'var(--surface-sunken)', overflow: 'hidden' }}>
-            <div style={{ height: '100%', width: pct + '%', borderRadius: '999px', background: 'var(--brand-green)' }} />
+        </div>
+        <div style={{ padding: '0 16px 16px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div>
+            <div style={{ fontSize: 'var(--text-heading)', fontWeight: 'var(--fw-medium)', color: 'var(--ink-900)', letterSpacing: 'var(--tracking-tight)' }}>{p.name}</div>
+            <div className="muted rowflex" style={{ fontSize: 'var(--text-body)', gap: 6, marginTop: 2 }}><i className="ph ph-map-pin" aria-hidden="true" />{p.address}</div>
+          </div>
+          <div>
+            <div className="between" style={{ marginBottom: 8 }}>
+              <span className="muted" style={{ fontSize: 'var(--text-small)' }}>Parduota {p.sold} iš {p.units} butų</span>
+              <span style={{ fontSize: 'var(--text-small)', fontWeight: 'var(--fw-medium)', color: 'var(--brand-green-strong)' }}>{pct}%</span>
+            </div>
+            <div style={{ height: 8, borderRadius: '999px', background: 'var(--surface-sunken)', overflow: 'hidden' }}>
+              <div style={{ height: '100%', width: pct + '%', borderRadius: '999px', background: 'var(--brand-green)' }} />
+            </div>
           </div>
         </div>
       </Card>

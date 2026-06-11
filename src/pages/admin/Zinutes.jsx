@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import Shell from '../../shared/Shell.jsx'
 import { PanelHead } from '../../shared/UI.jsx'
 
@@ -33,14 +34,20 @@ const isMobile = () => window.innerWidth <= 760
 
 export default function AdminZinutes() {
   const DS = window.MitedaDesignSystem_acc833
-  const { Card, Avatar, Badge } = DS
+  const { Card, Avatar, Badge, Button } = DS
 
-  const [active, setActive] = useState(null)
-  const [chatOpen, setChatOpen] = useState(false)
+  const [searchParams] = useSearchParams()
+  const contactParam = searchParams.get('contact')
+  const initialConvo = contactParam ? CONVOS.find((c) => c.name === contactParam) ?? null : null
+  const [active, setActive] = useState(initialConvo)
+  const [chatOpen, setChatOpen] = useState(!!initialConvo)
   const [input, setInput] = useState('')
   const [msgs, setMsgs] = useState(MESSAGES)
   const [search, setSearch] = useState('')
   const [mobile, setMobile] = useState(isMobile)
+  const [newMsgOpen, setNewMsgOpen] = useState(false)
+  const [newMsgTo, setNewMsgTo] = useState('')
+  const [newMsgText, setNewMsgText] = useState('')
 
   React.useEffect(() => {
     const onResize = () => setMobile(isMobile())
@@ -66,7 +73,10 @@ export default function AdminZinutes() {
   const ConvoList = (
     <Card style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', padding: 0 }}>
       <div style={{ padding: '16px 16px 10px', borderBottom: '1px solid var(--line-100)' }}>
-        <PanelHead title="Pokalbiai" subtitle={`${CONVOS.length} pokalbiai`} />
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+          <PanelHead title="Pokalbiai" subtitle={`${CONVOS.length} pokalbiai`} />
+          <Button variant="accent" iconLeft="ph ph-pencil-simple" size="sm" onClick={() => { setNewMsgTo(''); setNewMsgText(''); setNewMsgOpen(true) }}>Nauja žinutė</Button>
+        </div>
         <input value={search} onChange={(e) => setSearch(e.target.value)}
           placeholder="Ieškoti pokalbio…"
           style={{ marginTop: 10, width: '100%', padding: '8px 12px', border: '1px solid var(--line-200)', borderRadius: 'var(--radius-sm)', fontFamily: 'var(--font-sans)', fontSize: 'var(--text-small)', outline: 'none', boxSizing: 'border-box', background: 'var(--surface-sunken)' }} />
@@ -133,7 +143,44 @@ export default function AdminZinutes() {
     </Card>
   )
 
+  const sendNewMsg = () => {
+    if (!newMsgTo || !newMsgText.trim()) return
+    const convo = CONVOS.find((c) => c.name === newMsgTo)
+    if (convo) {
+      const msg = { id: Date.now(), from: 'me', text: newMsgText.trim(), time: 'Dabar' }
+      setMsgs((m) => ({ ...m, [convo.id]: [...(m[convo.id] || []), msg] }))
+      openConvo(convo)
+    }
+    setNewMsgOpen(false)
+  }
+
   return (
+    <>
+    {newMsgOpen && (
+      <div onClick={() => setNewMsgOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 400, background: 'rgba(0,0,0,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div onClick={(e) => e.stopPropagation()} style={{ width: 440, maxWidth: 'calc(100vw - 32px)', background: 'var(--surface-card)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-lg)', overflow: 'hidden' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid var(--line-100)' }}>
+            <span style={{ fontSize: 'var(--text-title)', fontWeight: 'var(--fw-semibold)', color: 'var(--ink-900)' }}>Nauja žinutė</span>
+            <button onClick={() => setNewMsgOpen(false)} style={{ width: 32, height: 32, border: 'none', borderRadius: 'var(--radius-sm)', background: 'transparent', color: 'var(--ink-500)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <i className="ph ph-x" style={{ fontSize: 18 }} />
+            </button>
+          </div>
+          <div style={{ padding: '20px' }}>
+            <label style={{ display: 'block', fontSize: 'var(--text-small)', fontWeight: 'var(--fw-medium)', color: 'var(--ink-500)', marginBottom: 6 }}>Gavėjas</label>
+            <select value={newMsgTo} onChange={(e) => setNewMsgTo(e.target.value)} style={{ width: '100%', height: 38, padding: '0 10px', border: '1px solid var(--line-200)', borderRadius: 'var(--radius-sm)', fontFamily: 'var(--font-sans)', fontSize: 'var(--text-body)', color: 'var(--ink-900)', background: 'var(--surface-card)', outline: 'none', marginBottom: 16, boxSizing: 'border-box' }}>
+              <option value="">Pasirinkite gavėją…</option>
+              {CONVOS.map((c) => <option key={c.id} value={c.name}>{c.name} · {c.role}</option>)}
+            </select>
+            <label style={{ display: 'block', fontSize: 'var(--text-small)', fontWeight: 'var(--fw-medium)', color: 'var(--ink-500)', marginBottom: 6 }}>Žinutė</label>
+            <textarea value={newMsgText} onChange={(e) => setNewMsgText(e.target.value)} rows={4} placeholder="Rašykite žinutę…" style={{ width: '100%', padding: '10px 12px', border: '1px solid var(--line-200)', borderRadius: 'var(--radius-sm)', fontFamily: 'var(--font-sans)', fontSize: 'var(--text-body)', color: 'var(--ink-900)', background: 'var(--surface-card)', outline: 'none', resize: 'vertical', boxSizing: 'border-box' }} />
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, padding: '12px 20px', borderTop: '1px solid var(--line-100)' }}>
+            <Button variant="secondary" onClick={() => setNewMsgOpen(false)}>Atšaukti</Button>
+            <Button variant="accent" onClick={sendNewMsg} iconLeft="ph ph-paper-plane-tilt">Siųsti</Button>
+          </div>
+        </div>
+      </div>
+    )}
     <Shell role="admin" nav="zinutes" title="Žinutės" subtitle="Pokalbiai su gyventojais ir paslaugų teikėjais."
       headerActions={totalUnread > 0 ? <Badge tone="urgent">{totalUnread} naujų</Badge> : null}>
       <div className="content" style={{ height: 'calc(100vh - 72px)', display: 'grid', gridTemplateColumns: mobile ? '1fr' : '320px 1fr', gap: 16 }}>
@@ -141,5 +188,6 @@ export default function AdminZinutes() {
         {showChat && ChatPanel}
       </div>
     </Shell>
+    </>
   )
 }

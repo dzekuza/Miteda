@@ -171,7 +171,7 @@ export default function Gyventojas() {
             </div>
             <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
               {Button && <>
-                <Button variant="secondary" iconLeft="ph ph-chat-circle" size="sm" onClick={() => navigate('/admin/zinutes')}>Žinutė</Button>
+                <Button variant="secondary" iconLeft="ph ph-chat-circle" size="sm" onClick={() => navigate(`/admin/zinutes?contact=${encodeURIComponent(person.name)}`)}>Žinutė</Button>
                 <Button variant="secondary" iconLeft="ph ph-phone" size="sm">Skambinti</Button>
                 {!isEditing
                   ? <Button variant="secondary" iconLeft="ph ph-pencil-simple" size="sm" onClick={() => { setTab('info'); setIsEditing(true) }}>Redaguoti</Button>

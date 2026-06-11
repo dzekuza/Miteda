@@ -5,12 +5,13 @@ import repo from '../lib/repo.js'
 // DS components come from the globally loaded bundle
 const getDS = () => window.MitedaDesignSystem_acc833 || {}
 
-function PanelHead({ title, subtitle, action }) {
+function PanelHead({ title, subtitle, description, action }) {
   return (
     <div className="panel-head">
       <div className="panel-head__tx">
         <h2 className="sec-title">{title}</h2>
         {subtitle && <p className="sec-sub">{subtitle}</p>}
+        {description && <p style={{ fontSize: 'var(--text-body)', color: 'var(--ink-400)', marginTop: 4, lineHeight: 1.5 }}>{description}</p>}
       </div>
       {action}
     </div>

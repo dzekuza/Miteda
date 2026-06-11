@@ -150,10 +150,10 @@ MD.repair = {
 
 /* ---- ADMIN: objektai ---- */
 MD.properties = [
-  { name: "Kalnų Terasos", address: "Kalnų g. 14, Vilnius", units: 48, sold: 41 },
-  { name: "Žvejų Namai", address: "Žvejų g. 7, Klaipėda", units: 32, sold: 18 },
-  { name: "Pušyno Kvartalas", address: "Pušyno al. 22, Kaunas", units: 64, sold: 60 },
-  { name: "Saulės Slėnis", address: "Saulės g. 3, Vilnius", units: 24, sold: 9 },
+  { name: "Kalnų Terasos", address: "Kalnų g. 14, Vilnius", units: 48, sold: 41, coverImage: "/covers/cover-1.jpg" },
+  { name: "Žvejų Namai", address: "Žvejų g. 7, Klaipėda", units: 32, sold: 18, coverImage: "/covers/cover-2.jpg" },
+  { name: "Pušyno Kvartalas", address: "Pušyno al. 22, Kaunas", units: 64, sold: 60, coverImage: "/covers/cover-3.jpg" },
+  { name: "Saulės Slėnis", address: "Saulės g. 3, Vilnius", units: 24, sold: 9, coverImage: "/covers/cover-1.jpg" },
 ];
 
 /* ---- ADMIN: visi defektai ---- */
