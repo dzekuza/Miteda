@@ -786,7 +786,7 @@ function AddUnitModal({ units, onAdd, onClose, initial, onSave }) {
   )
 }
 
-function UnitsToolbar({ maxFloor, search, setSearch, searchFocused, setSearchFocused, filterAukstas, setFilterAukstas, filterKambariai, setFilterKambariai, filterBusena, setFilterBusena, openDropdown, setOpenDropdown, onAdd }) {
+function UnitsToolbar({ maxFloor, search, setSearch, searchFocused, setSearchFocused, filterAukstas, setFilterAukstas, filterKambariai, setFilterKambariai, filterBusena, setFilterBusena, openDropdown, setOpenDropdown, onAdd, filteredCount, totalCount }) {
   const { Button } = window.MitedaDesignSystem_acc833
 
   React.useEffect(() => {
@@ -870,12 +870,17 @@ function UnitsToolbar({ maxFloor, search, setSearch, searchFocused, setSearchFoc
         )
       })}
       <div style={{ flex: 1 }} />
+      {totalCount != null && (
+        <span style={{ fontSize: 'var(--text-small)', color: 'var(--ink-400)', flexShrink: 0 }}>
+          {filteredCount != null && filteredCount !== totalCount ? `${filteredCount} iš ${totalCount} butų` : `${totalCount} butų iš viso`}
+        </span>
+      )}
       <Button variant="accent" size="sm" iconLeft="ph ph-plus" onClick={onAdd}>Pridėti</Button>
     </div>
   )
 }
 
-function UnitsTab({ P, propIdx, search, filterAukstas, filterKambariai, filterBusena, adding, setAdding }) {
+function UnitsTab({ P, propIdx, search, filterAukstas, filterKambariai, filterBusena, adding, setAdding, onCountChange }) {
   const DS = window.MitedaDesignSystem_acc833
   const { IconButton, Badge, Checkbox } = DS
 
@@ -929,15 +934,14 @@ function UnitsTab({ P, propIdx, search, filterAukstas, filterKambariai, filterBu
     return true
   })
 
+  React.useEffect(() => {
+    if (onCountChange) onCountChange(filtered.length, units.length)
+  }, [filtered.length, units.length])
 
   return (
     <div>
 
-      <div style={{ marginBottom: 12 }}>
-        <span style={{ fontSize: 'var(--text-small)', color: 'var(--ink-400)' }}>
-          {filtered.length !== units.length ? `${filtered.length} iš ${units.length} butų` : `${units.length} butų iš viso`}
-        </span>
-      </div>
+
       {selCount > 0 && (
         <div className="between" style={{ marginBottom: 16, padding: '12px 16px', borderRadius: 'var(--radius-md)', background: 'var(--brand-green-faint)' }}>
           <span style={{ fontSize: 'var(--text-body)', fontWeight: 'var(--fw-medium)', color: 'var(--ink-900)' }}>Pažymėta {selCount} butų</span>
@@ -948,10 +952,10 @@ function UnitsTab({ P, propIdx, search, filterAukstas, filterKambariai, filterBu
         </div>
       )}
       <table className="tbl">
-          <thead><tr style={{ position: 'sticky', top: 40, zIndex: 4, background: 'var(--surface-card)' }}>
-            <th style={{ width: 36 }}><Checkbox checked={allSelected} onChange={toggleAll} /></th>
-            <th>Butas</th><th>Aukštas</th><th>Plotas</th><th>Kamb.</th><th>Būsena</th>
-            <th>Savininkas</th><th>Telefonas</th><th>Nuo</th><th></th>
+          <thead><tr style={{ position: 'sticky', top: 0, zIndex: 4, background: 'var(--surface-card)' }}>
+            <th style={{ width: 36, paddingTop: 10 }}><Checkbox checked={allSelected} onChange={toggleAll} /></th>
+            <th style={{ paddingTop: 10 }}>Butas</th><th style={{ paddingTop: 10 }}>Aukštas</th><th style={{ paddingTop: 10 }}>Plotas</th><th style={{ paddingTop: 10 }}>Kamb.</th><th style={{ paddingTop: 10 }}>Būsena</th>
+            <th style={{ paddingTop: 10 }}>Savininkas</th><th style={{ paddingTop: 10 }}>Telefonas</th><th style={{ paddingTop: 10 }}>Nuo</th><th style={{ paddingTop: 10 }}></th>
           </tr></thead>
           <tbody>
             {filtered.length === 0 && (
@@ -1457,6 +1461,7 @@ export default function Objektas() {
   const [unitsFilterBusena, setUnitsFilterBusena] = useState('all')
   const [unitsOpenDropdown, setUnitsOpenDropdown] = useState(null)
   const [unitsAdding, setUnitsAdding] = useState(false)
+  const [unitsCount, setUnitsCount] = useState(null)
   const [propsData] = useRepo('listProperties')
   const props = propsData || []
   const baseP = props[idx] || props[0]
@@ -1518,6 +1523,8 @@ export default function Objektas() {
                 filterBusena={unitsFilterBusena} setFilterBusena={setUnitsFilterBusena}
                 openDropdown={unitsOpenDropdown} setOpenDropdown={setUnitsOpenDropdown}
                 onAdd={() => setUnitsAdding(true)}
+                filteredCount={unitsCount?.filtered}
+                totalCount={unitsCount?.total ?? P.units}
               />
             )}
             <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
@@ -1528,6 +1535,7 @@ export default function Objektas() {
                 filterBusena={unitsFilterBusena}
                 adding={unitsAdding}
                 setAdding={setUnitsAdding}
+                onCountChange={(f, t) => setUnitsCount({ filtered: f, total: t })}
               />}
               {tab === 'residents' && <ResidentsTab P={P} propIdx={idx} />}
               {tab === 'photos' && <PhotosTab P={P} propIdx={idx} />}
