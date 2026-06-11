@@ -67,7 +67,7 @@ function EditPropertyModal({ p, onClose, onSave }) {
   const [addr, setAddr] = useState(p.address)
   const [units, setUnits] = useState(String(p.units))
   return (
-    <Modal title="Redaguoti objektą" onClose={onClose}
+    <Modal title="Redaguoti objektą" subtitle="Atnaujinkite pastato informaciją ir nuotrauką." onClose={onClose}
       footer={<React.Fragment>
         {Button && <Button variant="ghost" onClick={onClose}>Atšaukti</Button>}
         {Button && <Button variant="accent" iconLeft="ph ph-floppy-disk" onClick={() => name.trim() && onSave({ ...p, name: name.trim(), address: addr.trim() || '—', units: parseInt(units) || p.units })}>Išsaugoti</Button>}

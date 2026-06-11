@@ -11,7 +11,7 @@ function PanelHead({ title, subtitle, description, action }) {
       <div className="panel-head__tx">
         <h2 className="sec-title">{title}</h2>
         {subtitle && <p className="sec-sub">{subtitle}</p>}
-        {description && <p style={{ fontSize: 'var(--text-body)', color: 'var(--ink-400)', marginTop: 4, lineHeight: 1.5 }}>{description}</p>}
+        {description && <p style={{ fontSize: 'var(--text-body)', color: 'var(--ink-400)', marginTop: 4, marginBottom: 0, lineHeight: 1.5 }}>{description}</p>}
       </div>
       {action}
     </div>

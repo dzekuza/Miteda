@@ -113,7 +113,7 @@ export default function Darbai() {
     const [manager, setManager] = React.useState('')
     const valid = building.trim() && apt.trim() && phase.trim() && manager.trim()
     return (
-      <Modal title="Naujas projektas" onClose={onClose} width={480}>
+      <Modal title="Naujas projektas" subtitle="Sukurkite naują remonto ar priežiūros projektą." onClose={onClose} width={480}>
         <div className="stack" style={{ gap: 16 }}>
           <div className="grid-2" style={{ gap: 12 }}>
             <div className="field" style={{ margin: 0 }}><label>Pastatas</label><input value={building} onChange={(e) => setBuilding(e.target.value)} placeholder="Pvz. A korpusas" /></div>
@@ -137,7 +137,7 @@ export default function Darbai() {
     const [manager, setManager] = React.useState(p.manager)
     const valid = building.trim() && apt.trim() && phase.trim() && manager.trim()
     return (
-      <Modal title="Redaguoti projektą" onClose={onClose} width={480}>
+      <Modal title="Redaguoti projektą" subtitle="Atnaujinkite projekto informaciją." onClose={onClose} width={480}>
         <div className="stack" style={{ gap: 16 }}>
           <div className="grid-2" style={{ gap: 12 }}>
             <div className="field" style={{ margin: 0 }}><label>Pastatas</label><input value={building} onChange={(e) => setBuilding(e.target.value)} /></div>
@@ -191,7 +191,7 @@ export default function Darbai() {
       {showNew && <NewProjectModal onClose={() => setShowNew(false)} />}
       {editing && <EditProjectModal p={editing} onClose={() => setEditing(null)} onSave={handleSaveEdit} />}
       {removing && (
-        <Modal title="Pašalinti projektą" onClose={() => setRemoving(null)} width={400}>
+        <Modal title="Pašalinti projektą" subtitle="Projektas ir visi jo darbai bus negrįžtamai ištrinti." onClose={() => setRemoving(null)} width={400}>
           <div className="stack" style={{ gap: 20 }}>
             <p style={{ margin: 0, fontSize: 'var(--text-body)', color: 'var(--ink-600)' }}>
               Ar tikrai norite pašalinti projektą <strong style={{ color: 'var(--ink-900)' }}>{removing.building} · {removing.apt}</strong>? Šio veiksmo atšaukti negalėsite.

@@ -103,6 +103,11 @@ export default function AdminBendruomene() {
 
   const [mentionQ, setMentionQ] = React.useState(null)
   const bodyRef = React.useRef(null)
+  const [search, setSearch] = React.useState('')
+  const [searchFocused, setSearchFocused] = React.useState(false)
+  const [activeCat, setActiveCat] = React.useState('Visi')
+  const [newAttachedFile, setNewAttachedFile] = React.useState(null)
+  const newFileInputRef = React.useRef(null)
 
   function handleBodyChange(e) {
     const val = e.target.value
@@ -233,6 +238,21 @@ export default function AdminBendruomene() {
       </div>}>
       <div className="content grid-aside">
         <div className="stack">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 24px', background: 'var(--surface-card)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--line-100)', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, height: 32, background: 'var(--overlay-ink-04)', borderRadius: 'var(--radius-md)', padding: '0 10px', width: 200, flexShrink: 0, overflow: 'hidden', border: searchFocused ? '1.5px solid var(--brand-green)' : '1.5px solid transparent', boxSizing: 'border-box', transition: 'border-color 0.15s' }}>
+              <i className="ph ph-magnifying-glass" style={{ fontSize: 14, color: 'var(--ink-400)', flexShrink: 0 }} aria-hidden="true" />
+              <input value={search} onChange={(e) => setSearch(e.target.value)} onFocus={() => setSearchFocused(true)} onBlur={() => setSearchFocused(false)} placeholder="Ieškoti…" style={{ border: 'none', background: 'transparent', outline: 'none', fontSize: 'var(--text-small)', color: 'var(--ink-900)', width: '100%' }} />
+              {search && <button type="button" onClick={() => setSearch('')} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, color: 'var(--ink-400)', display: 'flex', alignItems: 'center', flexShrink: 0 }}><i className="ph ph-x" style={{ fontSize: 12 }} /></button>}
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', padding: 0, marginBottom: 12 }}>
+              {['Visi', ...(MD.properties || []).map((p) => p.name)].map((c) => (
+                <Button key={c} variant="ghost" size="sm" onClick={() => setActiveCat(c)}
+                  style={{ boxShadow: activeCat === c ? 'inset 0 0 0 1.5px var(--brand-green)' : 'inset 0 0 0 1.5px var(--line-200)', background: activeCat === c ? 'var(--brand-green-soft, rgba(34,197,94,0.12))' : 'transparent', color: activeCat === c ? 'var(--brand-green)' : 'var(--ink-600)', fontWeight: activeCat === c ? 600 : 400 }}>
+                  {c}
+                </Button>
+              ))}
+            </div>
+          </div>
           {polls.map((p, pi) => {
             const totalVotes = Object.values(p.votes || {}).reduce((a, b) => a + b, 0) + (pollVotes[pi] !== undefined ? 1 : 0)
             const voted = pollVotes[pi]
@@ -262,7 +282,9 @@ export default function AdminBendruomene() {
               </Card>
             )
           })}
-          {threads.map((t, i) => <ThreadCard key={i} t={t} onOpen={setOpen} liked={!!likes[i]} onLike={() => toggle(i)} />)}
+          {threads
+            .filter((t) => (activeCat === 'Visi' || t.building === activeCat) && (!search || t.title.toLowerCase().includes(search.toLowerCase()) || (t.body || '').toLowerCase().includes(search.toLowerCase())))
+            .map((t, i) => <ThreadCard key={i} t={t} onOpen={setOpen} liked={!!likes[i]} onLike={() => toggle(i)} />)}
         </div>
         <div className="stack">
           <Card>

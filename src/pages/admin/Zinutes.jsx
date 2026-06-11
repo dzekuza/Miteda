@@ -42,6 +42,8 @@ export default function AdminZinutes() {
   const [active, setActive] = useState(initialConvo)
   const [chatOpen, setChatOpen] = useState(!!initialConvo)
   const [input, setInput] = useState('')
+  const [attachedFile, setAttachedFile] = useState(null)
+  const fileInputRef = React.useRef(null)
   const [msgs, setMsgs] = useState(MESSAGES)
   const [hoveredMsg, setHoveredMsg] = useState(null)
   const [search, setSearch] = useState('')
@@ -66,6 +68,7 @@ export default function AdminZinutes() {
     const newMsg = { id: Date.now(), from: 'me', text: input.trim(), time: 'Dabar' }
     setMsgs((m) => ({ ...m, [active.id]: [...(m[active.id] || []), newMsg] }))
     setInput('')
+    setAttachedFile(null)
   }
 
   const showList = !mobile || !chatOpen
@@ -147,7 +150,20 @@ export default function AdminZinutes() {
           </div>
         ))}
       </div>
+      {attachedFile && (
+        <div style={{ padding: '4px 16px 0', display: 'flex', alignItems: 'center', gap: 6 }}>
+          <i className="ph ph-paperclip" style={{ fontSize: 13, color: 'var(--ink-400)' }} aria-hidden="true" />
+          <span style={{ fontSize: 'var(--text-sm)', color: 'var(--ink-600)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{attachedFile.name}</span>
+          <button onClick={() => setAttachedFile(null)} style={{ border: 'none', background: 'none', cursor: 'pointer', padding: 2, color: 'var(--ink-400)', display: 'inline-flex', alignItems: 'center' }} aria-label="Pašalinti failą">
+            <i className="ph ph-x" style={{ fontSize: 13 }} aria-hidden="true" />
+          </button>
+        </div>
+      )}
       <div style={{ padding: '12px 16px', borderTop: '1px solid var(--line-100)', display: 'flex', gap: 10 }}>
+        <input ref={fileInputRef} type="file" onChange={(e) => setAttachedFile(e.target.files?.[0] ?? null)} style={{ display: 'none' }} />
+        <button onClick={() => fileInputRef.current?.click()} title="Pridėti failą" style={{ width: 42, height: 42, border: '1px solid var(--line-200)', borderRadius: 'var(--radius-sm)', background: attachedFile ? 'var(--brand-green-soft, #e6f4ec)' : 'var(--surface-card)', color: attachedFile ? 'var(--brand-green)' : 'var(--ink-400)', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <i className="ph ph-paperclip" style={{ fontSize: 18 }} aria-hidden="true" />
+        </button>
         <input value={input} onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && send()}
           placeholder={`Rašykite ${active.name.split(' ')[0]}…`}

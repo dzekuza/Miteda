@@ -200,7 +200,7 @@ function DefectDetailModal({ defect, onClose, onUpdate }) {
           </div>
 
           {pickingWorker && (
-            <Modal title="Pasirinkti meistrą" onClose={() => setPickingWorker(false)} width={480}>
+            <Modal title="Pasirinkti meistrą" subtitle="Priskirskite defekto taisymą specialistui." onClose={() => setPickingWorker(false)} width={480}>
               <div className="stack-sm" style={{ gap: 6 }}>
                 {WORKERS.map((w) => (
                   <button key={w.name} type="button"
@@ -236,7 +236,7 @@ function DefectDetailModal({ defect, onClose, onUpdate }) {
       )}
 
       {pickingStatus && (
-        <Modal title="Keisti būseną" onClose={() => setPickingStatus(false)} width={340}
+        <Modal title="Keisti būseną" subtitle="Atnaujinkite defekto sprendimo progresą." onClose={() => setPickingStatus(false)} width={340}
           footer={<><Button variant="ghost" onClick={() => setPickingStatus(false)}>Atšaukti</Button><Button variant="accent" onClick={() => setPickingStatus(false)}>Išsaugoti</Button></>}
         >
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -314,7 +314,6 @@ export default function Defektai() {
       headerActions={
         <div style={{ display: 'flex', gap: 8 }}>
           <Button variant="secondary" iconLeft="ph ph-export">Eksportuoti</Button>
-          <Button variant="accent" iconLeft="ph ph-plus" onClick={() => setCreating(true)}>Naujas defektas</Button>
         </div>
       }>
       <div className="content stack">
@@ -323,10 +322,17 @@ export default function Defektai() {
           <Stat icon="ph ph-spinner" label="Vykdoma" value={counts.progress} />
           <Stat icon="ph ph-check-circle" label="Išspręsta" value={counts.resolved} accent />
         </div>
-        <Card>
+        <Card style={{ paddingBottom: 16 }}>
           <PanelHead title="Visi defektai" subtitle="Filtruokite pagal objektą ir būseną"
             action={<FilterChips items={['Visos', 'Atviras', 'Vykdoma', 'Išspręsta']} value={s} onChange={setS} />} />
-          <div style={{ marginBottom: 16 }}><FilterChips items={buildings} value={b} onChange={setB} /></div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', padding: '10px 0' }}>
+            {buildings.map((bld) => (
+              <Button key={bld} variant="ghost" size="sm" onClick={() => setB(bld)}
+                style={{ boxShadow: b === bld ? 'inset 0 0 0 1.5px var(--brand-green)' : 'inset 0 0 0 1.5px var(--line-200)', background: b === bld ? 'var(--brand-green-soft, rgba(34,197,94,0.12))' : 'transparent', color: b === bld ? 'var(--brand-green)' : 'var(--ink-600)', fontWeight: b === bld ? 600 : 400 }}>
+                {bld}
+              </Button>
+            ))}
+          </div>
           <div style={{ overflowX: 'auto' }}>
             <table className="tbl">
               <thead><tr>
@@ -360,6 +366,8 @@ export default function Defektai() {
                     <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }} onClick={(e) => e.stopPropagation()}>
                       <div style={{ display: 'inline-flex', alignItems: 'center', gap: 2 }}>
                         <IconButton icon="ph ph-arrow-up-right" variant="ghost" size="sm" ariaLabel="Atidaryti"
+                          onClick={(e) => { e.stopPropagation(); setSelected(d) }} />
+                        <IconButton icon="ph ph-chat-circle" variant="ghost" size="sm" ariaLabel="Siųsti žinutę"
                           onClick={(e) => { e.stopPropagation(); setSelected(d) }} />
                         <div style={{ position: 'relative' }}>
                           <IconButton icon="ph ph-dots-three-vertical" variant="ghost" size="sm" ariaLabel="Veiksmai"

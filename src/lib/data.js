@@ -84,12 +84,12 @@ MD.contractStatuses = {
 /* ---- Kontaktai ---- */
 MD.contactCats = ["Visi", "Administracija", "Santechnika", "Elektra", "Valymas", "Apsauga"];
 MD.contacts = [
-  { name: "Aistė Vasiliauskienė", role: "Pastato administratorė", company: "Miteda", cat: "Administracija", phone: "+370 600 11223", email: "aiste@miteda.lt" },
-  { name: "Marius Stankus", role: "Santechnikas", company: "Akva Servisas", cat: "Santechnika", phone: "+370 611 55667", email: "marius@akva.lt" },
-  { name: "Darius Kavaliauskas", role: "Elektrikas", company: "ElektroMB", cat: "Elektra", phone: "+370 622 33445", email: "darius@elektromb.lt" },
-  { name: "Jolanta Petkevičienė", role: "Valymo paslaugos", company: "Švara LT", cat: "Valymas", phone: "+370 633 99001", email: "jolanta@svara.lt" },
-  { name: "Tomas Žukauskas", role: "Apsaugos vadovas", company: "Apsaugos partneriai", cat: "Apsauga", phone: "+370 644 22110", email: "tomas@apsauga.lt" },
-  { name: "Renata Bagdonienė", role: "Buhalterė", company: "Miteda", cat: "Administracija", phone: "+370 655 77889", email: "renata@miteda.lt" },
+  { name: "Aistė Vasiliauskienė", role: "Pastato administratorė", company: "Miteda", cat: "Administracija", phone: "+370 600 11223", email: "aiste@miteda.lt", objektai: ["Kalnų Terasos", "Žvejų Namai", "Pušyno Kvartalas", "Saulės Slėnis"] },
+  { name: "Marius Stankus", role: "Santechnikas", company: "Akva Servisas", cat: "Santechnika", phone: "+370 611 55667", email: "marius@akva.lt", objektai: ["Kalnų Terasos", "Pušyno Kvartalas"] },
+  { name: "Darius Kavaliauskas", role: "Elektrikas", company: "ElektroMB", cat: "Elektra", phone: "+370 622 33445", email: "darius@elektromb.lt", objektai: ["Žvejų Namai", "Saulės Slėnis"] },
+  { name: "Jolanta Petkevičienė", role: "Valymo paslaugos", company: "Švara LT", cat: "Valymas", phone: "+370 633 99001", email: "jolanta@svara.lt", objektai: ["Kalnų Terasos", "Saulės Slėnis"] },
+  { name: "Tomas Žukauskas", role: "Apsaugos vadovas", company: "Apsaugos partneriai", cat: "Apsauga", phone: "+370 644 22110", email: "tomas@apsauga.lt", objektai: ["Pušyno Kvartalas", "Žvejų Namai"] },
+  { name: "Renata Bagdonienė", role: "Buhalterė", company: "Miteda", cat: "Administracija", phone: "+370 655 77889", email: "renata@miteda.lt", objektai: ["Kalnų Terasos", "Žvejų Namai", "Pušyno Kvartalas", "Saulės Slėnis"] },
 ];
 
 /* ---- Tvarkaraštis / įvykiai ---- */
@@ -116,13 +116,13 @@ MD.bulletin = [
 
 /* ---- Bendruomenė / forumas ---- */
 MD.threads = [
-  { title: "Priminimas dėl automobilių statymo visiems", cat: "Diskusija", author: "Tomas Petraitis", replies: 52, likes: 31, views: "3.2 tūkst.", time: "Prieš 3 val.", hot: true,
+  { title: "Priminimas dėl automobilių statymo visiems", cat: "Diskusija", building: "Kalnų Terasos", author: "Tomas Petraitis", replies: 52, likes: 31, views: "3.2 tūkst.", time: "Prieš 3 val.", hot: true,
     body: "Pastebiu, kad svečiai vis dažniau užima gyventojų vietas. Gal verta įrengti aiškesnę ženklinimo sistemą?" },
-  { title: "Dviračių laikymas rūsyje", cat: "Pasiūlymas", author: "Eglė Vaitkutė", replies: 18, likes: 12, views: "1.1 tūkst.", time: "Vakar", hot: true,
+  { title: "Dviračių laikymas rūsyje", cat: "Pasiūlymas", building: "Žvejų Namai", author: "Eglė Vaitkutė", replies: 18, likes: 12, views: "1.1 tūkst.", time: "Vakar", hot: true,
     body: "Ar būtų galima rūsyje įrengti daugiau dviračių stovų? Dabartiniai visada užimti." },
-  { title: "Bendruomenės sodas kieme — kas norėtų?", cat: "Idėja", author: "Rūta Kazlauskaitė", replies: 27, likes: 44, views: "2.0 tūkst.", time: "Prieš 2 d.", hot: false,
+  { title: "Bendruomenės sodas kieme — kas norėtų?", cat: "Idėja", building: "Pušyno Kvartalas", author: "Rūta Kazlauskaitė", replies: 27, likes: 44, views: "2.0 tūkst.", time: "Prieš 2 d.", hot: false,
     body: "Galvoju apie bendrą daržą prie pietinės pusės. Kas prisidėtų prie priežiūros?" },
-  { title: "Interneto tiekėjo rekomendacijos", cat: "Klausimas", author: "Mantas Šimkus", replies: 9, likes: 5, views: "640", time: "Prieš 4 d.", hot: false,
+  { title: "Interneto tiekėjo rekomendacijos", cat: "Klausimas", building: "Saulės Slėnis", author: "Mantas Šimkus", replies: 9, likes: 5, views: "640", time: "Prieš 4 d.", hot: false,
     body: "Persikrausčiau neseniai. Kokį interneto tiekėją rekomenduotumėte mūsų name?" },
 ];
 

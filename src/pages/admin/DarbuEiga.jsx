@@ -101,7 +101,7 @@ export default function DarbuEiga() {
         </Card>
       </div>
       {selected && (
-        <Modal title={selected.title} onClose={() => setSelected(null)}>
+        <Modal title={selected.title} subtitle={selected.date} onClose={() => setSelected(null)}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div className="muted" style={{ fontSize: 'var(--text-small)' }}>{selected.date} · {selected.photos} nuotr.</div>
             {selected.body && <p style={{ margin: 0, fontSize: 'var(--text-body)', color: 'var(--ink-500)', lineHeight: 'var(--lh-body)' }}>{selected.body}</p>}

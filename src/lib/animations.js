@@ -15,8 +15,8 @@ export function runPageEnter() {
       tl.from('.hdr', { y: -18, autoAlpha: 0, duration: 0.4 })
     }
 
-    if (document.querySelector('.content > *')) {
-      tl.from('.content > *', { y: 24, opacity: 0, duration: 0.5, stagger: 0.07 }, '-=0.2')
+    if (document.querySelector('.content > *:not(.scroll-reveal)')) {
+      tl.from('.content > *:not(.scroll-reveal)', { y: 24, opacity: 0, duration: 0.5, stagger: 0.07 }, '-=0.2')
     }
 
     const childSel = '.grid-3 > *, .grid-2 > *, .grid-fit > *, .grid-fit-sm > *, .grid-auto > *'
