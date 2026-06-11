@@ -208,9 +208,10 @@ const ORIENTATIONS = ['Pietų', 'Rytų', 'Šiaurės', 'Vakarų']
 const HEATINGS = ['Centrinis šildymas', 'Grindinis šildymas', 'Dujinis šildymas']
 const ENERGY_CLASSES = ['A++', 'A+', 'A', 'B', 'C', 'D']
 
-function AddUnitModal({ units, onAdd, onClose }) {
+function AddUnitModal({ units, onAdd, onClose, initial, onSave }) {
   const DS = window.MitedaDesignSystem_acc833
   const { Button, Badge } = DS
+  const isEdit = !!initial
 
   const lastUnit = units[units.length - 1]
   const suggestId = () => {
@@ -223,7 +224,25 @@ function AddUnitModal({ units, onAdd, onClose }) {
   const sid = suggestId()
 
   const [tab, setTab] = useState('basic')
-  const [form, setForm] = useState({
+  const [form, setForm] = useState(initial ? {
+    id: initial.id,
+    floor: String(initial.floor),
+    area: String(initial.area),
+    rooms: String(initial.rooms || (initial.area <= 53 ? 1 : initial.area <= 75 ? 2 : 3)),
+    orientation: initial.orientation || 'Pietų',
+    heating: initial.heating || 'Centrinis šildymas',
+    hasParking: initial.hasParking || false,
+    hasStorage: initial.hasStorage || false,
+    year: initial.year || '2024',
+    energyClass: initial.energyClass || 'A+',
+    st: initial.st,
+    ownerName: initial.owner?.name || '',
+    ownerPhone: initial.owner?.phone || '',
+    ownerEmail: initial.owner?.email || '',
+    ownerSince: initial.owner?.since || '',
+    photos: initial.photos || [],
+    documents: initial.documents || [],
+  } : {
     id: sid,
     floor: lastUnit ? String(lastUnit.floor + (lastUnit.id[0] !== sid[0] ? 1 : 0)) : '1',
     area: '65',
@@ -249,7 +268,7 @@ function AddUnitModal({ units, onAdd, onClose }) {
   const validate = () => {
     const e = {}
     if (!form.id.trim()) e.id = 'Būtinas laukas'
-    else if (units.some((u) => u.id === form.id.trim())) e.id = 'Toks butas jau egzistuoja'
+    else if (!isEdit && units.some((u) => u.id === form.id.trim())) e.id = 'Toks butas jau egzistuoja'
     if (!form.floor || isNaN(+form.floor) || +form.floor < 1) e.floor = 'Įveskite teisingą aukštą'
     if (!form.area || isNaN(+form.area) || +form.area < 10) e.area = 'Įveskite teisingą plotą'
     setErrors(e)
@@ -259,14 +278,16 @@ function AddUnitModal({ units, onAdd, onClose }) {
 
   const submit = () => {
     if (!validate()) return
-    onAdd({
+    const data = {
       id: form.id.trim(), floor: +form.floor, area: +form.area, st: form.st,
       rooms: +form.rooms, orientation: form.orientation, heating: form.heating,
       hasParking: form.hasParking, hasStorage: form.hasStorage,
       year: form.year, energyClass: form.energyClass,
       owner: form.ownerName ? { name: form.ownerName, phone: form.ownerPhone, email: form.ownerEmail, since: form.ownerSince } : null,
       photos: form.photos, documents: form.documents,
-    })
+    }
+    if (isEdit) onSave(data)
+    else onAdd(data)
     onClose()
   }
 
@@ -308,10 +329,10 @@ function AddUnitModal({ units, onAdd, onClose }) {
   }
 
   return (
-    <Modal title="Pridėti butą" subtitle="Naujas butas šiame pastate" onClose={onClose} width={680}
+    <Modal title={isEdit ? `Redaguoti butą ${initial.id}` : 'Pridėti butą'} subtitle={isEdit ? 'Keisti buto duomenis' : 'Naujas butas šiame pastate'} onClose={onClose} width={680}
       footer={<>
         <Button variant="ghost" onClick={onClose}>Atšaukti</Button>
-        <Button variant="accent" iconLeft="ph ph-plus" onClick={submit}>Pridėti butą</Button>
+        <Button variant="accent" iconLeft={isEdit ? 'ph ph-floppy-disk' : 'ph ph-plus'} onClick={submit}>{isEdit ? 'Išsaugoti' : 'Pridėti butą'}</Button>
       </>}>
 
       <div style={{ marginBottom: 20 }}>
@@ -505,6 +526,15 @@ function UnitsTab({ P }) {
   const [sel, setSel] = useState({})
   const [detail, setDetail] = useState(null)
   const [adding, setAdding] = useState(false)
+  const [editing, setEditing] = useState(null)
+  const [popover, setPopover] = useState(null)
+
+  React.useEffect(() => {
+    if (popover === null) return
+    const close = () => setPopover(null)
+    document.addEventListener('mousedown', close)
+    return () => document.removeEventListener('mousedown', close)
+  }, [popover])
 
   const selCount = Object.values(sel).filter(Boolean).length
   const allSelected = units.length > 0 && selCount === units.length
@@ -515,6 +545,8 @@ function UnitsTab({ P }) {
   const markSold = () => { setUnits((us) => us.map((u, i) => sel[i] ? { ...u, st: 'sold' } : u)); setSel({}) }
   const saveStatus = (st) => { setUnits((us) => us.map((u, i) => i === detail.idx ? { ...u, st } : u)) }
   const addUnit = (u) => setUnits((us) => [...us, u])
+  const updateUnit = (idx, data) => setUnits((us) => us.map((u, i) => i === idx ? { ...u, ...data } : u))
+  const deleteUnit = (idx) => { setUnits((us) => us.filter((_, i) => i !== idx)); setSel((s) => { const n = {}; Object.keys(s).forEach((k) => { if (+k < idx) n[k] = s[k]; else if (+k > idx) n[+k - 1] = s[k] }); return n }) }
 
   return (
     <div>
@@ -566,9 +598,41 @@ function UnitsTab({ P }) {
                   <td style={{ color: 'var(--ink-400)', fontSize: 'var(--text-small)', whiteSpace: 'nowrap' }}>
                     {owner ? owner.since : '—'}
                   </td>
-                  <td style={{ textAlign: 'right' }}>
-                    <IconButton icon="ph ph-arrow-right" variant="ghost" size="sm" ariaLabel="Peržiūrėti"
-                      onClick={(e) => { e.stopPropagation(); setDetail({ idx: i, unit: u }) }} />
+                  <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }} onClick={(e) => e.stopPropagation()}>
+                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 2 }}>
+                      <IconButton icon="ph ph-arrow-right" variant="ghost" size="sm" ariaLabel="Peržiūrėti"
+                        onClick={() => setDetail({ idx: i, unit: u })} />
+                      <div style={{ position: 'relative' }}>
+                        <IconButton icon="ph ph-dots-three-vertical" variant="ghost" size="sm" ariaLabel="Veiksmai"
+                          onClick={(e) => { e.stopPropagation(); setPopover(popover === i ? null : i) }} />
+                        {popover === i && (
+                          <div onMouseDown={(e) => e.stopPropagation()} style={{
+                            position: 'absolute', top: 'calc(100% + 4px)', right: 0, zIndex: 50,
+                            background: 'var(--surface-card)', border: '1px solid var(--line-200)',
+                            borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-lg)',
+                            minWidth: 160, overflow: 'hidden',
+                          }}>
+                            {[
+                              { icon: 'ph ph-pencil', label: 'Redaguoti', action: () => { setEditing({ idx: i, unit: u }); setPopover(null) } },
+                              { icon: 'ph ph-trash', label: 'Ištrinti', danger: true, action: () => { deleteUnit(i); setPopover(null) } },
+                            ].map(({ icon, label, action, danger }) => (
+                              <button key={label} type="button" onClick={action} style={{
+                                display: 'flex', alignItems: 'center', gap: 10, width: '100%',
+                                padding: '10px 14px', border: 'none', background: 'transparent',
+                                cursor: 'pointer', fontFamily: 'var(--font-sans)', fontSize: 'var(--text-body)',
+                                color: danger ? 'var(--orange)' : 'var(--ink-800)',
+                                textAlign: 'left',
+                              }}
+                                onMouseEnter={(e) => e.currentTarget.style.background = 'var(--surface-sunken)'}
+                                onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
+                                <i className={icon} style={{ fontSize: 16 }} />
+                                {label}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </td>
                 </tr>
               )
@@ -578,6 +642,11 @@ function UnitsTab({ P }) {
       </div>
       {adding && (
         <AddUnitModal units={units} onAdd={addUnit} onClose={() => setAdding(false)} />
+      )}
+      {editing && (
+        <AddUnitModal units={units} initial={editing.unit}
+          onSave={(data) => updateUnit(editing.idx, data)}
+          onClose={() => setEditing(null)} />
       )}
       {detail && (
         <UnitDetailModal
