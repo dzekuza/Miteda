@@ -51,6 +51,7 @@ function UnitDetailModal({ unit, idx, onClose, onSaveUnit }) {
   const { Badge, Button, Avatar } = DS
   const [tab, setTab] = useState('tech')
   const [isEditing, setIsEditing] = useState(false)
+  const [statusPicker, setStatusPicker] = useState(false)
 
   const fallbackOwner = OWNERS[idx % OWNERS.length]
   const contracts = CONTRACT_TPLS.map((c, i) => ({ ...c, id: `SUT-${100 + i}` }))
@@ -82,8 +83,16 @@ function UnitDetailModal({ unit, idx, onClose, onSaveUnit }) {
   const [form, setForm] = useState(initForm)
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }))
 
-  const startEdit = () => { setForm(initForm()); setIsEditing(true) }
+  const startEdit = () => { setForm(initForm()); setIsEditing(true); setStatusPicker(false) }
   const cancelEdit = () => { setForm(initForm()); setIsEditing(false) }
+
+  React.useEffect(() => {
+    if (!statusPicker) return
+    const close = () => setStatusPicker(false)
+    document.addEventListener('mousedown', close)
+    return () => document.removeEventListener('mousedown', close)
+  }, [statusPicker])
+
   const saveEdit = () => {
     const updated = {
       ...unit,
@@ -152,8 +161,47 @@ function UnitDetailModal({ unit, idx, onClose, onSaveUnit }) {
         ? <><Button variant="ghost" onClick={cancelEdit}>Atšaukti</Button><Button variant="accent" iconLeft="ph ph-floppy-disk" onClick={saveEdit}>Išsaugoti</Button></>
         : null}
     >
-      {/* Header row */}
-      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 16 }}>
+      {/* Header row — status + edit toggle */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ fontSize: 'var(--text-small)', color: 'var(--ink-400)' }}>Būsena:</span>
+          {!isEditing
+            ? <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 6 }}>
+                <Badge tone={UNIT_STATUS[unit.st].tone}>{UNIT_STATUS[unit.st].label}</Badge>
+                <button type="button" onClick={() => setStatusPicker((v) => !v)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 22, height: 22, border: 'none', borderRadius: 'var(--radius-sm)', background: 'transparent', cursor: 'pointer', color: 'var(--ink-300)' }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-sunken)'; e.currentTarget.style.color = 'var(--ink-600)' }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--ink-300)' }}>
+                  <i className="ph ph-pencil-simple" style={{ fontSize: 13 }} />
+                </button>
+                {statusPicker && (
+                  <div onMouseDown={(e) => e.stopPropagation()} style={{ position: 'absolute', top: 'calc(100% + 6px)', left: 0, zIndex: 60, background: 'var(--surface-card)', border: '1px solid var(--line-200)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-lg)', minWidth: 180, overflow: 'hidden' }}>
+                    <div style={{ padding: '8px 12px 6px', fontSize: 'var(--text-small)', color: 'var(--ink-400)', fontWeight: 'var(--fw-medium)', borderBottom: '1px solid var(--line-100)' }}>Keisti būseną</div>
+                    {Object.entries(UNIT_STATUS).map(([key, { label, tone }]) => (
+                      <button key={key} type="button" onClick={() => { onSaveUnit({ ...unit, st: key }); setStatusPicker(false) }} style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '9px 14px', border: 'none', background: unit.st === key ? 'var(--surface-sunken)' : 'transparent', cursor: 'pointer', fontFamily: 'var(--font-sans)', fontSize: 'var(--text-body)', color: 'var(--ink-800)', textAlign: 'left' }}
+                        onMouseEnter={(e) => e.currentTarget.style.background = 'var(--surface-sunken)'}
+                        onMouseLeave={(e) => e.currentTarget.style.background = unit.st === key ? 'var(--surface-sunken)' : 'transparent'}>
+                        <Badge tone={tone}>{label}</Badge>
+                        {unit.st === key && <i className="ph ph-check" style={{ marginLeft: 'auto', color: 'var(--brand-green)', fontSize: 14 }} />}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            : <div style={{ display: 'flex', gap: 4 }}>
+                {Object.entries(UNIT_STATUS).map(([key, { label, tone }]) => (
+                  <button key={key} type="button" onClick={() => set('st', key)} style={{
+                    height: 26, padding: '0 10px', border: 'none', borderRadius: 'var(--radius-pill)',
+                    cursor: 'pointer', fontFamily: 'var(--font-sans)', fontSize: 'var(--text-small)',
+                    fontWeight: form.st === key ? 'var(--fw-medium)' : undefined,
+                    background: form.st === key ? 'var(--overlay-ink-04)' : 'transparent',
+                    color: form.st === key ? 'var(--ink-900)' : 'var(--ink-400)',
+                    outline: form.st === key ? '1.5px solid var(--line-300)' : 'none',
+                    transition: 'all 120ms',
+                  }}>{label}</button>
+                ))}
+              </div>
+          }
+        </div>
         {!isEditing
           ? <button type="button" onClick={startEdit}
               style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', border: '1px solid var(--line-200)', borderRadius: 'var(--radius-md)', background: 'var(--surface-card)', color: 'var(--ink-600)', fontFamily: 'var(--font-sans)', fontSize: 'var(--text-small)', cursor: 'pointer' }}
