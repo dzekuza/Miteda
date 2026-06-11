@@ -4,23 +4,6 @@
    Components use these classes via className (no inline-style soup).
    ============================================================ */
 
-/* ---- Type weight fix ---------------------------------------
-   Only the Tomato Grotesk *Light* master is supplied, yet the DS
-   declares it across 300–600, so Medium/Semibold render thin and
-   the browser refuses to synthesise heavier weights for this OTF.
-   We thicken medium/semibold text optically with a hairline stroke
-   in the same colour (scales with font-size via em). Body weight
-   (400) is untouched, keeping the true light letterforms.
-   ------------------------------------------------------------ */
-.hdr__title, .sec-title,
-h1, h2, h3,
-[style*="fw-medium"], [style*="fw-semibold"] {
-  -webkit-text-stroke: 0.024em currentColor;
-  text-stroke: 0.024em currentColor;
-  paint-order: stroke fill;
-}
-.hdr__title, .sec-title, h1, h2 { -webkit-text-stroke-width: 0.03em; }
-
 /* ---- Layout spacing token ----------------------------------
    Gap between layout components (cards, columns, sections).
    Change here to re-space the whole app. */
@@ -124,6 +107,11 @@ h1, h2, h3,
 .hdr__io { display: flex; align-items: center; gap: 12px; }
 .hdr__search { width: 264px; }
 @media (max-width: 1100px) { .hdr__search { display: none !important; } }
+.hdr__bc { display: flex; align-items: center; gap: 4px; margin-bottom: 2px; }
+.hdr__bc-sep { color: var(--ink-300); font-size: var(--text-small); user-select: none; }
+.hdr__bc-link { font-size: var(--text-small); color: var(--ink-400); text-decoration: none; }
+.hdr__bc-link:hover { color: var(--ink-700); text-decoration: underline; }
+.hdr__bc-cur { font-size: var(--text-small); color: var(--ink-500); }
 
 /* ---- Generic panel section title --------------------------- */
 .panel-head {

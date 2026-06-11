@@ -5,6 +5,16 @@ import { runPageEnter } from '../lib/animations'
 // DS components come from the globally loaded bundle
 const getDS = () => window.MitedaDesignSystem_acc833 || {}
 
+const SEGMENT_LABELS = {
+  admin: 'Administracija', owner: 'Savininkas', statyba: 'Statyba',
+  objektai: 'Objektai', objektas: 'Objektas', defektai: 'Defektai',
+  kontaktai: 'Kontaktai', darbai: 'Darbai', zinutes: 'Žinutės',
+  pagrindinis: 'Pagrindinis', nuotraukos: 'Nuotraukos', sutartys: 'Sutartys',
+  tvarkarastis: 'Tvarkaraštis', skelbimai: 'Skelbimai', bendruomene: 'Bendruomenė',
+  nustatymai: 'Nustatymai', finansai: 'Finansai', ataskaitos: 'Ataskaitos',
+  vadovas: 'Vadovas', darbininkas: 'Darbininkas',
+}
+
 const ROLES = {
   gyventojas: {
     folder: 'owner', home: '/owner/pagrindinis', label: 'Gyventojas', icon: 'ph ph-house',
@@ -148,7 +158,7 @@ const NOTIFICATIONS = [
   { id: 5, icon: 'ph ph-users-three', tone: 'neutral', title: 'Bendruomenės žinutė', body: 'C-21 · M. Šimkus parašė į bendruomenės forumą.', time: 'Vakar', unread: false },
 ]
 
-function Header({ title, subtitle, actions, onMenu, role }) {
+function Header({ title, subtitle, actions, onMenu, role, breadcrumbs }) {
   const DS = getDS()
   const IconButton = DS.IconButton
   const Input = DS.Input
@@ -194,6 +204,18 @@ function Header({ title, subtitle, actions, onMenu, role }) {
           <i className="ph ph-list" style={{ fontSize: 22 }} aria-hidden="true" />
         </button>
         <div className="panel-head__tx">
+          {breadcrumbs && breadcrumbs.length > 1 && (
+            <nav className="hdr__bc" aria-label="Breadcrumb">
+              {breadcrumbs.map((c, i) => (
+                <React.Fragment key={i}>
+                  {i > 0 && <span className="hdr__bc-sep" aria-hidden="true">/</span>}
+                  {c.href && i < breadcrumbs.length - 1
+                    ? <Link className="hdr__bc-link" to={c.href}>{c.label}</Link>
+                    : <span className="hdr__bc-cur" aria-current={i === breadcrumbs.length - 1 ? 'page' : undefined}>{c.label}</span>}
+                </React.Fragment>
+              ))}
+            </nav>
+          )}
           <h1 className="hdr__title">{title}</h1>
           {subtitle && <p className="hdr__sub">{subtitle}</p>}
         </div>
@@ -255,7 +277,7 @@ function Header({ title, subtitle, actions, onMenu, role }) {
   )
 }
 
-export default function Shell({ role, nav, title, subtitle, headerActions, children }) {
+export default function Shell({ role, nav, title, subtitle, headerActions, breadcrumbs, children }) {
   const [open, setOpen] = React.useState(false)
   const [collapsed, setCollapsed] = React.useState(() => {
     try { return localStorage.getItem('miteda-sb-collapsed') === '1' } catch (e) { return false }
@@ -267,12 +289,24 @@ export default function Shell({ role, nav, title, subtitle, headerActions, child
     try { localStorage.setItem('miteda-sb-collapsed', n ? '1' : '0') } catch (e) {}
     return n
   })
+
+  const autoCrumbs = React.useMemo(() => {
+    const segs = location.pathname.split('/').filter(Boolean)
+    if (segs.length < 2) return null
+    return segs.map((seg, i) => ({
+      label: SEGMENT_LABELS[seg] || seg,
+      href: '/' + segs.slice(0, i + 1).join('/'),
+    }))
+  }, [location.pathname])
+
+  const crumbs = breadcrumbs ?? autoCrumbs
+
   return (
     <div className={'app-shell' + (open ? ' nav-open' : '') + (collapsed ? ' sb-collapsed' : '')}>
       <div className="sidebar-scrim" onClick={() => setOpen(false)} />
       <Sidebar role={role} nav={nav} collapsed={collapsed} onToggle={toggle} />
       <main className="main">
-        <Header title={title} subtitle={subtitle} actions={headerActions} onMenu={() => setOpen(true)} role={role} />
+        <Header title={title} subtitle={subtitle} actions={headerActions} onMenu={() => setOpen(true)} role={role} breadcrumbs={crumbs} />
         {children}
       </main>
     </div>
