@@ -61,20 +61,73 @@ function PropertyCard({ p, i, onEdit, onRemove }) {
   )
 }
 
+function CoverDropzone({ value, onChange }) {
+  const fileRef = React.useRef()
+  const [dragOver, setDragOver] = React.useState(false)
+  const handleFile = (file) => {
+    if (!file || !file.type.startsWith('image/')) return
+    onChange(URL.createObjectURL(file))
+  }
+  return (
+    <div>
+      <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }}
+        onChange={(e) => { handleFile(e.target.files[0]); e.target.value = '' }} />
+      <div
+        onClick={() => fileRef.current?.click()}
+        onDragOver={(e) => { e.preventDefault(); setDragOver(true) }}
+        onDragLeave={() => setDragOver(false)}
+        onDrop={(e) => { e.preventDefault(); setDragOver(false); handleFile(e.dataTransfer.files[0]) }}
+        style={{
+          position: 'relative', height: 140, borderRadius: 'var(--radius-md)', overflow: 'hidden',
+          background: value ? `url(${value}) center/cover no-repeat` : 'var(--surface-sunken)',
+          border: `1.5px dashed ${dragOver ? 'var(--brand-green)' : 'var(--line-200)'}`,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          cursor: 'pointer', transition: 'border-color 0.15s', boxSizing: 'border-box',
+        }}>
+        {!value
+          ? <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, color: dragOver ? 'var(--brand-green)' : 'var(--ink-300)', pointerEvents: 'none' }}>
+              <i className="ph ph-image" style={{ fontSize: 32 }} />
+              <span style={{ fontSize: 'var(--text-small)' }}>{dragOver ? 'Paleiskite norėdami įkelti' : 'Tempkite arba spustelėkite'}</span>
+            </div>
+          : <div style={{ position: 'absolute', inset: 0, background: dragOver ? 'rgba(0,0,0,0.5)' : 'rgba(0,0,0,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
+              <span style={{ color: '#fff', fontSize: 'var(--text-small)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                <i className={`ph ${dragOver ? 'ph-arrow-down' : 'ph-pencil-simple'}`} style={{ fontSize: 16 }} />
+                {dragOver ? 'Paleiskite norėdami pakeisti' : 'Keisti nuotrauką'}
+              </span>
+            </div>
+        }
+      </div>
+      {value && (
+        <button type="button" onClick={() => onChange(null)}
+          style={{ marginTop: 6, border: 'none', background: 'none', cursor: 'pointer', fontSize: 'var(--text-small)', color: 'var(--ink-400)', display: 'flex', alignItems: 'center', gap: 4, padding: 0 }}>
+          <i className="ph ph-x" style={{ fontSize: 13 }} /> Pašalinti nuotrauką
+        </button>
+      )}
+    </div>
+  )
+}
+
 function EditPropertyModal({ p, onClose, onSave }) {
   const { Button } = getDS()
   const [name, setName] = useState(p.name)
   const [addr, setAddr] = useState(p.address)
   const [units, setUnits] = useState(String(p.units))
+  const [coverImage, setCoverImage] = useState(p.coverImage || null)
   return (
     <Modal title="Redaguoti objektą" subtitle="Atnaujinkite pastato informaciją ir nuotrauką." onClose={onClose}
       footer={<React.Fragment>
         {Button && <Button variant="ghost" onClick={onClose}>Atšaukti</Button>}
-        {Button && <Button variant="accent" iconLeft="ph ph-floppy-disk" onClick={() => name.trim() && onSave({ ...p, name: name.trim(), address: addr.trim() || '—', units: parseInt(units) || p.units })}>Išsaugoti</Button>}
+        {Button && <Button variant="accent" iconLeft="ph ph-floppy-disk" onClick={() => name.trim() && onSave({ ...p, name: name.trim(), address: addr.trim() || '—', units: parseInt(units) || p.units, coverImage })}>Išsaugoti</Button>}
       </React.Fragment>}>
-      <div className="field"><label>Pavadinimas</label><input value={name} onChange={(e) => setName(e.target.value)} /></div>
-      <div className="field"><label>Adresas</label><input value={addr} onChange={(e) => setAddr(e.target.value)} /></div>
-      <div className="field"><label>Butų skaičius</label><input value={units} onChange={(e) => setUnits(e.target.value)} type="number" /></div>
+      <div className="stack-sm" style={{ gap: 14 }}>
+        <div className="field" style={{ marginBottom: 0 }}>
+          <label>Viršelio nuotrauka</label>
+          <CoverDropzone value={coverImage} onChange={setCoverImage} />
+        </div>
+        <div className="field" style={{ marginBottom: 0 }}><label>Pavadinimas</label><input value={name} onChange={(e) => setName(e.target.value)} /></div>
+        <div className="field" style={{ marginBottom: 0 }}><label>Adresas</label><input value={addr} onChange={(e) => setAddr(e.target.value)} /></div>
+        <div className="field" style={{ marginBottom: 0 }}><label>Butų skaičius</label><input value={units} onChange={(e) => setUnits(e.target.value)} type="number" /></div>
+      </div>
     </Modal>
   )
 }
@@ -84,15 +137,22 @@ function AddModal({ onClose, onSubmit }) {
   const [name, setName] = useState('')
   const [addr, setAddr] = useState('')
   const [units, setUnits] = useState('')
+  const [coverImage, setCoverImage] = useState(null)
   return (
     <Modal title="Pridėti objektą" subtitle="Naujas pastatas atsiras objektų sąraše." onClose={onClose}
       footer={<React.Fragment>
         {Button && <Button variant="secondary" onClick={onClose}>Atšaukti</Button>}
-        {Button && <Button variant="accent" iconLeft="ph ph-plus" onClick={() => name.trim() && onSubmit({ name: name.trim(), address: addr.trim() || '—', units: parseInt(units) || 0, sold: 0 })}>Pridėti</Button>}
+        {Button && <Button variant="accent" iconLeft="ph ph-plus" onClick={() => name.trim() && onSubmit({ name: name.trim(), address: addr.trim() || '—', units: parseInt(units) || 0, sold: 0, coverImage })}>Pridėti</Button>}
       </React.Fragment>}>
-      <div className="field"><label>Pavadinimas</label><input value={name} onChange={(e) => setName(e.target.value)} placeholder="Pvz. Ąžuolų Namai" /></div>
-      <div className="field"><label>Adresas</label><input value={addr} onChange={(e) => setAddr(e.target.value)} placeholder="Gatvė, miestas" /></div>
-      <div className="field"><label>Butų skaičius</label><input value={units} onChange={(e) => setUnits(e.target.value)} placeholder="Pvz. 48" type="number" /></div>
+      <div className="stack-sm" style={{ gap: 14 }}>
+        <div className="field" style={{ marginBottom: 0 }}>
+          <label>Viršelio nuotrauka</label>
+          <CoverDropzone value={coverImage} onChange={setCoverImage} />
+        </div>
+        <div className="field" style={{ marginBottom: 0 }}><label>Pavadinimas</label><input value={name} onChange={(e) => setName(e.target.value)} placeholder="Pvz. Ąžuolų Namai" /></div>
+        <div className="field" style={{ marginBottom: 0 }}><label>Adresas</label><input value={addr} onChange={(e) => setAddr(e.target.value)} placeholder="Gatvė, miestas" /></div>
+        <div className="field" style={{ marginBottom: 0 }}><label>Butų skaičius</label><input value={units} onChange={(e) => setUnits(e.target.value)} placeholder="Pvz. 48" type="number" /></div>
+      </div>
     </Modal>
   )
 }

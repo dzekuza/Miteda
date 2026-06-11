@@ -190,21 +190,26 @@ function UnitDetailModal({ unit, idx, onClose, onSaveUnit }) {
       <div className="between" style={{ marginBottom: 16 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <span style={{ fontSize: 'var(--text-small)', color: 'var(--ink-400)' }}>Būsena:</span>
-          <div style={{ display: 'flex', gap: 4 }}>
-            {Object.entries(UNIT_STATUS).map(([key, { label, tone }]) => (
-              <button key={key} type="button" onClick={() => set('st', key)} style={{
-                height: 26, padding: '0 10px', border: 'none', borderRadius: 'var(--radius-pill)',
-                cursor: 'pointer', fontFamily: 'var(--font-sans)', fontSize: 'var(--text-small)',
-                fontWeight: form.st === key ? 'var(--fw-medium)' : undefined,
-                background: form.st === key ? 'var(--overlay-ink-04)' : 'transparent',
-                color: form.st === key ? 'var(--ink-900)' : 'var(--ink-400)',
-                outline: form.st === key ? '1.5px solid var(--line-300)' : 'none',
-                transition: 'all 120ms',
-              }}>{label}</button>
-            ))}
+          <div style={{ position: 'relative' }}>
+            <button type="button" onClick={() => setStatusPicker((v) => !v)} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '2px 8px 2px 8px', border: 'none', borderRadius: 'var(--radius-pill)', background: 'transparent', cursor: 'pointer', fontFamily: 'var(--font-sans)' }}>
+              <Badge tone={UNIT_STATUS[form.st]?.tone}>{UNIT_STATUS[form.st]?.label}</Badge>
+              <i className="ph ph-pencil-simple" style={{ fontSize: 12, color: 'var(--ink-400)' }} />
+            </button>
+          {statusPicker && (
+            <div style={{ position: 'absolute', right: 0, top: '100%', marginTop: 4, background: 'var(--surface-card)', borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.10)', padding: 8, zIndex: 100, minWidth: 160 }} onMouseDown={(e) => e.stopPropagation()}>
+              {Object.entries(UNIT_STATUS).map(([key, { label, tone }]) => (
+                <button key={key} type="button" onClick={() => { set('st', key); setStatusPicker(false) }} style={{
+                  display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '6px 8px',
+                  border: 'none', borderRadius: 'var(--radius-sm)', background: form.st === key ? 'var(--overlay-ink-04)' : 'transparent',
+                  cursor: 'pointer', fontFamily: 'var(--font-sans)', textAlign: 'left',
+                }}>
+                  <Badge tone={tone}>{label}</Badge>
+                </button>
+              ))}
+            </div>
+          )}
           </div>
         </div>
-
       </div>
 
       {/* Tabs */}
@@ -443,7 +448,6 @@ function UnitDetailModal({ unit, idx, onClose, onSaveUnit }) {
 }
 
 const ADD_TABS = [
-  { key: 'basic', label: 'Pagrindinis' },
   { key: 'tech', label: 'Techniniai duomenys' },
   { key: 'owner', label: 'Savininkas' },
   { key: 'photos', label: 'Nuotraukos' },
@@ -469,7 +473,7 @@ function AddUnitModal({ units, onAdd, onClose, initial, onSave }) {
   }
   const sid = suggestId()
 
-  const [tab, setTab] = useState('basic')
+  const [tab, setTab] = useState('tech')
   const [form, setForm] = useState(initial ? {
     id: initial.id,
     floor: String(initial.floor),
@@ -482,6 +486,7 @@ function AddUnitModal({ units, onAdd, onClose, initial, onSave }) {
     year: initial.year || '2024',
     energyClass: initial.energyClass || 'A+',
     st: initial.st,
+    parkingNr: initial.parkingNr || '',
     ownerName: initial.owner?.name || '',
     ownerPhone: initial.owner?.phone || '',
     ownerEmail: initial.owner?.email || '',
@@ -496,6 +501,7 @@ function AddUnitModal({ units, onAdd, onClose, initial, onSave }) {
     orientation: 'Pietų',
     heating: 'Centrinis šildymas',
     hasParking: false,
+    parkingNr: '',
     hasStorage: false,
     year: '2024',
     energyClass: 'A+',
@@ -520,7 +526,7 @@ function AddUnitModal({ units, onAdd, onClose, initial, onSave }) {
     if (!form.floor || isNaN(+form.floor) || +form.floor < 1) e.floor = 'Įveskite teisingą aukštą'
     if (!form.area || isNaN(+form.area) || +form.area < 10) e.area = 'Įveskite teisingą plotą'
     setErrors(e)
-    if (Object.keys(e).length > 0) { setTab('basic'); return false }
+    if (Object.keys(e).length > 0) { setTab('tech'); return false }
     return true
   }
 
@@ -529,7 +535,7 @@ function AddUnitModal({ units, onAdd, onClose, initial, onSave }) {
     const data = {
       id: form.id.trim(), floor: +form.floor, area: +form.area, st: form.st,
       rooms: +form.rooms, orientation: form.orientation, heating: form.heating,
-      hasParking: form.hasParking, hasStorage: form.hasStorage,
+      hasParking: form.hasParking, parkingNr: form.parkingNr, hasStorage: form.hasStorage,
       year: form.year, energyClass: form.energyClass,
       owner: form.ownerName ? { name: form.ownerName, phone: form.ownerPhone, email: form.ownerEmail, since: form.ownerSince } : null,
       photos: form.photos, documents: form.documents,
@@ -539,16 +545,16 @@ function AddUnitModal({ units, onAdd, onClose, initial, onSave }) {
     onClose()
   }
 
-  const pill = (editable = true, err = false) => ({
-    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-    padding: '10px 12px', borderRadius: 'var(--radius-sm)', margin: '2px 0', minHeight: 38,
-    background: editable ? 'var(--surface-card)' : 'var(--surface-sunken)',
-    boxShadow: err ? 'inset 0 0 0 1.5px var(--orange)' : editable ? 'inset 0 0 0 1.5px var(--brand-green)' : 'inset 0 0 0 1px var(--line-100)',
-  })
-  const pillLbl = { fontSize: 'var(--text-small)', color: 'var(--ink-400)', flexShrink: 0 }
-  const pillVal = { fontSize: 'var(--text-body)', fontWeight: 'var(--fw-medium)', color: 'var(--ink-900)' }
-  const inp = { border: 'none', background: 'transparent', textAlign: 'right', fontSize: 'var(--text-body)', fontWeight: 'var(--fw-medium)', color: 'var(--ink-900)', outline: 'none', fontFamily: 'var(--font-sans)', width: 140, minWidth: 0 }
-  const inlSel = { border: 'none', background: 'transparent', fontSize: 'var(--text-body)', fontWeight: 'var(--fw-medium)', color: 'var(--ink-900)', outline: 'none', cursor: 'pointer', fontFamily: 'var(--font-sans)', maxWidth: 200 }
+  const iInp = { border: 'none', background: 'transparent', fontSize: 'var(--text-body)', fontWeight: 'var(--fw-medium)', color: 'var(--ink-900)', outline: 'none', fontFamily: 'var(--font-sans)', width: '100%' }
+  const iSel = { border: 'none', background: 'transparent', fontSize: 'var(--text-body)', fontWeight: 'var(--fw-medium)', color: 'var(--ink-900)', outline: 'none', cursor: 'pointer', fontFamily: 'var(--font-sans)', width: '100%' }
+  const FieldBox = ({ label, error, disabled, onClick, wrapStyle, children }) => (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 4, ...wrapStyle }}>
+      <span style={{ fontSize: 'var(--text-small)', color: error ? 'var(--orange)' : 'var(--ink-400)', fontWeight: 'var(--fw-medium)' }}>{error || label}</span>
+      <div style={{ display: 'flex', alignItems: 'center', height: 40, padding: '0 12px', background: 'var(--surface-card)', borderRadius: 'var(--radius-sm)', boxShadow: error ? 'inset 0 0 0 1.5px var(--orange)' : disabled ? 'inset 0 0 0 1px var(--line-100)' : 'inset 0 0 0 1px var(--line-200)', opacity: disabled ? 0.5 : 1, cursor: onClick ? 'pointer' : undefined, transition: 'box-shadow 150ms' }} onClick={onClick}>
+        {children}
+      </div>
+    </div>
+  )
 
   const photoInputRef = React.useRef()
   const docInputRef = React.useRef()
@@ -571,43 +577,16 @@ function AddUnitModal({ units, onAdd, onClose, initial, onSave }) {
         <Button variant="accent" iconLeft={isEdit ? 'ph ph-floppy-disk' : 'ph ph-plus'} onClick={submit}>{isEdit ? 'Išsaugoti' : 'Pridėti butą'}</Button>
       </>}>
 
-      <div style={{ marginBottom: 20 }}>
-        <Tabs tabs={ADD_TABS} value={tab} onChange={setTab} />
-      </div>
-
-      {/* --- Pagrindinis --- */}
-      {tab === 'basic' && (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2px 8px' }}>
-          <div style={{ ...pill(true, !!errors.id), gridColumn: '1 / -1', flexDirection: errors.id ? 'column' : 'row', alignItems: errors.id ? 'flex-start' : 'center', gap: errors.id ? 4 : 0 }}>
-            <span style={pillLbl}>Buto numeris</span>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-              <input style={inp} value={form.id} placeholder="pvz. A-12" onChange={(e) => set('id', e.target.value)} />
-              {errors.id && <span style={{ fontSize: 'var(--text-small)', color: 'var(--orange)' }}>{errors.id}</span>}
-            </div>
-          </div>
-          <div style={{ ...pill(true, !!errors.floor), flexDirection: errors.floor ? 'column' : 'row', alignItems: errors.floor ? 'flex-start' : 'center', gap: errors.floor ? 4 : 0 }}>
-            <span style={pillLbl}>Aukštas</span>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-              <input style={inp} type="number" min="1" value={form.floor} onChange={(e) => set('floor', e.target.value)} />
-              {errors.floor && <span style={{ fontSize: 'var(--text-small)', color: 'var(--orange)' }}>{errors.floor}</span>}
-            </div>
-          </div>
-          <div style={{ ...pill(true, !!errors.area), flexDirection: errors.area ? 'column' : 'row', alignItems: errors.area ? 'flex-start' : 'center', gap: errors.area ? 4 : 0 }}>
-            <span style={pillLbl}>Plotas (m²)</span>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-              <input style={inp} type="number" min="10" value={form.area} onChange={(e) => set('area', e.target.value)} />
-              {errors.area && <span style={{ fontSize: 'var(--text-small)', color: 'var(--orange)' }}>{errors.area}</span>}
-            </div>
-          </div>
-          <span style={{ ...pillLbl, gridColumn: '1 / -1' }}>Būsena</span>
-          <div style={{ display: 'flex', gap: 6, width: '100%', gridColumn: '1 / -1' }}>
+      {/* Header row — status */}
+      <div className="between" style={{ marginBottom: 16 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <span style={{ fontSize: 'var(--text-small)', color: 'var(--ink-400)' }}>Būsena:</span>
+          <div style={{ display: 'flex', gap: 4 }}>
             {Object.entries(UNIT_STATUS).map(([key, { label, tone }]) => (
               <button key={key} type="button" onClick={() => set('st', key)} style={{
-                flex: 1, height: 32, border: 'none', borderRadius: 'var(--radius-sm)', cursor: 'pointer',
-                fontFamily: 'var(--font-sans)', fontSize: 'var(--text-small)',
-                fontWeight: form.st === key ? 'var(--fw-medium)' : undefined,
+                height: 26, padding: '0 10px', border: 'none', borderRadius: 'var(--radius-pill)',
+                cursor: 'pointer', fontFamily: 'var(--font-sans)',
                 background: form.st === key ? 'var(--overlay-ink-04)' : 'transparent',
-                color: form.st === key ? 'var(--ink-900)' : 'var(--ink-400)',
                 outline: form.st === key ? '1.5px solid var(--line-300)' : 'none',
                 transition: 'all 120ms',
               }}>
@@ -616,53 +595,64 @@ function AddUnitModal({ units, onAdd, onClose, initial, onSave }) {
             ))}
           </div>
         </div>
-      )}
+      </div>
+
+      <div style={{ marginBottom: 16 }}>
+        <Tabs tabs={ADD_TABS} value={tab} onChange={setTab} />
+      </div>
 
       {/* --- Techniniai duomenys --- */}
       {tab === 'tech' && (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2px 8px' }}>
-          <div style={pill()}>
-            <span style={pillLbl}>Kambariai</span>
-            <input style={inp} type="number" min="1" max="10" value={form.rooms} onChange={(e) => set('rooms', e.target.value)} />
-          </div>
-          <div style={pill()}>
-            <span style={pillLbl}>Orientacija</span>
-            <select style={inlSel} value={form.orientation} onChange={(e) => set('orientation', e.target.value)}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          <FieldBox label="Buto numeris" error={errors.id} wrapStyle={{ gridColumn: '1 / -1' }}>
+            <input style={iInp} value={form.id} placeholder="pvz. A-12" onChange={(e) => set('id', e.target.value)} />
+          </FieldBox>
+          <FieldBox label="Aukštas" error={errors.floor}>
+            <input style={iInp} type="number" min="1" value={form.floor} onChange={(e) => set('floor', e.target.value)} />
+          </FieldBox>
+          <FieldBox label="Plotas (m²)" error={errors.area}>
+            <input style={iInp} type="number" min="10" value={form.area} onChange={(e) => set('area', e.target.value)} />
+          </FieldBox>
+          <FieldBox label="Kambariai">
+            <input style={iInp} type="number" min="1" max="10" value={form.rooms} onChange={(e) => set('rooms', e.target.value)} />
+          </FieldBox>
+          <FieldBox label="Orientacija">
+            <select style={iSel} value={form.orientation} onChange={(e) => set('orientation', e.target.value)}>
               {ORIENTATIONS.map(o => <option key={o} value={o}>{o}</option>)}
             </select>
-          </div>
-          <div style={pill()}>
-            <span style={pillLbl}>Šildymas</span>
-            <select style={inlSel} value={form.heating} onChange={(e) => set('heating', e.target.value)}>
+          </FieldBox>
+          <FieldBox label="Šildymas">
+            <select style={iSel} value={form.heating} onChange={(e) => set('heating', e.target.value)}>
               {HEATINGS.map(h => <option key={h} value={h}>{h}</option>)}
             </select>
-          </div>
-          <div style={pill()}>
-            <span style={pillLbl}>Energetinė klasė</span>
-            <select style={inlSel} value={form.energyClass} onChange={(e) => set('energyClass', e.target.value)}>
-              {ENERGY_CLASSES.map(c => <option key={c} value={c}>{c}</option>)}
-            </select>
-          </div>
-          <div style={pill()}>
-            <span style={pillLbl}>Statybos metai</span>
-            <input style={inp} type="number" min="1900" max="2100" value={form.year} onChange={(e) => set('year', e.target.value)} />
-          </div>
-          <label style={{ ...pill(), cursor: 'pointer' }} onClick={() => set('hasParking', !form.hasParking)}>
-            <span style={pillLbl}>Automobilio stovėjimas</span>
+          </FieldBox>
+          <FieldBox label="Automobilio stovėjimas" onClick={() => set('hasParking', !form.hasParking)}>
+            <span style={{ flex: 1, fontSize: 'var(--text-body)', fontWeight: 'var(--fw-medium)', color: 'var(--ink-900)' }}>{form.hasParking ? 'Taip' : 'Ne'}</span>
             <input type="checkbox" checked={form.hasParking} onChange={(e) => set('hasParking', e.target.checked)} onClick={(e) => e.stopPropagation()}
               style={{ width: 16, height: 16, accentColor: 'var(--brand-green)', cursor: 'pointer', flexShrink: 0 }} />
-          </label>
-          <label style={{ ...pill(), cursor: 'pointer' }} onClick={() => set('hasStorage', !form.hasStorage)}>
-            <span style={pillLbl}>Sandėliukas</span>
+          </FieldBox>
+          <FieldBox label="Stovėjimo aikštelės Nr." disabled={!form.hasParking}>
+            <input style={{ ...iInp, opacity: form.hasParking ? 1 : 0.35 }} disabled={!form.hasParking} placeholder="pvz. P-12" value={form.parkingNr || ''} onChange={(e) => set('parkingNr', e.target.value)} />
+          </FieldBox>
+          <FieldBox label="Sandėliukas" onClick={() => set('hasStorage', !form.hasStorage)}>
+            <span style={{ flex: 1, fontSize: 'var(--text-body)', fontWeight: 'var(--fw-medium)', color: 'var(--ink-900)' }}>{form.hasStorage ? 'Taip' : 'Ne'}</span>
             <input type="checkbox" checked={form.hasStorage} onChange={(e) => set('hasStorage', e.target.checked)} onClick={(e) => e.stopPropagation()}
               style={{ width: 16, height: 16, accentColor: 'var(--brand-green)', cursor: 'pointer', flexShrink: 0 }} />
-          </label>
+          </FieldBox>
+          <FieldBox label="Statybos metai">
+            <input style={iInp} type="number" min="1900" max="2100" value={form.year} onChange={(e) => set('year', e.target.value)} />
+          </FieldBox>
+          <FieldBox label="Energetinė klasė">
+            <select style={iSel} value={form.energyClass} onChange={(e) => set('energyClass', e.target.value)}>
+              {ENERGY_CLASSES.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+          </FieldBox>
         </div>
       )}
 
       {/* --- Savininkas --- */}
       {tab === 'owner' && (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2px 8px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
           {/* Searchable existing owner picker */}
           <div style={{ gridColumn: '1 / -1', marginBottom: 4 }}>
             <div style={{ position: 'relative' }}>
@@ -705,22 +695,18 @@ function AddUnitModal({ units, onAdd, onClose, initial, onSave }) {
               )}
             </div>
           </div>
-          <div style={{ ...pill(), gridColumn: '1 / -1' }}>
-            <span style={pillLbl}>Vardas Pavardė</span>
-            <input style={{ ...inp, width: 240 }} value={form.ownerName} placeholder="Lukas Petrauskas" onChange={(e) => { set('ownerName', e.target.value); setOwnerSearch(e.target.value) }} />
-          </div>
-          <div style={pill()}>
-            <span style={pillLbl}>Telefonas</span>
-            <input style={inp} value={form.ownerPhone} placeholder="+370 600 00000" onChange={(e) => set('ownerPhone', e.target.value)} />
-          </div>
-          <div style={pill()}>
-            <span style={pillLbl}>El. paštas</span>
-            <input style={inp} type="email" value={form.ownerEmail} placeholder="vardas@gmail.com" onChange={(e) => set('ownerEmail', e.target.value)} />
-          </div>
-          <div style={pill()}>
-            <span style={pillLbl}>Savininkas nuo</span>
-            <input style={inp} type="date" value={form.ownerSince} onChange={(e) => set('ownerSince', e.target.value)} />
-          </div>
+          <FieldBox label="Vardas Pavardė" wrapStyle={{ gridColumn: '1 / -1' }}>
+            <input style={iInp} value={form.ownerName} placeholder="Lukas Petrauskas" onChange={(e) => { set('ownerName', e.target.value); setOwnerSearch(e.target.value) }} />
+          </FieldBox>
+          <FieldBox label="Telefonas">
+            <input style={iInp} value={form.ownerPhone} placeholder="+370 600 00000" onChange={(e) => set('ownerPhone', e.target.value)} />
+          </FieldBox>
+          <FieldBox label="El. paštas">
+            <input style={iInp} type="email" value={form.ownerEmail} placeholder="vardas@gmail.com" onChange={(e) => set('ownerEmail', e.target.value)} />
+          </FieldBox>
+          <FieldBox label="Savininkas nuo">
+            <input style={iInp} type="date" value={form.ownerSince} onChange={(e) => set('ownerSince', e.target.value)} />
+          </FieldBox>
         </div>
       )}
 
@@ -966,14 +952,16 @@ function UnitsTab({ P }) {
                   <td>{u.area} m²</td>
                   <td style={{ color: 'var(--ink-500)' }}>{rooms} kamb.</td>
                   <td><Badge tone={UNIT_STATUS[u.st].tone}>{UNIT_STATUS[u.st].label}</Badge></td>
-                  <td>
+                  <td onClick={(e) => e.stopPropagation()}>
                     {owner
-                      ? <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      ? <Link to={`/admin/gyventojas/${owner.name.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\s+/g, '-')}`} style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none' }}
+                          onMouseEnter={(e) => e.currentTarget.style.opacity = '0.75'}
+                          onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}>
                           <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'var(--surface-sunken)', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: '0 0 auto', fontSize: 11, fontWeight: 'var(--fw-medium)', color: 'var(--ink-500)' }}>
                             {owner.name.split(' ').map((n) => n[0]).join('').slice(0, 2)}
                           </div>
                           <span style={{ fontSize: 'var(--text-body)', color: 'var(--ink-900)' }}>{owner.name}</span>
-                        </div>
+                        </Link>
                       : <span style={{ color: 'var(--ink-300)' }}>—</span>}
                   </td>
                   <td style={{ color: owner ? 'var(--ink-600)' : 'var(--ink-300)', fontSize: 'var(--text-small)' }}>
@@ -1405,13 +1393,12 @@ function EditObjektasModal({ P, onSave, onClose }) {
   const [form, setForm] = useState({ name: P.name, address: P.address, units: String(P.units), coverImage: P.coverImage || null })
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }))
   const fileRef = React.useRef()
+  const [dragOver, setDragOver] = useState(false)
   const fld = { height: 40, padding: '0 12px', border: 'none', borderRadius: 'var(--radius-sm)', background: 'var(--surface-card)', boxShadow: 'inset 0 0 0 1px var(--line-200)', fontFamily: 'var(--font-sans)', fontSize: 'var(--text-body)', color: 'var(--ink-900)', outline: 'none', width: '100%', boxSizing: 'border-box' }
 
-  const handleFile = (e) => {
-    const file = e.target.files[0]
-    if (!file) return
+  const handleFile = (file) => {
+    if (!file || !file.type.startsWith('image/')) return
     set('coverImage', URL.createObjectURL(file))
-    e.target.value = ''
   }
 
   return (
@@ -1420,16 +1407,23 @@ function EditObjektasModal({ P, onSave, onClose }) {
       <div className="stack-sm" style={{ gap: 14 }}>
         <div className="field" style={{ marginBottom: 0 }}>
           <label>Viršelio nuotrauka</label>
-          <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleFile} />
-          <div onClick={() => fileRef.current?.click()} style={{ position: 'relative', height: 140, borderRadius: 'var(--radius-md)', overflow: 'hidden', background: form.coverImage ? `url(${form.coverImage}) center/cover no-repeat` : 'var(--surface-sunken)', border: '1.5px dashed var(--line-200)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+          <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }}
+            onChange={(e) => { handleFile(e.target.files[0]); e.target.value = '' }} />
+          <div
+            onClick={() => fileRef.current?.click()}
+            onDragOver={(e) => { e.preventDefault(); setDragOver(true) }}
+            onDragLeave={() => setDragOver(false)}
+            onDrop={(e) => { e.preventDefault(); setDragOver(false); handleFile(e.dataTransfer.files[0]) }}
+            style={{ position: 'relative', height: 140, borderRadius: 'var(--radius-md)', overflow: 'hidden', background: form.coverImage ? `url(${form.coverImage}) center/cover no-repeat` : 'var(--surface-sunken)', border: `1.5px dashed ${dragOver ? 'var(--brand-green)' : 'var(--line-200)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'border-color 0.15s', boxSizing: 'border-box' }}>
             {!form.coverImage
-              ? <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, color: 'var(--ink-300)' }}>
+              ? <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, color: dragOver ? 'var(--brand-green)' : 'var(--ink-300)', pointerEvents: 'none' }}>
                   <i className="ph ph-image" style={{ fontSize: 32 }} />
-                  <span style={{ fontSize: 'var(--text-small)' }}>Pasirinkite nuotrauką</span>
+                  <span style={{ fontSize: 'var(--text-small)' }}>{dragOver ? 'Paleiskite norėdami įkelti' : 'Tempkite arba spustelėkite'}</span>
                 </div>
-              : <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              : <div style={{ position: 'absolute', inset: 0, background: dragOver ? 'rgba(0,0,0,0.5)' : 'rgba(0,0,0,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
                   <span style={{ color: '#fff', fontSize: 'var(--text-small)', display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <i className="ph ph-pencil-simple" style={{ fontSize: 16 }} /> Keisti nuotrauką
+                    <i className={`ph ${dragOver ? 'ph-arrow-down' : 'ph-pencil-simple'}`} style={{ fontSize: 16 }} />
+                    {dragOver ? 'Paleiskite norėdami pakeisti' : 'Keisti nuotrauką'}
                   </span>
                 </div>
             }
