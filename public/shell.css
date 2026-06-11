@@ -98,7 +98,7 @@ a.plain { color: inherit; text-decoration: none; }
 @media (max-width: 680px) {
   .hdr { padding: 14px 16px; flex-wrap: nowrap; align-items: center; }
   .hdr__l { flex: 1 1 0; min-width: 0; }
-  .hdr__r { flex: 0 0 auto; margin-left: auto; }
+  .hdr__r { flex: 0 0 auto; margin-left: auto; gap: 6px; }
   .hdr__sub { display: none; }
   .hdr__actions { order: unset; flex-basis: auto; padding-top: 0; }
   .hdr__actions > * { width: auto; }

@@ -201,7 +201,7 @@ function HeaderSearch({ role }) {
   }
 
   return (
-    <div ref={wrapRef} style={{ position: 'relative', width: 264 }} className="hdr__search-wrap">
+    <div ref={wrapRef} style={{ position: 'relative' }} className="hdr__search">
       <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
         <i className="ph ph-magnifying-glass" style={{ position: 'absolute', left: 10, fontSize: 16, color: 'var(--ink-400)', pointerEvents: 'none' }} />
         <input

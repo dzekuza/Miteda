@@ -120,12 +120,18 @@ function UnitDetailModal({ unit, idx, onClose, onSaveUnit }) {
   const fld = { height: 36, padding: '0 10px', border: 'none', borderRadius: 'var(--radius-sm)', background: 'var(--surface-card)', boxShadow: 'inset 0 0 0 1px var(--line-200)', fontFamily: 'var(--font-sans)', fontSize: 'var(--text-body)', color: 'var(--ink-900)', outline: 'none', width: '100%', boxSizing: 'border-box' }
   const selFld = { ...fld, paddingRight: 30 }
 
-  const ReadRow = ({ label, value }) => (
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', borderRadius: 'var(--radius-sm)', background: 'var(--surface-sunken)', margin: '2px 0' }}>
-      <span style={{ fontSize: 'var(--text-small)', color: 'var(--ink-400)' }}>{label}</span>
-      <span style={{ fontSize: 'var(--text-body)', fontWeight: 'var(--fw-medium)', color: 'var(--ink-900)' }}>{value}</span>
-    </div>
-  )
+  const pill = (editable = true) => ({
+    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+    padding: '10px 12px', borderRadius: 'var(--radius-sm)', margin: '2px 0', minHeight: 38,
+    background: isEditing && editable ? 'var(--surface-card)' : 'var(--surface-sunken)',
+    boxShadow: isEditing && editable ? 'inset 0 0 0 1.5px var(--brand-green)' : isEditing ? 'inset 0 0 0 1px var(--line-100)' : 'none',
+    opacity: isEditing && !editable ? 0.5 : 1,
+    transition: 'box-shadow 150ms, background 150ms, opacity 150ms',
+  })
+  const pillLbl = { fontSize: 'var(--text-small)', color: 'var(--ink-400)', flexShrink: 0 }
+  const pillVal = { fontSize: 'var(--text-body)', fontWeight: 'var(--fw-medium)', color: 'var(--ink-900)' }
+  const inp = { border: 'none', background: 'transparent', textAlign: 'right', fontSize: 'var(--text-body)', fontWeight: 'var(--fw-medium)', color: 'var(--ink-900)', outline: 'none', fontFamily: 'var(--font-sans)', width: 120, minWidth: 0 }
+  const inlSel = { border: 'none', background: 'transparent', fontSize: 'var(--text-body)', fontWeight: 'var(--fw-medium)', color: 'var(--ink-900)', outline: 'none', cursor: 'pointer', fontFamily: 'var(--font-sans)', maxWidth: 200 }
 
   const EditRow = ({ label, children }) => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
@@ -156,8 +162,8 @@ function UnitDetailModal({ unit, idx, onClose, onSaveUnit }) {
               <i className="ph ph-pencil-simple" style={{ fontSize: 15 }} />
               Redaguoti
             </button>
-          : <span style={{ fontSize: 'var(--text-small)', color: 'var(--brand-green)', display: 'flex', alignItems: 'center', gap: 5 }}>
-              <i className="ph ph-pencil-simple" style={{ fontSize: 14 }} /> Redagavimo režimas
+          : <span style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', border: '1px solid transparent', borderRadius: 'var(--radius-md)', fontSize: 'var(--text-small)', color: 'var(--brand-green)' }}>
+              <i className="ph ph-pencil-simple" style={{ fontSize: 15 }} /> Redagavimo režimas
             </span>
         }
       </div>
@@ -168,52 +174,57 @@ function UnitDetailModal({ unit, idx, onClose, onSaveUnit }) {
       </div>
 
       {/* Tech tab */}
-      {tab === 'tech' && !isEditing && (
+      {tab === 'tech' && (
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2px 8px' }}>
-          <ReadRow label="Butas" value={unit.id} />
-          <ReadRow label="Aukštas" value={`${unit.floor} aukštas`} />
-          <ReadRow label="Plotas" value={`${unit.area} m²`} />
-          <ReadRow label="Kambariai" value={`${rooms}-${rooms === 1 ? 'kambarinis' : 'kambariai'}`} />
-          <ReadRow label="Orientacija" value={orientation} />
-          <ReadRow label="Šildymas" value={heating} />
-          <ReadRow label="Automobilio stovėjimas" value={hasParking ? 'Taip (1 vieta)' : 'Ne'} />
-          <ReadRow label="Sandėliukas" value={hasStorage ? 'Taip' : 'Ne'} />
-          <ReadRow label="Statybos metai" value={unit.year || '2024'} />
-          <ReadRow label="Energetinė klasė" value={unit.energyClass || 'A+'} />
-        </div>
-      )}
-      {tab === 'tech' && isEditing && (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-          <EditRow label="Aukštas">
-            <input style={fld} type="number" min="1" value={form.floor} onChange={(e) => set('floor', e.target.value)} />
-          </EditRow>
-          <EditRow label="Plotas (m²)">
-            <input style={fld} type="number" min="10" value={form.area} onChange={(e) => set('area', e.target.value)} />
-          </EditRow>
-          <EditRow label="Orientacija">
-            <DSSelect value={form.orientation} onChange={(v) => set('orientation', v)} options={ORIENTATIONS} />
-          </EditRow>
-          <EditRow label="Šildymas">
-            <DSSelect value={form.heating} onChange={(v) => set('heating', v)} options={HEATINGS} />
-          </EditRow>
-          <EditRow label="Statybos metai">
-            <input style={fld} type="number" min="1900" max="2100" value={form.year} onChange={(e) => set('year', e.target.value)} />
-          </EditRow>
-          <EditRow label="Energetinė klasė">
-            <DSSelect value={form.energyClass} onChange={(v) => set('energyClass', v)} options={ENERGY_CLASSES} />
-          </EditRow>
-          <EditRow label="Būsena">
-            <DSSelect value={form.st} onChange={(v) => set('st', v)} options={Object.entries(UNIT_STATUS).map(([k, { label }]) => ({ value: k, label }))} />
-          </EditRow>
-          <div style={{ gridColumn: '1 / -1', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-            <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', borderRadius: 'var(--radius-sm)', background: 'var(--surface-sunken)', cursor: 'pointer' }}>
-              <span style={{ fontSize: 'var(--text-body)', color: 'var(--ink-700)' }}>Automobilio stovėjimas</span>
-              <input type="checkbox" checked={form.hasParking} onChange={(e) => set('hasParking', e.target.checked)} style={{ width: 16, height: 16, accentColor: 'var(--brand-green)', cursor: 'pointer' }} />
-            </label>
-            <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', borderRadius: 'var(--radius-sm)', background: 'var(--surface-sunken)', cursor: 'pointer' }}>
-              <span style={{ fontSize: 'var(--text-body)', color: 'var(--ink-700)' }}>Sandėliukas</span>
-              <input type="checkbox" checked={form.hasStorage} onChange={(e) => set('hasStorage', e.target.checked)} style={{ width: 16, height: 16, accentColor: 'var(--brand-green)', cursor: 'pointer' }} />
-            </label>
+          <div style={pill(false)}><span style={pillLbl}>Butas</span><span style={pillVal}>{unit.id}</span></div>
+          <div style={pill()}><span style={pillLbl}>Aukštas</span>
+            {isEditing
+              ? <input style={inp} type="number" min="1" value={form.floor} onChange={(e) => set('floor', e.target.value)} />
+              : <span style={pillVal}>{unit.floor} aukštas</span>}
+          </div>
+          <div style={pill()}><span style={pillLbl}>Plotas</span>
+            {isEditing
+              ? <input style={inp} type="number" min="10" value={form.area} onChange={(e) => set('area', e.target.value)} />
+              : <span style={pillVal}>{unit.area} m²</span>}
+          </div>
+          <div style={pill(false)}><span style={pillLbl}>Kambariai</span><span style={pillVal}>{currentRooms}-{currentRooms === 1 ? 'kambarinis' : 'kambariai'}</span></div>
+          <div style={pill()}><span style={pillLbl}>Orientacija</span>
+            {isEditing
+              ? <select style={inlSel} value={form.orientation} onChange={(e) => set('orientation', e.target.value)}>
+                  {ORIENTATIONS.map(o => <option key={o} value={o}>{o}</option>)}
+                </select>
+              : <span style={pillVal}>{orientation}</span>}
+          </div>
+          <div style={pill()}><span style={pillLbl}>Šildymas</span>
+            {isEditing
+              ? <select style={inlSel} value={form.heating} onChange={(e) => set('heating', e.target.value)}>
+                  {HEATINGS.map(h => <option key={h} value={h}>{h}</option>)}
+                </select>
+              : <span style={pillVal}>{heating}</span>}
+          </div>
+          <div style={{ ...pill(), cursor: isEditing ? 'pointer' : 'default' }} onClick={isEditing ? () => set('hasParking', !form.hasParking) : undefined}>
+            <span style={pillLbl}>Automobilio stovėjimas</span>
+            {isEditing
+              ? <input type="checkbox" checked={form.hasParking} onChange={(e) => set('hasParking', e.target.checked)} onClick={(e) => e.stopPropagation()} style={{ width: 16, height: 16, accentColor: 'var(--brand-green)', cursor: 'pointer', flexShrink: 0 }} />
+              : <span style={pillVal}>{hasParking ? 'Taip (1 vieta)' : 'Ne'}</span>}
+          </div>
+          <div style={{ ...pill(), cursor: isEditing ? 'pointer' : 'default' }} onClick={isEditing ? () => set('hasStorage', !form.hasStorage) : undefined}>
+            <span style={pillLbl}>Sandėliukas</span>
+            {isEditing
+              ? <input type="checkbox" checked={form.hasStorage} onChange={(e) => set('hasStorage', e.target.checked)} onClick={(e) => e.stopPropagation()} style={{ width: 16, height: 16, accentColor: 'var(--brand-green)', cursor: 'pointer', flexShrink: 0 }} />
+              : <span style={pillVal}>{hasStorage ? 'Taip' : 'Ne'}</span>}
+          </div>
+          <div style={pill()}><span style={pillLbl}>Statybos metai</span>
+            {isEditing
+              ? <input style={inp} type="number" min="1900" max="2100" value={form.year} onChange={(e) => set('year', e.target.value)} />
+              : <span style={pillVal}>{unit.year || '2024'}</span>}
+          </div>
+          <div style={pill()}><span style={pillLbl}>Energetinė klasė</span>
+            {isEditing
+              ? <select style={inlSel} value={form.energyClass} onChange={(e) => set('energyClass', e.target.value)}>
+                  {ENERGY_CLASSES.map(c => <option key={c} value={c}>{c}</option>)}
+                </select>
+              : <span style={pillVal}>{unit.energyClass || 'A+'}</span>}
           </div>
         </div>
       )}
@@ -269,49 +280,37 @@ function UnitDetailModal({ unit, idx, onClose, onSaveUnit }) {
       )}
 
       {/* Owner tab */}
-      {tab === 'owner' && !isEditing && (
+      {tab === 'owner' && (
         <div className="stack-sm">
           <div className="row">
-            {Avatar && owner && <Avatar name={owner.name} size={48} />}
+            {Avatar && (owner || form.ownerName) && <Avatar name={isEditing ? (form.ownerName || '?') : owner?.name} size={48} />}
             <div className="row__main">
-              <span className="row__title">{unit.st === 'free' ? '—' : owner?.name}</span>
-              <span className="row__meta">{unit.st === 'free' ? 'Butas laisvas, savininko nėra' : `Savininkas nuo ${owner?.since}`}</span>
+              {isEditing
+                ? <input style={{ ...inp, textAlign: 'left', width: '100%', fontSize: 'var(--text-body)', fontWeight: 'var(--fw-semibold)' }} value={form.ownerName} onChange={(e) => set('ownerName', e.target.value)} placeholder="Vardas Pavardė" />
+                : <span className="row__title">{unit.st === 'free' ? '—' : owner?.name}</span>}
+              <span className="row__meta">{unit.st === 'free' ? 'Butas laisvas, savininko nėra' : `Savininkas nuo ${isEditing ? (form.ownerSince || '...') : owner?.since}`}</span>
             </div>
           </div>
-          {unit.st !== 'free' && owner && (
+          {(unit.st !== 'free') && (
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 4 }}>
               {[
-                { icon: 'ph ph-phone', label: 'Telefonas', value: owner.phone },
-                { icon: 'ph ph-envelope', label: 'El. paštas', value: owner.email },
-                { icon: 'ph ph-calendar', label: 'Įsigyta', value: owner.since },
-                { icon: 'ph ph-identification-card', label: 'Tipas', value: unit.st === 'reserved' ? 'Rezervacija' : 'Pilnateisis savininkas' },
+                { icon: 'ph ph-phone', label: 'Telefonas', key: 'ownerPhone', value: isEditing ? form.ownerPhone : owner?.phone, placeholder: '+370 600 00000' },
+                { icon: 'ph ph-envelope', label: 'El. paštas', key: 'ownerEmail', value: isEditing ? form.ownerEmail : owner?.email, placeholder: 'vardas@gmail.com' },
+                { icon: 'ph ph-calendar', label: 'Įsigyta', key: 'ownerSince', value: isEditing ? form.ownerSince : owner?.since, placeholder: '2023-01-01' },
+                { icon: 'ph ph-identification-card', label: 'Tipas', key: null, value: unit.st === 'reserved' ? 'Rezervacija' : 'Pilnateisis savininkas' },
               ].map((f) => (
                 <div key={f.label} style={{ padding: '12px 14px', borderRadius: 'var(--radius-md)', background: 'var(--surface-sunken)' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
                     <i className={f.icon} style={{ fontSize: 14, color: 'var(--ink-400)' }} aria-hidden="true" />
                     <span style={{ fontSize: 'var(--text-small)', color: 'var(--ink-400)' }}>{f.label}</span>
                   </div>
-                  <span style={{ fontSize: 'var(--text-body)', fontWeight: 'var(--fw-medium)', color: 'var(--ink-900)' }}>{f.value}</span>
+                  {isEditing && f.key
+                    ? <input style={{ ...inp, textAlign: 'left', width: '100%' }} value={f.value || ''} onChange={(e) => set(f.key, e.target.value)} placeholder={f.placeholder} />
+                    : <span style={{ fontSize: 'var(--text-body)', fontWeight: 'var(--fw-medium)', color: 'var(--ink-900)' }}>{f.value}</span>}
                 </div>
               ))}
             </div>
           )}
-        </div>
-      )}
-      {tab === 'owner' && isEditing && (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-          <EditRow label="Savininko vardas, pavardė">
-            <input style={fld} value={form.ownerName} onChange={(e) => set('ownerName', e.target.value)} placeholder="Vardas Pavardė" />
-          </EditRow>
-          <EditRow label="Telefonas">
-            <input style={fld} value={form.ownerPhone} onChange={(e) => set('ownerPhone', e.target.value)} placeholder="+370 600 00000" />
-          </EditRow>
-          <EditRow label="El. paštas">
-            <input style={fld} value={form.ownerEmail} onChange={(e) => set('ownerEmail', e.target.value)} placeholder="vardas@gmail.com" />
-          </EditRow>
-          <EditRow label="Savininkas nuo">
-            <input style={fld} value={form.ownerSince} onChange={(e) => set('ownerSince', e.target.value)} placeholder="2023-01-01" />
-          </EditRow>
         </div>
       )}
 
