@@ -395,9 +395,9 @@ function UnitDetailModal({ unit, idx, onClose, onSaveUnit }) {
                     Atsisiųsti visus
                   </button>
                 </div>
-                <div className="stack-sm" style={{ gap: 8 }}>
+                <div className="stack-sm gap-8">
                   {contracts.map((c) => (
-                    <div key={c.id} className="row" style={{ marginTop: 0 }}>
+                    <div key={c.id} className="row">
                       <div style={{ width: 36, height: 36, borderRadius: 'var(--radius-sm)', background: 'var(--surface-sunken)', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: '0 0 auto' }}>
                         <i className="ph ph-file-text" style={{ fontSize: 18, color: 'var(--ink-400)' }} aria-hidden="true" />
                       </div>
@@ -422,9 +422,9 @@ function UnitDetailModal({ unit, idx, onClose, onSaveUnit }) {
       {tab === 'contracts' && isEditing && (
         <div>
           <input ref={contractInputRef} type="file" multiple style={{ display: 'none' }} onChange={addContracts} />
-          <div className="stack-sm" style={{ gap: 8, marginBottom: form.contracts.length ? 12 : 0 }}>
+          <div className="stack-sm gap-8" style={{ marginBottom: form.contracts.length ? 12 : 0 }}>
             {form.contracts.map((c, i) => (
-              <div key={c.id} className="row" style={{ marginTop: 0 }}>
+              <div key={c.id} className="row">
                 <div style={{ width: 36, height: 36, borderRadius: 'var(--radius-sm)', background: 'var(--surface-sunken)', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: '0 0 auto' }}>
                   <i className="ph ph-file-text" style={{ fontSize: 18, color: 'var(--ink-400)' }} aria-hidden="true" />
                 </div>
@@ -578,8 +578,8 @@ function AddUnitModal({ units, onAdd, onClose, initial, onSave }) {
   return (
     <Modal title={isEdit ? `Redaguoti butą ${initial.id}` : 'Pridėti butą'} subtitle={isEdit ? 'Keisti buto duomenis' : 'Naujas butas šiame pastate'} onClose={onClose} width={680}
       footer={<>
-        <Button variant="ghost" onClick={onClose}>Atšaukti</Button>
-        <Button variant="accent" iconLeft={isEdit ? 'ph ph-floppy-disk' : 'ph ph-plus'} onClick={submit}>{isEdit ? 'Išsaugoti' : 'Pridėti butą'}</Button>
+        <Button variant="secondary" onClick={onClose}>Atšaukti</Button>
+        <Button variant="primary" iconLeft={isEdit ? 'ph ph-floppy-disk' : 'ph ph-plus'} onClick={submit}>{isEdit ? 'Išsaugoti' : 'Pridėti butą'}</Button>
       </>}>
 
       {/* Header row — status */}
@@ -588,13 +588,7 @@ function AddUnitModal({ units, onAdd, onClose, initial, onSave }) {
           <span style={{ fontSize: 'var(--text-small)', color: 'var(--ink-400)' }}>Būsena:</span>
           <div style={{ display: 'flex', gap: 4 }}>
             {Object.entries(UNIT_STATUS).map(([key, { label, tone }]) => (
-              <button key={key} type="button" onClick={() => set('st', key)} style={{
-                height: 26, padding: '0 10px', border: 'none', borderRadius: 'var(--radius-pill)',
-                cursor: 'pointer', fontFamily: 'var(--font-sans)',
-                background: form.st === key ? 'var(--overlay-ink-04)' : 'transparent',
-                outline: form.st === key ? '1.5px solid var(--line-300)' : 'none',
-                transition: 'all 120ms',
-              }}>
+              <button key={key} type="button" onClick={() => set('st', key)} style={{ border: 'none', padding: 0, background: 'none', cursor: 'pointer', borderRadius: 'var(--radius-pill)', outline: form.st === key ? '1.5px solid var(--line-300)' : 'none' }}>
                 <Badge tone={tone}>{label}</Badge>
               </button>
             ))}
@@ -621,16 +615,39 @@ function AddUnitModal({ units, onAdd, onClose, initial, onSave }) {
           <FieldBox label="Kambariai">
             <input style={iInp} type="number" min="1" max="10" value={form.rooms} onChange={(e) => set('rooms', e.target.value)} />
           </FieldBox>
-          <FieldBox label="Orientacija">
-            <select style={iSel} value={form.orientation} onChange={(e) => set('orientation', e.target.value)}>
-              {ORIENTATIONS.map(o => <option key={o} value={o}>{o}</option>)}
-            </select>
-          </FieldBox>
-          <FieldBox label="Šildymas">
-            <select style={iSel} value={form.heating} onChange={(e) => set('heating', e.target.value)}>
-              {HEATINGS.map(h => <option key={h} value={h}>{h}</option>)}
-            </select>
-          </FieldBox>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <span style={{ fontSize: 'var(--text-small)', color: 'var(--ink-400)', fontWeight: 'var(--fw-medium)' }}>Orientacija</span>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, paddingTop: 4 }}>
+              {ORIENTATIONS.map(o => (
+                <button key={o} type="button" onClick={() => set('orientation', o)}
+                  style={{ padding: '5px 14px', borderRadius: 999, border: `1.5px solid ${form.orientation === o ? 'var(--brand-green)' : 'transparent'}`, background: form.orientation === o ? 'none' : 'var(--surface-sunken)', color: form.orientation === o ? 'var(--brand-green-dark, var(--brand-green))' : 'var(--ink-700)', fontSize: 'var(--text-small)', fontFamily: 'var(--font-sans)', fontWeight: form.orientation === o ? 'var(--fw-medium)' : 'var(--fw-regular)', cursor: 'pointer', whiteSpace: 'nowrap', outline: 'none' }}>
+                  {o}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <span style={{ fontSize: 'var(--text-small)', color: 'var(--ink-400)', fontWeight: 'var(--fw-medium)' }}>Šildymas</span>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, paddingTop: 4 }}>
+              {HEATINGS.map(h => (
+                <button key={h} type="button" onClick={() => set('heating', h)}
+                  style={{ padding: '5px 14px', borderRadius: 999, border: `1.5px solid ${form.heating === h ? 'var(--brand-green)' : 'transparent'}`, background: form.heating === h ? 'none' : 'var(--surface-sunken)', color: form.heating === h ? 'var(--brand-green-dark, var(--brand-green))' : 'var(--ink-700)', fontSize: 'var(--text-small)', fontFamily: 'var(--font-sans)', fontWeight: form.heating === h ? 'var(--fw-medium)' : 'var(--fw-regular)', cursor: 'pointer', whiteSpace: 'nowrap', outline: 'none' }}>
+                  {h}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <span style={{ fontSize: 'var(--text-small)', color: 'var(--ink-400)', fontWeight: 'var(--fw-medium)' }}>Energetinė klasė</span>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, paddingTop: 4 }}>
+              {ENERGY_CLASSES.map(c => (
+                <button key={c} type="button" onClick={() => set('energyClass', c)}
+                  style={{ padding: '5px 14px', borderRadius: 999, border: `1.5px solid ${form.energyClass === c ? 'var(--brand-green)' : 'transparent'}`, background: form.energyClass === c ? 'none' : 'var(--surface-sunken)', color: form.energyClass === c ? 'var(--brand-green-dark, var(--brand-green))' : 'var(--ink-700)', fontSize: 'var(--text-small)', fontFamily: 'var(--font-sans)', fontWeight: form.energyClass === c ? 'var(--fw-medium)' : 'var(--fw-regular)', cursor: 'pointer', whiteSpace: 'nowrap', outline: 'none' }}>
+                  {c}
+                </button>
+              ))}
+            </div>
+          </div>
           <FieldBox label="Automobilio stovėjimas" onClick={() => set('hasParking', !form.hasParking)}>
             <span style={{ flex: 1, fontSize: 'var(--text-body)', fontWeight: 'var(--fw-medium)', color: 'var(--ink-900)' }}>{form.hasParking ? 'Taip' : 'Ne'}</span>
             <input type="checkbox" checked={form.hasParking} onChange={(e) => set('hasParking', e.target.checked)} onClick={(e) => e.stopPropagation()}
@@ -639,18 +656,13 @@ function AddUnitModal({ units, onAdd, onClose, initial, onSave }) {
           <FieldBox label="Stovėjimo aikštelės Nr." disabled={!form.hasParking}>
             <input style={{ ...iInp, opacity: form.hasParking ? 1 : 0.35 }} disabled={!form.hasParking} placeholder="pvz. P-12" value={form.parkingNr || ''} onChange={(e) => set('parkingNr', e.target.value)} />
           </FieldBox>
+          <FieldBox label="Statybos metai">
+            <input style={iInp} type="number" min="1900" max="2100" value={form.year} onChange={(e) => set('year', e.target.value)} />
+          </FieldBox>
           <FieldBox label="Sandėliukas" onClick={() => set('hasStorage', !form.hasStorage)}>
             <span style={{ flex: 1, fontSize: 'var(--text-body)', fontWeight: 'var(--fw-medium)', color: 'var(--ink-900)' }}>{form.hasStorage ? 'Taip' : 'Ne'}</span>
             <input type="checkbox" checked={form.hasStorage} onChange={(e) => set('hasStorage', e.target.checked)} onClick={(e) => e.stopPropagation()}
               style={{ width: 16, height: 16, accentColor: 'var(--brand-green)', cursor: 'pointer', flexShrink: 0 }} />
-          </FieldBox>
-          <FieldBox label="Statybos metai">
-            <input style={iInp} type="number" min="1900" max="2100" value={form.year} onChange={(e) => set('year', e.target.value)} />
-          </FieldBox>
-          <FieldBox label="Energetinė klasė">
-            <select style={iSel} value={form.energyClass} onChange={(e) => set('energyClass', e.target.value)}>
-              {ENERGY_CLASSES.map(c => <option key={c} value={c}>{c}</option>)}
-            </select>
           </FieldBox>
         </div>
       )}
@@ -756,7 +768,7 @@ function AddUnitModal({ units, onAdd, onClose, initial, onSave }) {
       {tab === 'docs' && (
         <div>
           <input ref={docInputRef} type="file" multiple style={{ display: 'none' }} onChange={addDocs} />
-          <div className="stack-sm" style={{ gap: 8, marginBottom: form.documents.length ? 12 : 0 }}>
+          <div className="stack-sm gap-8" style={{ marginBottom: form.documents.length ? 12 : 0 }}>
             {form.documents.map((d, i) => (
               <div key={i} className="row" style={{ padding: '10px 14px', borderRadius: 'var(--radius-sm)', background: 'var(--surface-sunken)' }}>
                 <div style={{ width: 32, height: 32, borderRadius: 'var(--radius-sm)', background: 'var(--surface-card)', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: '0 0 auto' }}>
@@ -945,7 +957,7 @@ function UnitsTab({ P, propIdx, search, filterAukstas, filterKambariai, filterBu
       {selCount > 0 && (
         <div className="between" style={{ marginBottom: 16, padding: '12px 16px', borderRadius: 'var(--radius-md)', background: 'var(--brand-green-faint)' }}>
           <span style={{ fontSize: 'var(--text-body)', fontWeight: 'var(--fw-medium)', color: 'var(--ink-900)' }}>Pažymėta {selCount} butų</span>
-          <div className="rowflex" style={{ gap: 8 }}>
+          <div className="rowflex gap-8">
             <Button variant="accent" size="sm" iconLeft="ph ph-check" onClick={markSold}>Pažymėti parduotais</Button>
             <Button variant="ghost" size="sm" onClick={() => setSel({})}>Atšaukti</Button>
           </div>
@@ -1143,7 +1155,7 @@ function ResidentDetailModal({ resident, onClose, onSave }) {
       )}
 
       {tab === 'contracts' && (
-        <div className="stack-sm" style={{ gap: 8 }}>
+        <div className="stack-sm gap-8">
           {contracts.map((c) => (
             <div key={c.id} className="row">
               <div style={{ width: 36, height: 36, borderRadius: 'var(--radius-sm)', background: 'var(--surface-sunken)', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: '0 0 auto' }}>
@@ -1182,7 +1194,7 @@ function AddResidentModal({ onClose, onAdd, units = [] }) {
   const filteredUnits = units.filter((id) => id.toLowerCase().includes(aptSearch.toLowerCase()))
   return (
     <Modal title="Pridėti gyventoją" subtitle="Sukurkite naują gyventojo profilį." onClose={onClose} width={520}
-      footer={<><Button variant="ghost" onClick={onClose}>Atšaukti</Button><Button variant="accent" iconLeft="ph ph-plus" onClick={submit}>Pridėti</Button></>}>
+      footer={<><Button variant="secondary" onClick={onClose}>Atšaukti</Button><Button variant="primary" iconLeft="ph ph-plus" onClick={submit}>Pridėti</Button></>}>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
         <FormRow label="Vardas, pavardė"><input style={fld} value={form.name} onChange={(e) => set('name', e.target.value)} placeholder="Vardas Pavardė" /></FormRow>
         <FormRow label="Butas">
@@ -1227,7 +1239,71 @@ function AddResidentModal({ onClose, onAdd, units = [] }) {
   )
 }
 
-function ResidentsTab({ P, propIdx }) {
+function ResidentsToolbar({ search, setSearch, searchFocused, setSearchFocused, filterRole, setFilterRole, openDropdown, setOpenDropdown, onAdd, filteredCount, totalCount }) {
+  const { Button } = window.MitedaDesignSystem_acc833
+  React.useEffect(() => {
+    if (openDropdown === null) return
+    const close = (e) => { if (!e.target.closest('[data-filter-dropdown]')) setOpenDropdown(null) }
+    document.addEventListener('mousedown', close)
+    return () => document.removeEventListener('mousedown', close)
+  }, [openDropdown])
+  const ROLE_FILTERS = [{ value: 'all', label: 'Role' }, { value: 'Savininkas', label: 'Savininkas' }, { value: 'Nuomininkas', label: 'Nuomininkas' }]
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', padding: '12px 0', borderBottom: '1px solid var(--line-100)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, height: 36, background: 'var(--overlay-ink-04)', borderRadius: 'var(--radius-md)', padding: '0 10px', width: 200, flexShrink: 0, overflow: 'hidden', border: searchFocused ? '1.5px solid var(--brand-green)' : '1.5px solid transparent', boxSizing: 'border-box', transition: 'border-color 0.15s' }}>
+        <i className="ph ph-magnifying-glass" style={{ fontSize: 16, color: 'var(--ink-400)', flexShrink: 0 }} />
+        <input type="text" placeholder="Ieškoti gyventojo, buto…" value={search} onChange={(e) => setSearch(e.target.value)} onFocus={() => setSearchFocused(true)} onBlur={() => setSearchFocused(false)}
+          style={{ flex: 1, border: 'none', outline: 'none', background: 'transparent', fontSize: 'var(--text-body)', fontFamily: 'var(--font-sans)', color: 'var(--ink-900)', minWidth: 0 }} />
+        {search && <button type="button" onClick={() => setSearch('')} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, color: 'var(--ink-400)', display: 'flex', alignItems: 'center', flexShrink: 0 }}><i className="ph ph-x" style={{ fontSize: 14 }} /></button>}
+      </div>
+      {[{ key: 'role', value: filterRole, set: setFilterRole, options: ROLE_FILTERS }].map(({ key, value, set, options }) => {
+        const active = value !== 'all'
+        const currentLabel = options.find(o => o.value === value)?.label || options[0].label
+        const isOpen = openDropdown === key
+        const btnStyle = { display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 'var(--radius-md)', border: `1.5px solid ${active ? 'var(--brand-green)' : 'var(--line-200)'}`, background: active ? 'var(--brand-green-faint)' : 'var(--surface-card)', color: active ? 'var(--brand-green-dark, var(--brand-green))' : 'var(--ink-600)', fontFamily: 'var(--font-sans)', fontSize: 'var(--text-small)', cursor: 'pointer', fontWeight: active ? 'var(--fw-medium)' : 'var(--fw-regular)', whiteSpace: 'nowrap', appearance: 'none', outline: 'none', height: 36, boxSizing: 'border-box' }
+        return (
+          <div key={key} data-filter-dropdown style={{ position: 'relative' }}>
+            <button type="button" style={btnStyle} onClick={() => setOpenDropdown(isOpen ? null : key)}>
+              {currentLabel}<i className={`ph ph-caret-${isOpen ? 'up' : 'down'}`} style={{ fontSize: 11, opacity: 0.7 }} />
+            </button>
+            {isOpen && (
+              <div style={{ position: 'absolute', top: 'calc(100% + 4px)', left: 0, zIndex: 200, background: 'var(--surface-card)', borderRadius: 'var(--radius-md)', boxShadow: '0 4px 20px rgba(0,0,0,0.12)', border: '1px solid var(--line-100)', minWidth: 150, padding: 4 }}>
+                {options.map(o => (
+                  <button key={o.value} type="button" onClick={() => { set(o.value); setOpenDropdown(null) }}
+                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', textAlign: 'left', padding: '8px 12px', borderRadius: 'var(--radius-sm)', border: 'none', background: value === o.value ? 'var(--brand-green-faint)' : 'transparent', color: value === o.value ? 'var(--brand-green-dark, var(--brand-green))' : 'var(--ink-700)', fontFamily: 'var(--font-sans)', fontSize: 'var(--text-small)', cursor: 'pointer', fontWeight: value === o.value ? 'var(--fw-medium)' : 'var(--fw-regular)' }}>
+                    {o.label}{value === o.value && <i className="ph ph-check" style={{ fontSize: 13 }} />}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )
+      })}
+      <div style={{ flex: 1 }} />
+      {totalCount != null && <span style={{ fontSize: 'var(--text-small)', color: 'var(--ink-400)', flexShrink: 0 }}>{filteredCount != null && filteredCount !== totalCount ? `${filteredCount} iš ${totalCount} gyventojų` : `${totalCount} gyventojų iš viso`}</span>}
+      <Button variant="accent" size="sm" iconLeft="ph ph-plus" onClick={onAdd}>Pridėti</Button>
+    </div>
+  )
+}
+
+function ContactsToolbar({ search, setSearch, searchFocused, setSearchFocused, onAdd, filteredCount, totalCount }) {
+  const { Button } = window.MitedaDesignSystem_acc833
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', padding: '12px 0', borderBottom: '1px solid var(--line-100)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, height: 36, background: 'var(--overlay-ink-04)', borderRadius: 'var(--radius-md)', padding: '0 10px', width: 200, flexShrink: 0, overflow: 'hidden', border: searchFocused ? '1.5px solid var(--brand-green)' : '1.5px solid transparent', boxSizing: 'border-box', transition: 'border-color 0.15s' }}>
+        <i className="ph ph-magnifying-glass" style={{ fontSize: 16, color: 'var(--ink-400)', flexShrink: 0 }} />
+        <input type="text" placeholder="Ieškoti kontakto, įmonės…" value={search} onChange={(e) => setSearch(e.target.value)} onFocus={() => setSearchFocused(true)} onBlur={() => setSearchFocused(false)}
+          style={{ flex: 1, border: 'none', outline: 'none', background: 'transparent', fontSize: 'var(--text-body)', fontFamily: 'var(--font-sans)', color: 'var(--ink-900)', minWidth: 0 }} />
+        {search && <button type="button" onClick={() => setSearch('')} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, color: 'var(--ink-400)', display: 'flex', alignItems: 'center', flexShrink: 0 }}><i className="ph ph-x" style={{ fontSize: 14 }} /></button>}
+      </div>
+      <div style={{ flex: 1 }} />
+      {totalCount != null && <span style={{ fontSize: 'var(--text-small)', color: 'var(--ink-400)', flexShrink: 0 }}>{filteredCount != null && filteredCount !== totalCount ? `${filteredCount} iš ${totalCount} kontaktų` : `${totalCount} kontaktų iš viso`}</span>}
+      <Button variant="accent" size="sm" iconLeft="ph ph-plus" onClick={onAdd}>Pridėti</Button>
+    </div>
+  )
+}
+
+function ResidentsTab({ P, propIdx, search, filterRole, adding, setAdding, onCountChange }) {
   const DS = window.MitedaDesignSystem_acc833
   const { Avatar, Badge, IconButton, Button } = DS
 
@@ -1240,7 +1316,6 @@ function ResidentsTab({ P, propIdx }) {
     return P.isNew ? [] : DEMO_RESIDENTS
   })
   const [selected, setSelected] = useState(null)
-  const [adding, setAdding] = useState(false)
 
   React.useEffect(() => {
     localStorage.setItem('miteda_residents_' + propIdx, JSON.stringify(residents))
@@ -1254,26 +1329,48 @@ function ResidentsTab({ P, propIdx }) {
   const addResident = (r) => setResidents((rs) => [...rs, r])
   const unitIds = P ? makeUnits(P).map((u) => u.id) : []
 
+  const q = (search || '').trim().toLowerCase()
+  const filtered = residents.filter((r) => {
+    if (filterRole && filterRole !== 'all' && r.role !== filterRole) return false
+    if (q && !r.name.toLowerCase().includes(q) && !String(r.apt).toLowerCase().includes(q)) return false
+    return true
+  })
+  React.useEffect(() => { if (onCountChange) onCountChange(filtered.length, residents.length) }, [filtered.length, residents.length])
+
   return (
     <>
-      <div className="between" style={{ marginBottom: 12 }}>
-        <span />
-        <Button variant="accent" size="sm" iconLeft="ph ph-plus" onClick={() => setAdding(true)}>Pridėti gyventoją</Button>
-      </div>
-      <div className="stack-sm" style={{ gap: 4 }}>
-        {residents.map((r, i) => (
-          <div key={i} className="row" style={{ cursor: 'pointer' }} onClick={() => setSelected(r)}>
-            <Avatar name={r.name} size={40} />
-            <div className="row__main">
-              <span className="row__title">{r.name}</span>
-              <span className="row__meta">Butas {r.apt}<span className="dot">·</span>{r.phone}</span>
-            </div>
-            <Badge tone={r.role === 'Nuomininkas' ? 'neutral' : 'success'}>{r.role}</Badge>
-            <IconButton icon="ph ph-arrow-right" variant="ghost" size="sm" ariaLabel="Peržiūrėti"
-              onClick={(e) => { e.stopPropagation(); setSelected(r) }} />
-          </div>
-        ))}
-      </div>
+      <table className="tbl">
+        <thead><tr style={{ position: 'sticky', top: 0, zIndex: 4, background: 'var(--surface-card)' }}>
+          <th style={{ paddingTop: 10 }}>Vardas</th>
+          <th style={{ paddingTop: 10 }}>Butas</th>
+          <th style={{ paddingTop: 10 }}>Telefonas</th>
+          <th style={{ paddingTop: 10 }}>Rolė</th>
+          <th style={{ paddingTop: 10 }}></th>
+        </tr></thead>
+        <tbody>
+          {filtered.length === 0 && (
+            <tr><td colSpan={5} style={{ textAlign: 'center', padding: '32px 0', color: 'var(--ink-400)', fontSize: 'var(--text-body)' }}>{residents.length === 0 ? 'Nėra gyventojų' : 'Nerasta gyventojų'}</td></tr>
+          )}
+          {filtered.map((r, i) => (
+            <tr key={i} style={{ cursor: 'pointer' }} onClick={() => setSelected(r)}>
+              <td>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'var(--surface-sunken)', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: '0 0 auto', fontSize: 11, fontWeight: 'var(--fw-medium)', color: 'var(--ink-500)' }}>
+                    {r.name.split(' ').map((n) => n[0]).join('').slice(0, 2)}
+                  </div>
+                  <span style={{ fontSize: 'var(--text-body)', color: 'var(--ink-900)' }}>{r.name}</span>
+                </div>
+              </td>
+              <td style={{ color: 'var(--ink-600)' }}>Butas {r.apt}</td>
+              <td style={{ color: 'var(--ink-600)', fontSize: 'var(--text-small)' }}>{r.phone}</td>
+              <td><Badge tone={r.role === 'Nuomininkas' ? 'neutral' : 'success'}>{r.role}</Badge></td>
+              <td style={{ textAlign: 'right' }} onClick={(e) => e.stopPropagation()}>
+                <IconButton icon="ph ph-arrow-right" variant="ghost" size="sm" ariaLabel="Peržiūrėti" onClick={() => setSelected(r)} />
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
       {selected && (
         <ResidentDetailModal
           resident={selected}
@@ -1324,7 +1421,7 @@ function AddContactModal({ onClose, onAdd }) {
   )
   return (
     <Modal title="Pridėti kontaktą" subtitle="Pridėkite kontaktą prie šio pastato." onClose={onClose} width={480}
-      footer={<><Button variant="ghost" onClick={onClose}>Atšaukti</Button><Button variant="accent" iconLeft="ph ph-plus" onClick={submit}>Pridėti</Button></>}>
+      footer={<><Button variant="secondary" onClick={onClose}>Atšaukti</Button><Button variant="primary" iconLeft="ph ph-plus" onClick={submit}>Pridėti</Button></>}>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
         <FormRow label="Vardas, pavardė"><input style={fld} value={form.name} onChange={(e) => set('name', e.target.value)} placeholder="Vardas Pavardė" /></FormRow>
         <FormRow label="Telefonas"><input style={fld} value={form.phone} onChange={(e) => set('phone', e.target.value)} placeholder="+370 6xx xxxxx" /></FormRow>
@@ -1335,7 +1432,7 @@ function AddContactModal({ onClose, onAdd }) {
   )
 }
 
-function ContactsTab({ P, propIdx }) {
+function ContactsTab({ P, propIdx, search, adding, setAdding, onCountChange }) {
   const DS = window.MitedaDesignSystem_acc833
   const { Avatar, IconButton, Button } = DS
   const [allContactsData] = useRepo('listContacts')
@@ -1348,7 +1445,6 @@ function ContactsTab({ P, propIdx }) {
     }
     return []
   })
-  const [adding, setAdding] = useState(false)
 
   React.useEffect(() => {
     if (P.isNew) { localStorage.setItem('miteda_seeded_contacts_' + propIdx, '1'); return }
@@ -1363,21 +1459,47 @@ function ContactsTab({ P, propIdx }) {
     localStorage.setItem('miteda_contacts_' + propIdx, JSON.stringify(contacts))
   }, [contacts, propIdx])
 
+  const cq = (search || '').trim().toLowerCase()
+  const filteredContacts = contacts.filter((c) => {
+    if (!cq) return true
+    return c.name.toLowerCase().includes(cq) || (c.company || '').toLowerCase().includes(cq) || (c.role || '').toLowerCase().includes(cq)
+  })
+  React.useEffect(() => { if (onCountChange) onCountChange(filteredContacts.length, contacts.length) }, [filteredContacts.length, contacts.length])
+
   return (
     <div>
-      <div className="between" style={{ marginBottom: 12 }}>
-        <span />
-        <Button variant="accent" size="sm" iconLeft="ph ph-plus" onClick={() => setAdding(true)}>Pridėti kontaktą</Button>
-      </div>
-      <div className="grid-2" style={{ alignItems: 'stretch' }}>
-        {contacts.map((c, i) => (
-          <div key={i} className="row" style={{ marginTop: 0, alignItems: 'center' }}>
-            <Avatar name={c.name} size={40} />
-            <div className="row__main"><span className="row__title">{c.name}</span><span className="row__meta">{c.role}<span className="dot">·</span>{c.company}</span></div>
-            <IconButton icon="ph ph-phone" variant="solid" size="sm" ariaLabel="Skambinti" />
-          </div>
-        ))}
-      </div>
+      <table className="tbl">
+        <thead><tr style={{ position: 'sticky', top: 0, zIndex: 4, background: 'var(--surface-card)' }}>
+          <th style={{ paddingTop: 10 }}>Vardas</th>
+          <th style={{ paddingTop: 10 }}>Rolė</th>
+          <th style={{ paddingTop: 10 }}>įmonė</th>
+          <th style={{ paddingTop: 10 }}>Telefonas</th>
+          <th style={{ paddingTop: 10 }}></th>
+        </tr></thead>
+        <tbody>
+          {filteredContacts.length === 0 && (
+            <tr><td colSpan={5} style={{ textAlign: 'center', padding: '32px 0', color: 'var(--ink-400)', fontSize: 'var(--text-body)' }}>{contacts.length === 0 ? 'Nėra kontaktų' : 'Nerasta kontaktų'}</td></tr>
+          )}
+          {filteredContacts.map((c, i) => (
+            <tr key={i}>
+              <td>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'var(--surface-sunken)', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: '0 0 auto', fontSize: 11, fontWeight: 'var(--fw-medium)', color: 'var(--ink-500)' }}>
+                    {c.name.split(' ').map((n) => n[0]).join('').slice(0, 2)}
+                  </div>
+                  <span style={{ fontSize: 'var(--text-body)', color: 'var(--ink-900)' }}>{c.name}</span>
+                </div>
+              </td>
+              <td style={{ color: 'var(--ink-600)' }}>{c.role || '—'}</td>
+              <td style={{ color: 'var(--ink-600)' }}>{c.company || '—'}</td>
+              <td style={{ color: 'var(--ink-600)', fontSize: 'var(--text-small)' }}>{c.phone || '—'}</td>
+              <td style={{ textAlign: 'right' }}>
+                <IconButton icon="ph ph-phone" variant="ghost" size="sm" ariaLabel="Skambinti" />
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
       {adding && <AddContactModal onClose={() => setAdding(false)} onAdd={(c) => setContacts((prev) => [...prev, c])} />}
     </div>
   )
@@ -1399,8 +1521,8 @@ function EditObjektasModal({ P, onSave, onClose }) {
   return (
     <Modal title="Redaguoti objektą" subtitle={P.name} onClose={onClose} width={480}
       footer={<><Button variant="ghost" onClick={onClose}>Atšaukti</Button><Button variant="accent" iconLeft="ph ph-floppy-disk" onClick={() => { onSave({ ...P, name: form.name.trim() || P.name, address: form.address.trim() || P.address, units: +form.units || P.units, coverImage: form.coverImage }); onClose() }}>Išsaugoti</Button></>}>
-      <div className="stack-sm" style={{ gap: 14 }}>
-        <div className="field" style={{ marginBottom: 0 }}>
+      <div className="stack-sm gap-14">
+        <div className="field field--compact">
           <label>Viršelio nuotrauka</label>
           <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }}
             onChange={(e) => { handleFile(e.target.files[0]); e.target.value = '' }} />
@@ -1429,15 +1551,15 @@ function EditObjektasModal({ P, onSave, onClose }) {
             </button>
           )}
         </div>
-        <div className="field" style={{ marginBottom: 0 }}>
+        <div className="field field--compact">
           <label>Objekto pavadinimas</label>
           <input style={fld} value={form.name} onChange={(e) => set('name', e.target.value)} placeholder="pvz. Vilniaus g. 12" />
         </div>
-        <div className="field" style={{ marginBottom: 0 }}>
+        <div className="field field--compact">
           <label>Adresas</label>
           <input style={fld} value={form.address} onChange={(e) => set('address', e.target.value)} placeholder="pvz. Vilniaus g. 12, Vilnius" />
         </div>
-        <div className="field" style={{ marginBottom: 0 }}>
+        <div className="field field--compact">
           <label>Butų skaičius</label>
           <input style={fld} type="number" min="1" value={form.units} onChange={(e) => set('units', e.target.value)} />
         </div>
@@ -1462,6 +1584,16 @@ export default function Objektas() {
   const [unitsOpenDropdown, setUnitsOpenDropdown] = useState(null)
   const [unitsAdding, setUnitsAdding] = useState(false)
   const [unitsCount, setUnitsCount] = useState(null)
+  const [residentsSearch, setResidentsSearch] = useState('')
+  const [residentsSearchFocused, setResidentsSearchFocused] = useState(false)
+  const [residentsFilterRole, setResidentsFilterRole] = useState('all')
+  const [residentsOpenDropdown, setResidentsOpenDropdown] = useState(null)
+  const [residentsAdding, setResidentsAdding] = useState(false)
+  const [residentsCount, setResidentsCount] = useState(null)
+  const [contactsSearch, setContactsSearch] = useState('')
+  const [contactsSearchFocused, setContactsSearchFocused] = useState(false)
+  const [contactsAdding, setContactsAdding] = useState(false)
+  const [contactsCount, setContactsCount] = useState(null)
   const [propsData] = useRepo('listProperties')
   const props = propsData || []
   const baseP = props[idx] || props[0]
@@ -1513,6 +1645,26 @@ export default function Objektas() {
         <div ref={cardRef} className="scroll-reveal">
           <Card style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', maxHeight: 'calc(100vh - 268px)' }}>
             <PanelHead title="Pastato valdymas" description="Valdykite butus, gyventojus, nuotraukas ir kontaktus." action={<Tabs tabs={tabs} value={tab} onChange={setTab} />} />
+            {tab === 'residents' && (
+              <ResidentsToolbar
+                search={residentsSearch} setSearch={setResidentsSearch}
+                searchFocused={residentsSearchFocused} setSearchFocused={setResidentsSearchFocused}
+                filterRole={residentsFilterRole} setFilterRole={setResidentsFilterRole}
+                openDropdown={residentsOpenDropdown} setOpenDropdown={setResidentsOpenDropdown}
+                onAdd={() => setResidentsAdding(true)}
+                filteredCount={residentsCount?.filtered}
+                totalCount={residentsCount?.total}
+              />
+            )}
+            {tab === 'contacts' && (
+              <ContactsToolbar
+                search={contactsSearch} setSearch={setContactsSearch}
+                searchFocused={contactsSearchFocused} setSearchFocused={setContactsSearchFocused}
+                onAdd={() => setContactsAdding(true)}
+                filteredCount={contactsCount?.filtered}
+                totalCount={contactsCount?.total}
+              />
+            )}
             {tab === 'units' && (
               <UnitsToolbar
                 maxFloor={Math.ceil(P.units / 12)}
@@ -1537,9 +1689,20 @@ export default function Objektas() {
                 setAdding={setUnitsAdding}
                 onCountChange={(f, t) => setUnitsCount({ filtered: f, total: t })}
               />}
-              {tab === 'residents' && <ResidentsTab P={P} propIdx={idx} />}
+              {tab === 'residents' && <ResidentsTab P={P} propIdx={idx}
+                search={residentsSearch}
+                filterRole={residentsFilterRole}
+                adding={residentsAdding}
+                setAdding={setResidentsAdding}
+                onCountChange={(f, t) => setResidentsCount({ filtered: f, total: t })}
+              />}
               {tab === 'photos' && <PhotosTab P={P} propIdx={idx} />}
-              {tab === 'contacts' && <ContactsTab P={P} propIdx={idx} />}
+              {tab === 'contacts' && <ContactsTab P={P} propIdx={idx}
+                search={contactsSearch}
+                adding={contactsAdding}
+                setAdding={setContactsAdding}
+                onCountChange={(f, t) => setContactsCount({ filtered: f, total: t })}
+              />}
             </div>
           </Card>
         </div>

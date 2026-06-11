@@ -63,15 +63,15 @@ function CreateDefectModal({ buildings, onAdd, onClose }) {
         <Button variant="ghost" onClick={onClose}>Atšaukti</Button>
         <Button variant="accent" iconLeft="ph ph-plus" onClick={submit}>Sukurti defektą</Button>
       </>}>
-      <div className="stack-sm" style={{ gap: 14 }}>
-        <div className="field" style={{ marginBottom: 0 }}>
+      <div className="stack-sm gap-14">
+        <div className="field field--compact">
           <label>Defekto aprašymas</label>
           <input style={fld(errors.title)} value={form.title} placeholder="Pvz. Praleidžia vamzdis po kriaukle"
             onChange={(e) => set('title', e.target.value)} />
           {errors.title && <span style={{ fontSize: 'var(--text-small)', color: 'var(--orange)' }}>{errors.title}</span>}
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-          <div className="field" style={{ marginBottom: 0 }}>
+          <div className="field field--compact">
             <label>Objektas</label>
             <select style={{ ...fld(errors.building), cursor: 'pointer' }} value={form.building}
               onChange={(e) => set('building', e.target.value)}>
@@ -79,19 +79,19 @@ function CreateDefectModal({ buildings, onAdd, onClose }) {
             </select>
             {errors.building && <span style={{ fontSize: 'var(--text-small)', color: 'var(--orange)' }}>{errors.building}</span>}
           </div>
-          <div className="field" style={{ marginBottom: 0 }}>
+          <div className="field field--compact">
             <label>Butas</label>
             <input style={fld()} value={form.apt} placeholder="pvz. B-12"
               onChange={(e) => set('apt', e.target.value)} />
           </div>
         </div>
-        <div className="field" style={{ marginBottom: 0 }}>
+        <div className="field field--compact">
           <label>Papildomas aprašymas</label>
           <textarea style={{ ...fld(), height: 72, padding: '10px 12px', resize: 'vertical' }}
             value={form.desc} placeholder="Detalus defekto aprašymas..."
             onChange={(e) => set('desc', e.target.value)} />
         </div>
-        <div className="field" style={{ marginBottom: 0 }}>
+        <div className="field field--compact">
           <label>Pirminis statusas</label>
           <div style={{ display: 'flex', gap: 6 }}>
             {Object.entries(ST).map(([key, { label }]) => (
@@ -112,10 +112,10 @@ function CreateDefectModal({ buildings, onAdd, onClose }) {
   )
 }
 
-function DefectDetailModal({ defect, onClose, onUpdate }) {
+function DefectDetailModal({ defect, onClose, onUpdate, initialTab = 'info' }) {
   const DS = window.MitedaDesignSystem_acc833
   const { Button, Badge, Avatar } = DS
-  const [tab, setTab] = useState('info')
+  const [tab, setTab] = useState(initialTab)
   const [status, setStatus] = useState(defect.status)
   const [worker, setWorker] = useState(defect.worker)
   const [thread, setThread] = useState(defect.thread || seedThread(defect))
@@ -201,7 +201,7 @@ function DefectDetailModal({ defect, onClose, onUpdate }) {
 
           {pickingWorker && (
             <Modal title="Pasirinkti meistrą" subtitle="Priskirskite defekto taisymą specialistui." onClose={() => setPickingWorker(false)} width={480}>
-              <div className="stack-sm" style={{ gap: 6 }}>
+              <div className="stack-sm gap-6">
                 {WORKERS.map((w) => (
                   <button key={w.name} type="button"
                     onClick={() => { setWorker(w); setPickingWorker(false) }}
@@ -268,6 +268,7 @@ export default function Defektai() {
   const [b, setB] = useState('Visi')
   const [s, setS] = useState('Visos')
   const [selected, setSelected] = useState(null)
+  const [selectedTab, setSelectedTab] = useState('info')
   const [creating, setCreating] = useState(false)
   const [defects, setDefects] = useState(null)
   const [popover, setPopover] = useState(null)
@@ -311,11 +312,7 @@ export default function Defektai() {
   return (
     <Shell role="admin" nav="defektai"
       title="Defektai" subtitle="Visi pranešimai apie defektus iš visų objektų."
-      headerActions={
-        <div style={{ display: 'flex', gap: 8 }}>
-          <Button variant="secondary" iconLeft="ph ph-export">Eksportuoti</Button>
-        </div>
-      }>
+>
       <div className="content stack">
         <div className="grid-3">
           <Stat icon="ph ph-warning-octagon" label="Atviri" value={counts.open} />
@@ -325,12 +322,12 @@ export default function Defektai() {
         <Card style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', maxHeight: 'calc(100vh - 268px)', paddingBottom: 0 }}>
           <PanelHead title="Visi defektai" subtitle="Filtruokite pagal objektą ir būseną"
             action={<FilterChips items={['Visos', 'Atviras', 'Vykdoma', 'Išspręsta']} value={s} onChange={setS} />} />
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', padding: '10px 0' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', marginTop: 16, marginBottom: 16 }}>
             {buildings.map((bld) => (
-              <Button key={bld} variant="ghost" size="sm" onClick={() => setB(bld)}
-                style={{ boxShadow: b === bld ? 'inset 0 0 0 1.5px var(--brand-green)' : 'inset 0 0 0 1.5px var(--line-200)', background: b === bld ? 'var(--brand-green-soft, rgba(34,197,94,0.12))' : 'transparent', color: b === bld ? 'var(--brand-green)' : 'var(--ink-600)', fontWeight: b === bld ? 600 : 400 }}>
+              <button key={bld} type="button" onClick={() => setB(bld)}
+                className={'filter-pill' + (b === bld ? ' is-active' : '')}>
                 {bld}
-              </Button>
+              </button>
             ))}
           </div>
           <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
@@ -366,9 +363,9 @@ export default function Defektai() {
                     <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }} onClick={(e) => e.stopPropagation()}>
                       <div style={{ display: 'inline-flex', alignItems: 'center', gap: 2 }}>
                         <IconButton icon="ph ph-arrow-up-right" variant="ghost" size="sm" ariaLabel="Atidaryti"
-                          onClick={(e) => { e.stopPropagation(); setSelected(d) }} />
+                          onClick={(e) => { e.stopPropagation(); setSelectedTab('info'); setSelected(d) }} />
                         <IconButton icon="ph ph-chat-circle" variant="ghost" size="sm" ariaLabel="Siųsti žinutę"
-                          onClick={(e) => { e.stopPropagation(); setSelected(d) }} />
+                          onClick={(e) => { e.stopPropagation(); setSelectedTab('chat'); setSelected(d) }} />
                         <div style={{ position: 'relative' }}>
                           <IconButton icon="ph ph-dots-three-vertical" variant="ghost" size="sm" ariaLabel="Veiksmai"
                             onClick={(e) => { e.stopPropagation(); setPopover(popover === d.id ? null : d.id) }} />
@@ -411,7 +408,7 @@ export default function Defektai() {
       </div>
 
       {creating && <CreateDefectModal buildings={buildings} onAdd={addDefect} onClose={() => setCreating(false)} />}
-      {selected && <DefectDetailModal defect={selected} onClose={() => setSelected(null)} onUpdate={updateDefect} />}
+      {selected && <DefectDetailModal defect={selected} onClose={() => setSelected(null)} onUpdate={updateDefect} initialTab={selectedTab} />}
     </Shell>
   )
 }

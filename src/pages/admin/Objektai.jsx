@@ -25,9 +25,9 @@ function PropertyCard({ p, i, onEdit, onRemove }) {
           <div className="between">
             <div>
               <div style={{ fontSize: 'var(--text-heading)', fontWeight: 'var(--fw-medium)', color: 'var(--ink-900)', letterSpacing: 'var(--tracking-tight)' }}>{p.name}</div>
-              <div className="muted rowflex" style={{ fontSize: 'var(--text-body)', gap: 6, marginTop: 4 }}><i className="ph ph-map-pin" aria-hidden="true" />{p.address}</div>
+              <div className="muted rowflex gap-6" style={{ fontSize: 'var(--text-body)', marginTop: 4 }}><i className="ph ph-map-pin" aria-hidden="true" />{p.address}</div>
             </div>
-            <div className="rowflex" style={{ gap: 4 }}>
+            <div className="rowflex gap-4">
               <button
                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); onEdit(p, i) }}
                 style={iconBtn()}
@@ -116,17 +116,17 @@ function EditPropertyModal({ p, onClose, onSave }) {
   return (
     <Modal title="Redaguoti objektą" subtitle="Atnaujinkite pastato informaciją ir nuotrauką." onClose={onClose}
       footer={<React.Fragment>
-        {Button && <Button variant="ghost" onClick={onClose}>Atšaukti</Button>}
-        {Button && <Button variant="accent" iconLeft="ph ph-floppy-disk" onClick={() => name.trim() && onSave({ ...p, name: name.trim(), address: addr.trim() || '—', units: parseInt(units) || p.units, coverImage })}>Išsaugoti</Button>}
+        {Button && <Button variant="secondary" onClick={onClose}>Atšaukti</Button>}
+        {Button && <Button variant="primary" iconLeft="ph ph-floppy-disk" onClick={() => name.trim() && onSave({ ...p, name: name.trim(), address: addr.trim() || '—', units: parseInt(units) || p.units, coverImage })}>Išsaugoti</Button>}
       </React.Fragment>}>
-      <div className="stack-sm" style={{ gap: 14 }}>
-        <div className="field" style={{ marginBottom: 0 }}>
+      <div className="stack-sm gap-14">
+        <div className="field field--compact">
           <label>Viršelio nuotrauka</label>
           <CoverDropzone value={coverImage} onChange={setCoverImage} />
         </div>
-        <div className="field" style={{ marginBottom: 0 }}><label>Pavadinimas</label><input value={name} onChange={(e) => setName(e.target.value)} /></div>
-        <div className="field" style={{ marginBottom: 0 }}><label>Adresas</label><input value={addr} onChange={(e) => setAddr(e.target.value)} /></div>
-        <div className="field" style={{ marginBottom: 0 }}><label>Butų skaičius</label><input value={units} onChange={(e) => setUnits(e.target.value)} type="number" /></div>
+        <div className="field field--compact"><label>Pavadinimas</label><input value={name} onChange={(e) => setName(e.target.value)} /></div>
+        <div className="field field--compact"><label>Adresas</label><input value={addr} onChange={(e) => setAddr(e.target.value)} /></div>
+        <div className="field field--compact"><label>Butų skaičius</label><input value={units} onChange={(e) => setUnits(e.target.value)} type="number" /></div>
       </div>
     </Modal>
   )
@@ -142,16 +142,16 @@ function AddModal({ onClose, onSubmit }) {
     <Modal title="Pridėti objektą" subtitle="Naujas pastatas atsiras objektų sąraše." onClose={onClose}
       footer={<React.Fragment>
         {Button && <Button variant="secondary" onClick={onClose}>Atšaukti</Button>}
-        {Button && <Button variant="accent" iconLeft="ph ph-plus" onClick={() => name.trim() && onSubmit({ name: name.trim(), address: addr.trim() || '—', units: parseInt(units) || 0, sold: 0, coverImage, isNew: true })}>Pridėti</Button>}
+        {Button && <Button variant="primary" iconLeft="ph ph-plus" onClick={() => name.trim() && onSubmit({ name: name.trim(), address: addr.trim() || '—', units: parseInt(units) || 0, sold: 0, coverImage, isNew: true })}>Pridėti</Button>}
       </React.Fragment>}>
-      <div className="stack-sm" style={{ gap: 14 }}>
-        <div className="field" style={{ marginBottom: 0 }}>
+      <div className="stack-sm gap-14">
+        <div className="field field--compact">
           <label>Viršelio nuotrauka</label>
           <CoverDropzone value={coverImage} onChange={setCoverImage} />
         </div>
-        <div className="field" style={{ marginBottom: 0 }}><label>Pavadinimas</label><input value={name} onChange={(e) => setName(e.target.value)} placeholder="Pvz. Ąžuolų Namai" /></div>
-        <div className="field" style={{ marginBottom: 0 }}><label>Adresas</label><input value={addr} onChange={(e) => setAddr(e.target.value)} placeholder="Gatvė, miestas" /></div>
-        <div className="field" style={{ marginBottom: 0 }}><label>Butų skaičius</label><input value={units} onChange={(e) => setUnits(e.target.value)} placeholder="Pvz. 48" type="number" /></div>
+        <div className="field field--compact"><label>Pavadinimas</label><input value={name} onChange={(e) => setName(e.target.value)} placeholder="Pvz. Ąžuolų Namai" /></div>
+        <div className="field field--compact"><label>Adresas</label><input value={addr} onChange={(e) => setAddr(e.target.value)} placeholder="Gatvė, miestas" /></div>
+        <div className="field field--compact"><label>Butų skaičius</label><input value={units} onChange={(e) => setUnits(e.target.value)} placeholder="Pvz. 48" type="number" /></div>
       </div>
     </Modal>
   )
@@ -189,7 +189,7 @@ export default function Objektai() {
           <Stat label="Iš viso butų" value={totalUnits} />
           <Stat label="Parduota" value={totalSold + ' / ' + totalUnits} accent />
         </div>
-        <div className="grid-4" style={{ gap: 4 }}>
+        <div className="grid-4 gap-4">
           {props.map((p, i) => (
             <PropertyCard key={i} p={p} i={i}
               onEdit={(p, i) => setEditing({ p, i })}

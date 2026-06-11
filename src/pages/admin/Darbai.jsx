@@ -17,7 +17,7 @@ export default function Darbai() {
             <div style={{ fontSize: 'var(--text-title)', fontWeight: 'var(--fw-medium)', color: 'var(--ink-900)' }}>{p.building} · {p.apt}</div>
             <div className="muted" style={{ fontSize: 'var(--text-small)', marginTop: 2 }}>{p.phase}</div>
           </div>
-          <div className="rowflex" style={{ gap: 4 }}>
+          <div className="rowflex gap-4">
             <Badge tone={p.progress > 75 ? 'success' : 'event'}>{p.progress}%</Badge>
             <button
               onClick={(e) => { e.stopPropagation(); onEdit(p) }}
@@ -41,7 +41,7 @@ export default function Darbai() {
           <div style={{ height: '100%', width: p.progress + '%', borderRadius: '999px', background: p.progress > 75 ? 'var(--brand-green)' : 'var(--accent-pink)' }} />
         </div>
         <div className="between" style={{ paddingTop: 14, borderTop: '1px solid var(--line-100)' }}>
-          <div className="rowflex" style={{ gap: 10 }}>
+          <div className="rowflex gap-10">
             <Avatar name={p.manager} size={32} tone="green" />
             <div>
               <div style={{ fontSize: 'var(--text-small)', color: 'var(--ink-400)' }}>Darbų vadovas</div>
@@ -76,7 +76,7 @@ export default function Darbai() {
           <div style={{ height: 1, background: 'var(--line-100)' }} />
           <div>
             <div style={{ fontSize: 'var(--text-small)', color: 'var(--ink-400)', marginBottom: 12 }}>Komanda</div>
-            <div className="rowflex" style={{ gap: 10 }}>
+            <div className="rowflex gap-10">
               <Avatar name={p.manager} size={36} tone="green" />
               <div>
                 <div style={{ fontSize: 'var(--text-body)', fontWeight: 'var(--fw-medium)', color: 'var(--ink-900)' }}>{p.manager}</div>
@@ -87,7 +87,7 @@ export default function Darbai() {
           <div style={{ height: 1, background: 'var(--line-100)' }} />
           <div>
             <div style={{ fontSize: 'var(--text-small)', color: 'var(--ink-400)', marginBottom: 8 }}>Išlaidos</div>
-            <div className="stack-sm" style={{ gap: 0 }}>
+            <div className="stack-sm gap-0">
               {expenses.map((e) => (
                 <div key={e.label} className="between" style={{ padding: '10px 0', borderBottom: '1px solid var(--line-100)' }}>
                   <span style={{ fontSize: 'var(--text-body)', color: 'var(--ink-700)' }}>{e.label}</span>
@@ -113,18 +113,15 @@ export default function Darbai() {
     const [manager, setManager] = React.useState('')
     const valid = building.trim() && apt.trim() && phase.trim() && manager.trim()
     return (
-      <Modal title="Naujas projektas" subtitle="Sukurkite naują remonto ar priežiūros projektą." onClose={onClose} width={480}>
+      <Modal title="Naujas projektas" subtitle="Sukurkite naują remonto ar priežiūros projektą." onClose={onClose} width={480}
+        footer={<><Button variant="secondary" onClick={onClose}>Atšaukti</Button><Button variant="primary" onClick={() => valid && onClose()} style={!valid ? { opacity: 0.5, pointerEvents: 'none' } : {}}>Sukurti projektą</Button></>}>
         <div className="stack" style={{ gap: 16 }}>
           <div className="grid-2" style={{ gap: 12 }}>
-            <div className="field" style={{ margin: 0 }}><label>Pastatas</label><input value={building} onChange={(e) => setBuilding(e.target.value)} placeholder="Pvz. A korpusas" /></div>
-            <div className="field" style={{ margin: 0 }}><label>Butas / zona</label><input value={apt} onChange={(e) => setApt(e.target.value)} placeholder="Pvz. Butas 12" /></div>
+            <div className="field field--compact"><label>Pastatas</label><input value={building} onChange={(e) => setBuilding(e.target.value)} placeholder="Pvz. A korpusas" /></div>
+            <div className="field field--compact"><label>Butas / zona</label><input value={apt} onChange={(e) => setApt(e.target.value)} placeholder="Pvz. Butas 12" /></div>
           </div>
-          <div className="field" style={{ margin: 0 }}><label>Darbų etapas</label><input value={phase} onChange={(e) => setPhase(e.target.value)} placeholder="Pvz. Santechnikos įrengimas" /></div>
-          <div className="field" style={{ margin: 0 }}><label>Darbų vadovas</label><input value={manager} onChange={(e) => setManager(e.target.value)} placeholder="Vardas Pavardė" /></div>
-          <div style={{ display: 'flex', gap: 10, paddingTop: 4 }}>
-            <Button variant="primary" onClick={() => valid && onClose()} style={!valid ? { opacity: 0.5, pointerEvents: 'none' } : {}}>Sukurti projektą</Button>
-            <Button variant="ghost" onClick={onClose}>Atšaukti</Button>
-          </div>
+          <div className="field field--compact"><label>Darbų etapas</label><input value={phase} onChange={(e) => setPhase(e.target.value)} placeholder="Pvz. Santechnikos įrengimas" /></div>
+          <div className="field field--compact"><label>Darbų vadovas</label><input value={manager} onChange={(e) => setManager(e.target.value)} placeholder="Vardas Pavardė" /></div>
         </div>
       </Modal>
     )
@@ -137,18 +134,15 @@ export default function Darbai() {
     const [manager, setManager] = React.useState(p.manager)
     const valid = building.trim() && apt.trim() && phase.trim() && manager.trim()
     return (
-      <Modal title="Redaguoti projektą" subtitle="Atnaujinkite projekto informaciją." onClose={onClose} width={480}>
+      <Modal title="Redaguoti projektą" subtitle="Atnaujinkite projekto informaciją." onClose={onClose} width={480}
+        footer={<><Button variant="secondary" onClick={onClose}>Atšaukti</Button><Button variant="primary" onClick={() => valid && onSave({ ...p, building, apt, phase, manager })} style={!valid ? { opacity: 0.5, pointerEvents: 'none' } : {}}>Išsaugoti</Button></>}>
         <div className="stack" style={{ gap: 16 }}>
           <div className="grid-2" style={{ gap: 12 }}>
-            <div className="field" style={{ margin: 0 }}><label>Pastatas</label><input value={building} onChange={(e) => setBuilding(e.target.value)} /></div>
-            <div className="field" style={{ margin: 0 }}><label>Butas / zona</label><input value={apt} onChange={(e) => setApt(e.target.value)} /></div>
+            <div className="field field--compact"><label>Pastatas</label><input value={building} onChange={(e) => setBuilding(e.target.value)} /></div>
+            <div className="field field--compact"><label>Butas / zona</label><input value={apt} onChange={(e) => setApt(e.target.value)} /></div>
           </div>
-          <div className="field" style={{ margin: 0 }}><label>Darbų etapas</label><input value={phase} onChange={(e) => setPhase(e.target.value)} /></div>
-          <div className="field" style={{ margin: 0 }}><label>Darbų vadovas</label><input value={manager} onChange={(e) => setManager(e.target.value)} /></div>
-          <div style={{ display: 'flex', gap: 10, paddingTop: 4 }}>
-            <Button variant="primary" onClick={() => valid && onSave({ ...p, building, apt, phase, manager })} style={!valid ? { opacity: 0.5, pointerEvents: 'none' } : {}}>Išsaugoti</Button>
-            <Button variant="ghost" onClick={onClose}>Atšaukti</Button>
-          </div>
+          <div className="field field--compact"><label>Darbų etapas</label><input value={phase} onChange={(e) => setPhase(e.target.value)} /></div>
+          <div className="field field--compact"><label>Darbų vadovas</label><input value={manager} onChange={(e) => setManager(e.target.value)} /></div>
         </div>
       </Modal>
     )
