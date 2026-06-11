@@ -15,11 +15,11 @@ function PropertyCard({ p, i }) {
   return (
     <Link className="plain" to={`/admin/objektas?b=${i}`}>
       <Card interactive style={{ display: 'flex', flexDirection: 'column', gap: 0, padding: 0, overflow: 'hidden' }}>
-        <div style={{ aspectRatio: '1 / 1', background: p.coverImage ? `url(${p.coverImage}) center/cover no-repeat` : coverColor, flexShrink: 0, borderRadius: 'var(--radius-lg)', margin: 8 }} />
-        <div style={{ padding: '0 16px 16px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <div style={{ aspectRatio: '5 / 4', background: p.coverImage ? `url(${p.coverImage}) center/cover no-repeat` : coverColor, flexShrink: 0, borderRadius: 16, margin: 8 }} />
+        <div style={{ padding: '8px 16px 20px', display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div>
             <div style={{ fontSize: 'var(--text-heading)', fontWeight: 'var(--fw-medium)', color: 'var(--ink-900)', letterSpacing: 'var(--tracking-tight)' }}>{p.name}</div>
-            <div className="muted rowflex" style={{ fontSize: 'var(--text-body)', gap: 6, marginTop: 8 }}><i className="ph ph-map-pin" aria-hidden="true" />{p.address}</div>
+            <div className="muted rowflex" style={{ fontSize: 'var(--text-body)', gap: 6, marginTop: 4 }}><i className="ph ph-map-pin" aria-hidden="true" />{p.address}</div>
           </div>
           <div>
             <div className="between" style={{ marginBottom: 8 }}>

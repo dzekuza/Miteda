@@ -2,6 +2,7 @@ import React from 'react'
 import ReactDOM from 'react-dom'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { runPageEnter } from '../lib/animations'
+import gsap from 'gsap'
 
 // DS components come from the globally loaded bundle
 const getDS = () => window.MitedaDesignSystem_acc833 || {}
@@ -174,11 +175,14 @@ const SEARCH_INDEX = Object.entries(ROLES).flatMap(([rk, r]) =>
   { icon: 'ph ph-user', label: 'Tomas Petraitis', to: '/admin/gyventojas/tomas-petraitis', role: 'Gyventojas', sub: 'Butas B-9 · t.petraitis@gmail.com' },
 ])
 
-function HeaderSearch({ role }) {
+function HeaderSearch({ role, open, onOpen, onClose, hideEls, hdrRRef }) {
   const navigate = useNavigate()
-  const [open, setOpen] = React.useState(false)
   const [query, setQuery] = React.useState('')
+  const [inputVisible, setInputVisible] = React.useState(false)
   const inputRef = React.useRef(null)
+  const wrapRef = React.useRef(null)
+  const barRef = React.useRef(null)
+  const iconBtnRef = React.useRef(null)
 
   const results = React.useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -187,79 +191,103 @@ function HeaderSearch({ role }) {
       item.label.toLowerCase().includes(q) ||
       (item.sub && item.sub.toLowerCase().includes(q)) ||
       item.role.toLowerCase().includes(q)
-    ).slice(0, 8)
+    ).slice(0, 7)
   }, [query])
 
-  const openModal = () => { setOpen(true); setTimeout(() => inputRef.current?.focus(), 50) }
-  const closeModal = () => { setOpen(false); setQuery('') }
-  const go = (item) => { closeModal(); navigate(item.to) }
+  const expand = () => {
+    onOpen()
+    setInputVisible(true)
+    // grow hdr__r to fill header
+    if (hdrRRef?.current) gsap.to(hdrRRef.current, { flex: '1 1 auto', duration: 0.28, ease: 'power3.out' })
+    // animate siblings out
+    if (hideEls?.current?.length) {
+      gsap.to(hideEls.current, { autoAlpha: 0, x: 8, duration: 0.18, ease: 'power2.in', stagger: 0.04 })
+    }
+    // animate bar in
+    gsap.fromTo(barRef.current,
+      { width: 36, opacity: 0 },
+      { width: '100%', opacity: 1, duration: 0.3, ease: 'power3.out', onComplete: () => inputRef.current?.focus() }
+    )
+    gsap.to(iconBtnRef.current, { autoAlpha: 0, duration: 0.15, ease: 'power2.in' })
+  }
+
+  const collapse = () => {
+    gsap.to(barRef.current, {
+      width: 36, opacity: 0, duration: 0.22, ease: 'power3.in',
+      onComplete: () => { onClose(); setQuery(''); setInputVisible(false) }
+    })
+    // shrink hdr__r back
+    if (hdrRRef?.current) gsap.to(hdrRRef.current, { flex: '0 0 auto', duration: 0.25, ease: 'power3.in', delay: 0.05 })
+    if (hideEls?.current?.length) {
+      gsap.to(hideEls.current, { autoAlpha: 1, x: 0, duration: 0.2, ease: 'power2.out', stagger: 0.04, delay: 0.15 })
+    }
+    gsap.to(iconBtnRef.current, { autoAlpha: 1, duration: 0.2, ease: 'power2.out', delay: 0.2 })
+  }
+
+  const go = (item) => { collapse(); navigate(item.to) }
 
   React.useEffect(() => {
-    const handler = (e) => { if (e.key === 'Escape') closeModal() }
-    if (open) document.addEventListener('keydown', handler)
-    return () => document.removeEventListener('keydown', handler)
+    const onKey = (e) => { if (e.key === 'Escape') collapse() }
+    const onClick = (e) => { if (wrapRef.current && !wrapRef.current.contains(e.target)) collapse() }
+    if (open) {
+      document.addEventListener('keydown', onKey)
+      document.addEventListener('mousedown', onClick)
+    }
+    return () => { document.removeEventListener('keydown', onKey); document.removeEventListener('mousedown', onClick) }
   }, [open])
 
   return (
-    <>
-      <button type="button" onClick={openModal} className="hdr__search"
-        style={{ width: 36, height: 36, border: 'none', borderRadius: 'var(--radius-md)', background: 'var(--overlay-ink-04)', color: 'var(--ink-500)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.15s, color 0.15s' }}
-        onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--overlay-ink-08)'; e.currentTarget.style.color = 'var(--ink-900)' }}
+    <div ref={wrapRef} style={{ position: 'relative', display: 'flex', alignItems: 'center', flex: open ? '1 1 auto' : '0 0 auto' }}>
+      {/* icon button — always in DOM, hidden via GSAP when expanded */}
+      <button ref={iconBtnRef} type="button" onClick={expand}
+        style={{ width: 36, height: 36, border: 'none', borderRadius: 'var(--radius-md)', background: 'var(--overlay-ink-04)', color: 'var(--ink-500)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, position: 'absolute', top: 0, left: 0 }}
+        onMouseEnter={(e) => { if (!open) { e.currentTarget.style.background = 'var(--overlay-ink-08)'; e.currentTarget.style.color = 'var(--ink-900)' } }}
         onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--overlay-ink-04)'; e.currentTarget.style.color = 'var(--ink-500)' }}>
         <i className="ph ph-magnifying-glass" style={{ fontSize: 20 }} />
       </button>
 
-      {open && ReactDOM.createPortal(
-        <div onMouseDown={closeModal} style={{ position: 'fixed', inset: 0, zIndex: 10000, background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(4px)', display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: '10vh' }}>
-          <div onMouseDown={(e) => e.stopPropagation()} style={{ width: '100%', maxWidth: 640, margin: '0 16px', display: 'flex', flexDirection: 'column', gap: 0 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, background: 'var(--surface-card)', borderRadius: results.length > 0 ? 'var(--radius-lg) var(--radius-lg) 0 0' : 'var(--radius-lg)', padding: '0 16px', boxShadow: '0 20px 60px rgba(0,0,0,0.25)', borderBottom: results.length > 0 ? '1px solid var(--line-100)' : 'none' }}>
-              <i className="ph ph-magnifying-glass" style={{ fontSize: 20, color: 'var(--ink-400)', flexShrink: 0 }} />
-              <input
-                ref={inputRef}
-                type="text"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Ieškoti…"
-                style={{ flex: 1, height: 56, border: 'none', outline: 'none', fontSize: 18, fontFamily: 'var(--font-sans)', color: 'var(--ink-900)', background: 'transparent' }}
-              />
-              {query && (
-                <button type="button" onClick={() => setQuery('')} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--ink-400)', display: 'flex', alignItems: 'center' }}>
-                  <i className="ph ph-x" style={{ fontSize: 16 }} />
-                </button>
-              )}
-              <button type="button" onClick={closeModal} style={{ background: 'var(--overlay-ink-04)', border: 'none', borderRadius: 'var(--radius-sm)', cursor: 'pointer', padding: '3px 8px', color: 'var(--ink-400)', fontSize: 11, fontFamily: 'var(--font-sans)', flexShrink: 0 }}>Esc</button>
-            </div>
+      {/* expanded bar — always in DOM, animated in/out */}
+      <div ref={barRef}
+        style={{ display: 'flex', alignItems: 'center', gap: 8, height: 36, background: 'var(--overlay-ink-04)', borderRadius: 'var(--radius-md)', padding: '0 10px', width: 36, opacity: 0, overflow: 'hidden', pointerEvents: inputVisible ? 'auto' : 'none' }}>
+        <i className="ph ph-magnifying-glass" style={{ fontSize: 16, color: 'var(--ink-400)', flexShrink: 0 }} />
+        <input
+          ref={inputRef}
+          type="text"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Ieškoti…"
+          style={{ flex: 1, border: 'none', outline: 'none', background: 'transparent', fontSize: 'var(--text-body)', fontFamily: 'var(--font-sans)', color: 'var(--ink-900)', minWidth: 0 }}
+        />
+        <button type="button" onClick={collapse} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, color: 'var(--ink-400)', display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+          <i className="ph ph-x" style={{ fontSize: 14 }} />
+        </button>
+      </div>
 
-            {results.length > 0 && (
-              <div style={{ background: 'var(--surface-card)', borderRadius: '0 0 var(--radius-lg) var(--radius-lg)', boxShadow: '0 20px 60px rgba(0,0,0,0.25)', overflow: 'hidden' }}>
-                {results.map((item, idx) => (
-                  <button key={idx} type="button" onMouseDown={() => go(item)}
-                    style={{ display: 'flex', alignItems: 'center', gap: 12, width: '100%', padding: '11px 16px', border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left', borderBottom: idx < results.length - 1 ? '1px solid var(--line-100)' : 'none' }}
-                    onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--overlay-ink-04)' }}
-                    onMouseLeave={(e) => { e.currentTarget.style.background = 'none' }}>
-                    <span style={{ width: 34, height: 34, borderRadius: 'var(--radius-sm)', background: 'var(--overlay-ink-04)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <i className={item.icon} style={{ fontSize: 17, color: 'var(--ink-600)' }} />
-                    </span>
-                    <span style={{ flex: 1, minWidth: 0 }}>
-                      <span style={{ display: 'block', fontSize: 'var(--text-body)', color: 'var(--ink-900)', fontWeight: 'var(--fw-medium)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.label}</span>
-                      {item.sub && <span style={{ display: 'block', fontSize: 'var(--text-small)', color: 'var(--ink-400)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.sub}</span>}
-                    </span>
-                    <span style={{ fontSize: 11, color: 'var(--ink-300)', flexShrink: 0 }}>{item.role}</span>
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {query.trim().length > 0 && results.length === 0 && (
-              <div style={{ background: 'var(--surface-card)', borderRadius: '0 0 var(--radius-lg) var(--radius-lg)', boxShadow: '0 20px 60px rgba(0,0,0,0.25)', padding: '24px 16px', textAlign: 'center' }}>
-                <span style={{ fontSize: 'var(--text-body)', color: 'var(--ink-400)' }}>Nieko nerasta pagal „{query}"</span>
-              </div>
-            )}
-          </div>
-        </div>,
-        document.body
+      {open && results.length > 0 && (
+        <div style={{ position: 'absolute', top: 'calc(100% + 6px)', right: 0, minWidth: 280, width: '100%', background: 'var(--surface-card)', border: '1px solid var(--line-200)', borderRadius: 'var(--radius-lg)', boxShadow: '0 8px 24px rgba(0,0,0,0.10)', zIndex: 9999, overflow: 'hidden' }}>
+          {results.map((item, idx) => (
+            <button key={idx} type="button" onMouseDown={() => go(item)}
+              style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '9px 14px', border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left', borderBottom: idx < results.length - 1 ? '1px solid var(--line-100)' : 'none' }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--overlay-ink-04)' }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = 'none' }}>
+              <span style={{ width: 30, height: 30, borderRadius: 'var(--radius-sm)', background: 'var(--overlay-ink-04)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <i className={item.icon} style={{ fontSize: 16, color: 'var(--ink-600)' }} />
+              </span>
+              <span style={{ flex: 1, minWidth: 0 }}>
+                <span style={{ display: 'block', fontSize: 'var(--text-body)', color: 'var(--ink-900)', fontWeight: 'var(--fw-medium)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.label}</span>
+                {item.sub && <span style={{ display: 'block', fontSize: 'var(--text-small)', color: 'var(--ink-400)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.sub}</span>}
+              </span>
+              <span style={{ fontSize: 11, color: 'var(--ink-300)', flexShrink: 0 }}>{item.role}</span>
+            </button>
+          ))}
+        </div>
       )}
-    </>
+      {open && query.trim().length > 0 && results.length === 0 && (
+        <div style={{ position: 'absolute', top: 'calc(100% + 6px)', right: 0, minWidth: 280, width: '100%', background: 'var(--surface-card)', border: '1px solid var(--line-200)', borderRadius: 'var(--radius-lg)', boxShadow: '0 8px 24px rgba(0,0,0,0.10)', zIndex: 9999, padding: '14px', textAlign: 'center' }}>
+          <span style={{ fontSize: 'var(--text-body)', color: 'var(--ink-400)' }}>Nieko nerasta pagal „{query}"</span>
+        </div>
+      )}
+    </div>
   )
 }
 
@@ -370,6 +398,16 @@ function Header({ title, subtitle, actions, onMenu, role, breadcrumbs }) {
   const navigate = useNavigate()  // eslint-disable-line
   const [notifOpen, setNotifOpen] = React.useState(false)
   const [read, setRead] = React.useState(new Set())
+  const [searchOpen, setSearchOpen] = React.useState(false)
+  const hdrLeftRef = React.useRef(null)
+  const hdrActionsRef = React.useRef(null)
+  const hdrIoRef = React.useRef(null)
+  const hdrRRef = React.useRef(null)
+  const hideEls = React.useRef([])
+
+  React.useEffect(() => {
+    hideEls.current = []
+  }, [])
 
   const r = ROLES[role] || ROLES.gyventojas
   const messagesPath = role === 'gyventojas' ? '/owner/zinutes' : '/admin/zinutes'
@@ -382,7 +420,7 @@ function Header({ title, subtitle, actions, onMenu, role, breadcrumbs }) {
 
   return (
     <header className="hdr">
-      <div className="hdr__l">
+      <div ref={hdrLeftRef} className="hdr__l">
         <button type="button" className="menu-btn" onClick={onMenu} aria-label="Meniu"
           style={{ width: 44, height: 44, flex: '0 0 auto',
             borderRadius: 'var(--radius-sm)', border: 'none',
@@ -406,15 +444,22 @@ function Header({ title, subtitle, actions, onMenu, role, breadcrumbs }) {
           {subtitle && <p className="hdr__sub">{subtitle}</p>}
         </div>
       </div>
-      <div className="hdr__r">
-        {actions && <div className="hdr__actions">{actions}</div>}
-        <HeaderSearch role={role} />
-        <span className="hdr__io">
-          {IconButton && <>
-            <IconButton icon="ph ph-bell" variant="soft" dot={unreadCount > 0} ariaLabel="Pranešimai"
-              onClick={openNotif} />
-            <IconButton icon="ph ph-chat-circle" variant="soft" dot ariaLabel="Žinutės" onClick={() => navigate(messagesPath)} />
-          </>}
+      <div ref={hdrRRef} className="hdr__r" style={{ flex: '0 0 auto' }}>
+        {actions && <div ref={hdrActionsRef} className="hdr__actions">{actions}</div>}
+        <HeaderSearch role={role} open={searchOpen} onOpen={() => setSearchOpen(true)} onClose={() => setSearchOpen(false)} hideEls={hideEls} hdrRRef={hdrRRef} />
+        <span ref={hdrIoRef} className="hdr__io">
+          {[
+            { icon: 'ph ph-bell', dot: unreadCount > 0, label: 'Pranešimai', onClick: openNotif },
+            { icon: 'ph ph-chat-circle', dot: true, label: 'Žinutės', onClick: () => navigate(messagesPath) },
+          ].map(({ icon, dot, label, onClick }) => (
+            <button key={label} type="button" aria-label={label} onClick={onClick}
+              style={{ position: 'relative', width: 36, height: 36, border: 'none', borderRadius: 'var(--radius-md)', background: 'var(--overlay-ink-04)', color: 'var(--ink-500)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.15s, color 0.15s', flexShrink: 0 }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--overlay-ink-08)'; e.currentTarget.style.color = 'var(--ink-900)' }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--overlay-ink-04)'; e.currentTarget.style.color = 'var(--ink-500)' }}>
+              <i className={icon} style={{ fontSize: 20 }} />
+              {dot && <span style={{ position: 'absolute', top: 6, right: 6, width: 7, height: 7, borderRadius: '50%', background: 'var(--orange)', border: '1.5px solid var(--surface-card)' }} />}
+            </button>
+          ))}
         </span>
       </div>
       <NotifDrawer open={notifOpen} onClose={() => setNotifOpen(false)} read={read} />

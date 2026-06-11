@@ -108,22 +108,23 @@ export default function Specialistas() {
             </div>
           </div>
 
-          {/* Stats */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 24 }}>
-            {[
-              { icon: 'ph ph-wrench', label: 'Darbai', value: WORK_HISTORY.length, sub: 'Iš viso' },
-              { icon: 'ph ph-check-circle', label: 'Atlikta', value: WORK_HISTORY.filter((w) => w.status === 'Atlikta').length, sub: 'Užbaigti' },
-              { icon: 'ph ph-clock', label: 'Vykdoma', value: WORK_HISTORY.filter((w) => w.status === 'Vykdoma').length, sub: 'Aktyvūs' },
-            ].map((s) => (
-              <div key={s.label} style={{ padding: '14px 16px', borderRadius: 'var(--radius-md)', background: 'var(--surface-sunken)', textAlign: 'center' }}>
-                <i className={s.icon} style={{ fontSize: 20, color: 'var(--ink-400)', marginBottom: 4, display: 'block' }} />
-                <span style={{ display: 'block', fontSize: 'var(--text-heading)', fontWeight: 'var(--fw-semibold)', color: 'var(--ink-900)', lineHeight: 1.2 }}>{s.value}</span>
-                <span style={{ display: 'block', fontSize: 11, color: 'var(--ink-400)', marginTop: 2 }}>{s.sub}</span>
-              </div>
-            ))}
+          {/* Stats + Tabs */}
+          <div style={{ marginBottom: 20 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 16 }}>
+              {[
+                { icon: 'ph ph-wrench', label: 'Darbai', value: WORK_HISTORY.length, sub: 'Iš viso' },
+                { icon: 'ph ph-check-circle', label: 'Atlikta', value: WORK_HISTORY.filter((w) => w.status === 'Atlikta').length, sub: 'Užbaigti' },
+                { icon: 'ph ph-clock', label: 'Vykdoma', value: WORK_HISTORY.filter((w) => w.status === 'Vykdoma').length, sub: 'Aktyvūs' },
+              ].map((s) => (
+                <div key={s.label} style={{ padding: '14px 16px', borderRadius: 'var(--radius-md)', background: 'var(--surface-sunken)', textAlign: 'center' }}>
+                  <i className={s.icon} style={{ fontSize: 20, color: 'var(--ink-400)', marginBottom: 4, display: 'block' }} />
+                  <span style={{ display: 'block', fontSize: 'var(--text-heading)', fontWeight: 'var(--fw-semibold)', color: 'var(--ink-900)', lineHeight: 1.2 }}>{s.value}</span>
+                  <span style={{ display: 'block', fontSize: 11, color: 'var(--ink-400)', marginTop: 2 }}>{s.sub}</span>
+                </div>
+              ))}
+            </div>
+            <Tabs tabs={TABS} value={tab} onChange={setTab} />
           </div>
-
-          <div style={{ marginBottom: 20 }}><Tabs tabs={TABS} value={tab} onChange={setTab} /></div>
 
           {/* Info */}
           {tab === 'info' && (
@@ -171,7 +172,7 @@ export default function Specialistas() {
 
           {/* Chat */}
           {tab === 'chat' && (
-            <div style={{ maxWidth: 520 }}>
+            <div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 16 }}>
                 {MESSAGES.map((m, i) => {
                   const isMe = m.from === 'me'

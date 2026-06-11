@@ -43,6 +43,7 @@ export default function AdminZinutes() {
   const [chatOpen, setChatOpen] = useState(!!initialConvo)
   const [input, setInput] = useState('')
   const [msgs, setMsgs] = useState(MESSAGES)
+  const [hoveredMsg, setHoveredMsg] = useState(null)
   const [search, setSearch] = useState('')
   const [mobile, setMobile] = useState(isMobile)
   const [newMsgOpen, setNewMsgOpen] = useState(false)
@@ -119,10 +120,29 @@ export default function AdminZinutes() {
       </div>
       <div style={{ flex: 1, overflowY: 'auto', padding: '20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
         {(msgs[active.id] || []).map((m) => (
-          <div key={m.id} style={{ display: 'flex', justifyContent: m.from === 'me' ? 'flex-end' : 'flex-start' }}>
+          <div key={m.id}
+            onMouseEnter={() => setHoveredMsg(m.id)}
+            onMouseLeave={() => setHoveredMsg(null)}
+            style={{ display: 'flex', flexDirection: m.from === 'me' ? 'row-reverse' : 'row', alignItems: 'flex-end', gap: 6 }}>
             <div style={{ maxWidth: '70%', padding: '10px 14px', borderRadius: m.from === 'me' ? '16px 16px 4px 16px' : '16px 16px 16px 4px', background: m.from === 'me' ? 'var(--brand-green)' : 'var(--surface-sunken)', color: m.from === 'me' ? '#fff' : 'var(--ink-900)', fontSize: 'var(--text-body)', lineHeight: 'var(--lh-body)' }}>
               {m.text}
               <div style={{ fontSize: 10, marginTop: 4, opacity: 0.65, textAlign: 'right' }}>{m.time}</div>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 3, opacity: hoveredMsg === m.id ? 1 : 0, transition: 'opacity 120ms', pointerEvents: hoveredMsg === m.id ? 'auto' : 'none' }}>
+              <button
+                title="Kopijuoti"
+                onClick={() => navigator.clipboard?.writeText(m.text)}
+                style={{ width: 26, height: 26, border: 'none', borderRadius: 8, background: 'var(--surface-raised)', color: 'var(--ink-400)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <i className="ph ph-copy" style={{ fontSize: 13 }} />
+              </button>
+              {m.from === 'me' && (
+                <button
+                  title="Ištrinti"
+                  onClick={() => setMsgs((prev) => ({ ...prev, [active.id]: prev[active.id].filter((x) => x.id !== m.id) }))}
+                  style={{ width: 26, height: 26, border: 'none', borderRadius: 8, background: 'var(--surface-raised)', color: 'var(--ink-400)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <i className="ph ph-trash" style={{ fontSize: 13 }} />
+                </button>
+              )}
             </div>
           </div>
         ))}

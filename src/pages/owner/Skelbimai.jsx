@@ -69,7 +69,10 @@ export default function Skelbimai() {
       title="Skelbimų lenta" subtitle="Bendruomenės skelbimai — parduodu, ieškau, dovanoju."
       headerActions={<Button variant="primary" iconLeft="ph ph-plus" onClick={() => setPost(true)}>Naujas skelbimas</Button>}>
       <div className="content stack">
-        <Card padding={16}><FilterChips items={MD.bulletinCats} value={cat} onChange={setCat} /></Card>
+        <Card>
+          <PanelHead title="Skelbimai" subtitle={`${shown.length} įrašai`}
+            action={<FilterChips items={MD.bulletinCats} value={cat} onChange={setCat} />} />
+        </Card>
         <div className="grid-3 grid-3-sm">
           {shown.map((n, i) => <NoticeCard key={i} n={n} onContact={setContact} />)}
         </div>

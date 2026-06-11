@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Shell from '../../shared/Shell.jsx'
-import { useRepo, PanelHead, FilterChips, Modal } from '../../shared/UI.jsx'
+import { useRepo, PanelHead, Tabs, Modal } from '../../shared/UI.jsx'
 import repo from '../../lib/repo.js'
 import MD from '../../lib/data.js'
 import { toSlug } from './Specialistas.jsx'
@@ -40,6 +40,12 @@ function EditModal({ value, onChange, onSave, onClose, isNew }) {
   )
 }
 
+const TABS = [
+  { key: 'visi', label: 'Visi' },
+  { key: 'specialistai', label: 'Specialistai' },
+  { key: 'gyventojai', label: 'Gyventojai' },
+]
+
 export default function Kontaktai() {
   const DS = window.MitedaDesignSystem_acc833
   const { Card, Button, IconButton, Avatar, Badge } = DS
@@ -49,10 +55,13 @@ export default function Kontaktai() {
 
   const [listData, refresh] = useRepo('listContacts')
   const list = listData || []
+  const [tab, setTab] = useState('visi')
   const [cat, setCat] = useState('Visi')
   const [editing, setEditing] = useState(null)
   const [draft, setDraft] = useState(blank)
-  const shown = cat === 'Visi' ? list : list.filter((c) => c.cat === cat)
+
+  const shownSpecialists = cat === 'Visi' ? list : list.filter((c) => c.cat === cat)
+  const total = (tab === 'visi' ? list.length + RESIDENTS.length : tab === 'specialistai' ? list.length : RESIDENTS.length)
 
   const openEdit = (c, i) => { setEditing(i); setDraft({ ...c }) }
   const openNew = () => { setEditing('new'); setDraft({ ...blank, cat: cat === 'Visi' ? 'Administracija' : cat }) }
@@ -65,48 +74,39 @@ export default function Kontaktai() {
     <Shell role="admin" nav="kontaktai"
       title="Kontaktai" subtitle="Pagrindinis specialistų ir paslaugų teikėjų katalogas."
       headerActions={<Button variant="primary" iconLeft="ph ph-plus" onClick={openNew}>Naujas kontaktas</Button>}>
-      <div className="content stack">
-        <Card>
-          <PanelHead title="Specialistai" subtitle={`${list.length} įrašai`}
-            action={<FilterChips items={MD.contactCats} value={cat} onChange={setCat} />} />
-          <div className="stack-sm" style={{ gap: 4 }}>
-            {shown.map((c) => {
-              const i = list.indexOf(c)
-              return (
-                <div key={i} className="row" style={{ cursor: 'pointer', boxShadow: 'inset 0 0 0 1px var(--line-100)' }}
-                  onClick={() => navigate(`/admin/specialistas/${toSlug(c.name)}`)}>
-                  <Avatar name={c.name} size={40} />
-                  <div className="row__main"><span className="row__title">{c.name}</span><span className="row__meta">{c.role}<span className="dot">·</span>{c.company}</span></div>
-                  <Badge tone="neutral">{c.cat}</Badge>
-                  <span className="muted" style={{ fontSize: 'var(--text-small)', minWidth: 120, textAlign: 'right' }}>{c.phone}</span>
-                  <IconButton icon="ph ph-pencil-simple" variant="ghost" size="sm" ariaLabel="Redaguoti"
-                    onClick={(e) => { e.stopPropagation(); openEdit(c, i) }} />
-                </div>
-              )
-            })}
-          </div>
-        </Card>
-        <div style={{ marginTop: 16 }}>
-          <Card>
-            <PanelHead title="Gyventojai" subtitle={`${RESIDENTS.length} gyventojai`} />
-            <div className="stack-sm" style={{ gap: 4 }}>
-              {RESIDENTS.map((r) => (
-                <div key={r.slug} className="row" style={{ cursor: 'pointer', boxShadow: 'inset 0 0 0 1px var(--line-100)' }}
-                  onClick={() => navigate(`/admin/gyventojas/${r.slug}`)}>
-                  <Avatar name={r.name} size={40} />
-                  <div className="row__main">
-                    <span className="row__title">{r.name}</span>
-                    <span className="row__meta">Butas {r.apt}<span className="dot">·</span>{r.phone}</span>
-                  </div>
-                  <Badge tone={r.role === 'Nuomininkas' ? 'neutral' : 'success'}>{r.role}</Badge>
-                  <IconButton icon="ph ph-arrow-right" variant="ghost" size="sm" ariaLabel="Peržiūrėti"
-                    onClick={(e) => { e.stopPropagation(); navigate(`/admin/gyventojas/${r.slug}`) }} />
-                </div>
-              ))}
+      <Card>
+        <PanelHead title="Visi kontaktai" subtitle={`${total} įrašai`}
+          action={<Tabs tabs={TABS} value={tab} onChange={setTab} />} />
+        <div className="stack-sm" style={{ gap: 4 }}>
+          {(tab === 'visi' || tab === 'specialistai') && shownSpecialists.map((c) => {
+            const i = list.indexOf(c)
+            return (
+              <div key={`s-${i}`} className="row" style={{ cursor: 'pointer', boxShadow: 'inset 0 0 0 1px var(--line-100)' }}
+                onClick={() => navigate(`/admin/specialistas/${toSlug(c.name)}`)}>
+                <Avatar name={c.name} size={40} />
+                <div className="row__main"><span className="row__title">{c.name}</span><span className="row__meta">{c.role}<span className="dot">·</span>{c.company}</span></div>
+                <Badge tone="neutral">{c.cat}</Badge>
+                <span className="muted" style={{ fontSize: 'var(--text-small)', minWidth: 120, textAlign: 'right' }}>{c.phone}</span>
+                <IconButton icon="ph ph-pencil-simple" variant="ghost" size="sm" ariaLabel="Redaguoti"
+                  onClick={(e) => { e.stopPropagation(); openEdit(c, i) }} />
+              </div>
+            )
+          })}
+          {(tab === 'visi' || tab === 'gyventojai') && RESIDENTS.map((r) => (
+            <div key={r.slug} className="row" style={{ cursor: 'pointer', boxShadow: 'inset 0 0 0 1px var(--line-100)' }}
+              onClick={() => navigate(`/admin/gyventojas/${r.slug}`)}>
+              <Avatar name={r.name} size={40} />
+              <div className="row__main">
+                <span className="row__title">{r.name}</span>
+                <span className="row__meta">Butas {r.apt}<span className="dot">·</span>{r.phone}</span>
+              </div>
+              <Badge tone={r.role === 'Nuomininkas' ? 'neutral' : 'success'}>{r.role}</Badge>
+              <IconButton icon="ph ph-arrow-right" variant="ghost" size="sm" ariaLabel="Peržiūrėti"
+                onClick={(e) => { e.stopPropagation(); navigate(`/admin/gyventojas/${r.slug}`) }} />
             </div>
-          </Card>
+          ))}
         </div>
-      </div>
+      </Card>
       {editing !== null && <EditModal value={draft} onChange={setDraft} onSave={save} onClose={() => setEditing(null)} isNew={editing === 'new'} />}
     </Shell>
   )

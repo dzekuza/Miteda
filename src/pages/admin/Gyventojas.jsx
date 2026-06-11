@@ -152,7 +152,7 @@ export default function Gyventojas() {
       <div className="content">
         <Card>
           {/* Profile header */}
-          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 20, padding: '4px 0 24px', borderBottom: '1px solid var(--line-100)', marginBottom: 24, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 20, padding: '4px 0 20px', borderBottom: '1px solid var(--line-100)', marginBottom: 20, flexWrap: 'wrap' }}>
             {Avatar && <Avatar name={person.name} size={72} />}
             <div style={{ flex: 1, minWidth: 200 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4, flexWrap: 'wrap' }}>
@@ -179,9 +179,10 @@ export default function Gyventojas() {
                 }
               </>}
             </div>
+            <div style={{ width: '100%', marginTop: 4 }}>
+              <Tabs tabs={TABS} value={tab} onChange={setTab} />
+            </div>
           </div>
-
-          <div style={{ marginBottom: 20 }}><Tabs tabs={TABS} value={tab} onChange={setTab} /></div>
 
           {/* ── Informacija ── */}
           {tab === 'info' && !isEditing && (
@@ -295,7 +296,7 @@ export default function Gyventojas() {
 
           {/* ── Pokalbiai ── */}
           {tab === 'chat' && (
-            <div style={{ maxWidth: 520 }}>
+            <div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 16 }}>
                 {MESSAGES.map((m, i) => {
                   const isMe = m.from === 'me'

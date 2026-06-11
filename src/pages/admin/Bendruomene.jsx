@@ -77,6 +77,21 @@ export default function AdminBendruomene() {
   const [newCat, setNewCat] = React.useState('')
   const [newBody, setNewBody] = React.useState('')
 
+  const [pollOpen, setPollOpen] = React.useState(false)
+  const [pollQ, setPollQ] = React.useState('')
+  const [pollOpts, setPollOpts] = React.useState(['', ''])
+  const [polls, setPolls] = React.useState([])
+  const [pollVotes, setPollVotes] = React.useState({})
+  const addPollOpt = () => setPollOpts((o) => [...o, ''])
+  const setPollOpt = (i, v) => setPollOpts((o) => o.map((x, idx) => idx === i ? v : x))
+  const removePollOpt = (i) => setPollOpts((o) => o.filter((_, idx) => idx !== i))
+  const submitPoll = () => {
+    if (!pollQ.trim() || pollOpts.filter(o => o.trim()).length < 2) return
+    setPolls((p) => [{ q: pollQ, opts: pollOpts.filter(o => o.trim()), time: 'Ką tik', votes: {} }, ...p])
+    setPollOpen(false)
+  }
+  const votePoll = (pi, oi) => setPollVotes((v) => ({ ...v, [pi]: oi }))
+
   const CATS = ['Informacija', 'Klausimai', 'Pasiūlymai', 'Renginiai', 'Kita']
   const MEMBERS = [
     { name: 'Greta Janušienė',      apt: 'A-4',  building: '1' },
@@ -167,11 +182,86 @@ export default function AdminBendruomene() {
         </div>
       </div>
     )}
+    {pollOpen && (
+      <div onClick={() => setPollOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 400, background: 'rgba(0,0,0,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div onClick={(e) => e.stopPropagation()} style={{ width: 520, maxWidth: 'calc(100vw - 32px)', background: 'var(--surface-card)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-lg)', overflow: 'hidden' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid var(--line-100)' }}>
+            <span style={{ fontSize: 'var(--text-title)', fontWeight: 'var(--fw-semibold)', color: 'var(--ink-900)' }}>Naujas balsavimas</span>
+            <button onClick={() => setPollOpen(false)} style={{ width: 32, height: 32, border: 'none', borderRadius: 'var(--radius-sm)', background: 'transparent', color: 'var(--ink-500)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <i className="ph ph-x" style={{ fontSize: 18 }} />
+            </button>
+          </div>
+          <div style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div>
+              <label style={{ display: 'block', fontSize: 'var(--text-small)', fontWeight: 'var(--fw-medium)', color: 'var(--ink-500)', marginBottom: 6 }}>Klausimas</label>
+              <input value={pollQ} onChange={(e) => setPollQ(e.target.value)} placeholder="Pvz. Ar sutinkate su..." style={{ width: '100%', height: 38, padding: '0 10px', border: '1px solid var(--line-200)', borderRadius: 'var(--radius-sm)', fontFamily: 'var(--font-sans)', fontSize: 'var(--text-body)', color: 'var(--ink-900)', background: 'var(--surface-card)', outline: 'none', boxSizing: 'border-box' }} />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: 'var(--text-small)', fontWeight: 'var(--fw-medium)', color: 'var(--ink-500)', marginBottom: 6 }}>Atsakymų variantai</label>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {pollOpts.map((opt, i) => (
+                  <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                    <input value={opt} onChange={(e) => setPollOpt(i, e.target.value)} placeholder={`Variantas ${i + 1}`}
+                      style={{ flex: 1, height: 38, padding: '0 10px', border: '1px solid var(--line-200)', borderRadius: 'var(--radius-sm)', fontFamily: 'var(--font-sans)', fontSize: 'var(--text-body)', color: 'var(--ink-900)', background: 'var(--surface-card)', outline: 'none', boxSizing: 'border-box' }} />
+                    {pollOpts.length > 2 && (
+                      <button type="button" onClick={() => removePollOpt(i)} style={{ width: 32, height: 32, border: 'none', borderRadius: 'var(--radius-sm)', background: 'var(--overlay-ink-04)', color: 'var(--ink-400)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <i className="ph ph-x" style={{ fontSize: 14 }} />
+                      </button>
+                    )}
+                  </div>
+                ))}
+                {pollOpts.length < 6 && (
+                  <button type="button" onClick={addPollOpt} style={{ alignSelf: 'flex-start', display: 'flex', alignItems: 'center', gap: 6, border: 'none', background: 'none', cursor: 'pointer', color: 'var(--brand-green)', fontFamily: 'var(--font-sans)', fontSize: 'var(--text-small)', fontWeight: 'var(--fw-medium)', padding: 0 }}>
+                    <i className="ph ph-plus" style={{ fontSize: 14 }} /> Pridėti variantą
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, padding: '12px 20px', borderTop: '1px solid var(--line-100)' }}>
+            <Button variant="secondary" onClick={() => setPollOpen(false)}>Atšaukti</Button>
+            <Button variant="primary" iconLeft="ph ph-chart-bar" onClick={submitPoll}>Paskelbti balsavimą</Button>
+          </div>
+        </div>
+      </div>
+    )}
     <Shell role="admin" nav="bendruomene"
       title="Bendruomenė" subtitle="Gyventojų diskusijos ir aktualijos."
-      headerActions={<Button variant="primary" iconLeft="ph ph-plus" onClick={() => { setNewTitle(''); setNewCat(''); setNewBody(''); setNewOpen(true) }}>Nauja diskusija</Button>}>
+      headerActions={<div style={{ display: 'flex', gap: 8 }}>
+        <Button variant="secondary" iconLeft="ph ph-chart-bar" onClick={() => { setPollQ(''); setPollOpts(['', '']); setPollOpen(true) }}>Naujas balsavimas</Button>
+        <Button variant="primary" iconLeft="ph ph-plus" onClick={() => { setNewTitle(''); setNewCat(''); setNewBody(''); setNewOpen(true) }}>Nauja diskusija</Button>
+      </div>}>
       <div className="content grid-aside">
         <div className="stack">
+          {polls.map((p, pi) => {
+            const totalVotes = Object.values(p.votes || {}).reduce((a, b) => a + b, 0) + (pollVotes[pi] !== undefined ? 1 : 0)
+            const voted = pollVotes[pi]
+            return (
+              <Card key={pi} tone="flat" style={{ borderRadius: 'var(--radius-md)', padding: 20 }}>
+                <div className="rowflex" style={{ gap: 8, marginBottom: 12 }}>
+                  <Badge tone="info">Balsavimas</Badge>
+                  <span className="muted right" style={{ fontSize: 'var(--text-small)' }}>{p.time}</span>
+                </div>
+                <h3 style={{ margin: '0 0 14px', fontSize: 'var(--text-title)', fontWeight: 'var(--fw-medium)', color: 'var(--ink-900)' }}>{p.q}</h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {p.opts.map((opt, oi) => {
+                    const pct = totalVotes > 0 && voted !== undefined ? Math.round(((oi === voted ? 1 : 0) / totalVotes) * 100) : 0
+                    return (
+                      <button key={oi} type="button" onClick={() => votePoll(pi, oi)}
+                        style={{ width: '100%', position: 'relative', padding: '10px 14px', border: voted === oi ? '1.5px solid var(--brand-green)' : '1px solid var(--line-200)', borderRadius: 'var(--radius-sm)', background: 'var(--surface-card)', cursor: voted === undefined ? 'pointer' : 'default', textAlign: 'left', fontFamily: 'var(--font-sans)', fontSize: 'var(--text-body)', color: 'var(--ink-900)', overflow: 'hidden' }}>
+                        {voted !== undefined && <div style={{ position: 'absolute', inset: 0, width: pct + '%', background: voted === oi ? 'rgba(120,191,62,0.12)' : 'var(--overlay-ink-04)', transition: 'width 0.4s' }} />}
+                        <span style={{ position: 'relative', display: 'flex', justifyContent: 'space-between' }}>
+                          <span>{opt}</span>
+                          {voted !== undefined && <span style={{ color: 'var(--ink-400)', fontSize: 'var(--text-small)' }}>{pct}%</span>}
+                        </span>
+                      </button>
+                    )
+                  })}
+                </div>
+                {voted !== undefined && <p style={{ margin: '10px 0 0', fontSize: 'var(--text-small)', color: 'var(--ink-400)' }}>{totalVotes} {totalVotes === 1 ? 'balsas' : 'balsai'}</p>}
+              </Card>
+            )
+          })}
           {threads.map((t, i) => <ThreadCard key={i} t={t} onOpen={setOpen} liked={!!likes[i]} onLike={() => toggle(i)} />)}
         </div>
         <div className="stack">

@@ -28,11 +28,35 @@ function Stat({ icon, label, value, accent }) {
 }
 
 function Tabs({ tabs, value, onChange }) {
+  const listRef = React.useRef(null)
+  const pillRef = React.useRef(null)
+
+  const movePill = React.useCallback(() => {
+    const list = listRef.current
+    const pill = pillRef.current
+    if (!list || !pill) return
+    const active = list.querySelector('[aria-selected="true"]')
+    if (!active) return
+    const listRect = list.getBoundingClientRect()
+    const btnRect = active.getBoundingClientRect()
+    pill.style.width = btnRect.width + 'px'
+    pill.style.transform = `translateX(${btnRect.left - listRect.left - 4}px)`
+  }, [])
+
+  React.useLayoutEffect(() => { movePill() }, [value, movePill])
+
   return (
-    <div className="tabs" role="tablist">
+    <div ref={listRef} className="tabs" role="tablist" style={{ position: 'relative' }}>
+      <div ref={pillRef} style={{
+        position: 'absolute', top: 4, left: 4, height: 'calc(100% - 8px)',
+        background: 'var(--surface-white)', borderRadius: 'var(--radius-pill)',
+        boxShadow: 'var(--shadow-xs)', pointerEvents: 'none',
+        transition: 'transform 0.22s cubic-bezier(0.4,0,0.2,1), width 0.22s cubic-bezier(0.4,0,0.2,1)',
+      }} />
       {tabs.map((t) => (
         <button key={t.key} role="tab" aria-selected={t.key === value}
           className={'tabs__btn' + (t.key === value ? ' is-active' : '')}
+          style={{ position: 'relative', zIndex: 1 }}
           onClick={() => onChange(t.key)}>
           {t.label}{t.count != null && <span style={{ opacity: 0.55, marginLeft: 6 }}>{t.count}</span>}
         </button>
@@ -42,13 +66,8 @@ function Tabs({ tabs, value, onChange }) {
 }
 
 function FilterChips({ items, value, onChange }) {
-  return (
-    <div className="chips">
-      {items.map((it) => (
-        <button key={it} className={'chip' + (it === value ? ' is-active' : '')} onClick={() => onChange(it)}>{it}</button>
-      ))}
-    </div>
-  )
+  const tabs = items.map((it) => ({ key: it, label: it }))
+  return <Tabs tabs={tabs} value={value} onChange={onChange} />
 }
 
 function Modal({ title, subtitle, onClose, children, footer, width }) {

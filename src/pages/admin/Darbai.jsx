@@ -6,7 +6,7 @@ export default function Darbai() {
   const DS = window.MitedaDesignSystem_acc833
   const { Card, Button, Badge, Avatar, KeyRow } = DS
 
-  function ProjectCard({ p, onClick }) {
+  function ProjectCard({ p, onClick, onEdit, onRemove }) {
     return (
       <Card interactive role="button" tabIndex={0}
         style={{ display: 'flex', flexDirection: 'column', gap: 16, cursor: 'pointer' }}
@@ -17,7 +17,25 @@ export default function Darbai() {
             <div style={{ fontSize: 'var(--text-title)', fontWeight: 'var(--fw-medium)', color: 'var(--ink-900)' }}>{p.building} · {p.apt}</div>
             <div className="muted" style={{ fontSize: 'var(--text-small)', marginTop: 2 }}>{p.phase}</div>
           </div>
-          <Badge tone={p.progress > 75 ? 'success' : 'event'}>{p.progress}%</Badge>
+          <div className="rowflex" style={{ gap: 4 }}>
+            <Badge tone={p.progress > 75 ? 'success' : 'event'}>{p.progress}%</Badge>
+            <button
+              onClick={(e) => { e.stopPropagation(); onEdit(p) }}
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, borderRadius: 8, border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--ink-400)' }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-raised)'; e.currentTarget.style.color = 'var(--ink-700)' }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--ink-400)' }}
+              title="Redaguoti">
+              <i className="ph ph-pencil" style={{ fontSize: 14 }} />
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); onRemove(p) }}
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, borderRadius: 8, border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--ink-400)' }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-raised)'; e.currentTarget.style.color = 'var(--accent-red, #e53e3e)' }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--ink-400)' }}
+              title="Pašalinti">
+              <i className="ph ph-trash" style={{ fontSize: 14 }} />
+            </button>
+          </div>
         </div>
         <div style={{ height: 8, borderRadius: '999px', background: 'var(--surface-sunken)', overflow: 'hidden' }}>
           <div style={{ height: '100%', width: p.progress + '%', borderRadius: '999px', background: p.progress > 75 ? 'var(--brand-green)' : 'var(--accent-pink)' }} />
@@ -112,11 +130,48 @@ export default function Darbai() {
     )
   }
 
+  function EditProjectModal({ p, onClose, onSave }) {
+    const [building, setBuilding] = React.useState(p.building)
+    const [apt, setApt] = React.useState(p.apt)
+    const [phase, setPhase] = React.useState(p.phase)
+    const [manager, setManager] = React.useState(p.manager)
+    const valid = building.trim() && apt.trim() && phase.trim() && manager.trim()
+    return (
+      <Modal title="Redaguoti projektą" onClose={onClose} width={480}>
+        <div className="stack" style={{ gap: 16 }}>
+          <div className="grid-2" style={{ gap: 12 }}>
+            <div className="field" style={{ margin: 0 }}><label>Pastatas</label><input value={building} onChange={(e) => setBuilding(e.target.value)} /></div>
+            <div className="field" style={{ margin: 0 }}><label>Butas / zona</label><input value={apt} onChange={(e) => setApt(e.target.value)} /></div>
+          </div>
+          <div className="field" style={{ margin: 0 }}><label>Darbų etapas</label><input value={phase} onChange={(e) => setPhase(e.target.value)} /></div>
+          <div className="field" style={{ margin: 0 }}><label>Darbų vadovas</label><input value={manager} onChange={(e) => setManager(e.target.value)} /></div>
+          <div style={{ display: 'flex', gap: 10, paddingTop: 4 }}>
+            <Button variant="primary" onClick={() => valid && onSave({ ...p, building, apt, phase, manager })} style={!valid ? { opacity: 0.5, pointerEvents: 'none' } : {}}>Išsaugoti</Button>
+            <Button variant="ghost" onClick={onClose}>Atšaukti</Button>
+          </div>
+        </div>
+      </Modal>
+    )
+  }
+
   const [projData] = useRepo('listProjects')
-  const PROJECTS = projData || []
+  const [projects, setProjects] = React.useState(null)
+  const PROJECTS = projects ?? projData ?? []
   const [selected, setSelected] = React.useState(null)
   const [showNew, setShowNew] = React.useState(false)
+  const [editing, setEditing] = React.useState(null)
+  const [removing, setRemoving] = React.useState(null)
   const totalWorkers = PROJECTS.reduce((s, p) => s + p.workers, 0)
+
+  function handleRemove(p) {
+    setProjects(PROJECTS.filter((x) => x !== p))
+    setRemoving(null)
+  }
+
+  function handleSaveEdit(updated) {
+    setProjects(PROJECTS.map((x) => x === editing ? updated : x))
+    setEditing(null)
+  }
 
   return (
     <Shell role="admin" nav="darbai"
@@ -129,11 +184,25 @@ export default function Darbai() {
           <Stat icon="ph ph-wallet" label="Bendros išlaidos" value="€13 160" accent />
         </div>
         <div className="grid-2">
-          {PROJECTS.map((p, i) => <ProjectCard key={i} p={p} onClick={() => setSelected(p)} />)}
+          {PROJECTS.map((p, i) => <ProjectCard key={i} p={p} onClick={() => setSelected(p)} onEdit={setEditing} onRemove={setRemoving} />)}
         </div>
       </div>
       {selected && <ProjectModal p={selected} onClose={() => setSelected(null)} />}
       {showNew && <NewProjectModal onClose={() => setShowNew(false)} />}
+      {editing && <EditProjectModal p={editing} onClose={() => setEditing(null)} onSave={handleSaveEdit} />}
+      {removing && (
+        <Modal title="Pašalinti projektą" onClose={() => setRemoving(null)} width={400}>
+          <div className="stack" style={{ gap: 20 }}>
+            <p style={{ margin: 0, fontSize: 'var(--text-body)', color: 'var(--ink-600)' }}>
+              Ar tikrai norite pašalinti projektą <strong style={{ color: 'var(--ink-900)' }}>{removing.building} · {removing.apt}</strong>? Šio veiksmo atšaukti negalėsite.
+            </p>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <Button variant="primary" style={{ background: 'var(--accent-red, #e53e3e)', borderColor: 'var(--accent-red, #e53e3e)' }} onClick={() => handleRemove(removing)}>Pašalinti</Button>
+              <Button variant="ghost" onClick={() => setRemoving(null)}>Atšaukti</Button>
+            </div>
+          </div>
+        </Modal>
+      )}
     </Shell>
   )
 }
