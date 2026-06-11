@@ -239,7 +239,7 @@ export default function AdminBendruomene() {
             return (
               <Card key={pi} tone="flat" style={{ borderRadius: 'var(--radius-md)', padding: 20 }}>
                 <div className="rowflex" style={{ gap: 8, marginBottom: 12 }}>
-                  <Badge tone="info">Balsavimas</Badge>
+                  <Badge tone="event">Balsavimas</Badge>
                   <span className="muted right" style={{ fontSize: 'var(--text-small)' }}>{p.time}</span>
                 </div>
                 <h3 style={{ margin: '0 0 14px', fontSize: 'var(--text-title)', fontWeight: 'var(--fw-medium)', color: 'var(--ink-900)' }}>{p.q}</h3>

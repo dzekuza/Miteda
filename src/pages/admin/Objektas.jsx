@@ -840,9 +840,10 @@ function UnitsTab({ P }) {
   const [popover, setPopover] = useState(null)
   const [confirmDelete, setConfirmDelete] = useState(null)
   const [search, setSearch] = useState('')
-  const [filterType, setFilterType] = useState('all')
-  const [filterResidents, setFilterResidents] = useState('all')
-  const [filterPhotos, setFilterPhotos] = useState('all')
+  const [searchFocused, setSearchFocused] = useState(false)
+  const [filterAukstas, setFilterAukstas] = useState('all')
+  const [filterKambariai, setFilterKambariai] = useState('all')
+  const [filterBusena, setFilterBusena] = useState('all')
   const [openDropdown, setOpenDropdown] = useState(null)
 
   React.useEffect(() => {
@@ -874,57 +875,55 @@ function UnitsTab({ P }) {
   const filtered = units.filter((u, i) => {
     const rooms = u.area <= 53 ? 1 : u.area <= 75 ? 2 : 3
     const hasResidents = u.st !== 'free'
-    const hasPhotos = Array.isArray(u.photos) && u.photos.length > 0
     const owner = hasResidents ? (u.owner || OWNERS[i % OWNERS.length]) : null
     const q = search.trim().toLowerCase()
     if (q && !u.id.toLowerCase().includes(q) && !(owner && owner.name.toLowerCase().includes(q))) return false
-    if (filterType !== 'all' && rooms !== +filterType) return false
-    if (filterResidents === 'yes' && !hasResidents) return false
-    if (filterResidents === 'no' && hasResidents) return false
-    if (filterPhotos === 'yes' && !hasPhotos) return false
-    if (filterPhotos === 'no' && hasPhotos) return false
+    if (filterAukstas !== 'all' && u.floor !== +filterAukstas) return false
+    if (filterKambariai !== 'all' && rooms !== +filterKambariai) return false
+    if (filterBusena !== 'all' && u.st !== filterBusena) return false
     return true
   })
 
-  const TYPE_FILTERS = [
-    { value: 'all', label: 'Butai' },
+  const maxFloor = Math.max(...units.map((u) => u.floor), 1)
+  const AUKSTAS_FILTERS = [
+    { value: 'all', label: 'Aukštas' },
+    ...Array.from({ length: maxFloor }, (_, i) => ({ value: String(i + 1), label: `${i + 1} aukštas` })),
+  ]
+  const KAMBARIAI_FILTERS = [
+    { value: 'all', label: 'Kambariai' },
     { value: '1', label: '1 kamb.' },
     { value: '2', label: '2 kamb.' },
     { value: '3', label: '3+ kamb.' },
   ]
-  const RESIDENTS_FILTERS = [
-    { value: 'all', label: 'Gyventojai' },
-    { value: 'yes', label: 'Yra' },
-    { value: 'no', label: 'Nėra' },
-  ]
-  const PHOTOS_FILTERS = [
-    { value: 'all', label: 'Nuotraukos' },
-    { value: 'yes', label: 'Yra' },
-    { value: 'no', label: 'Nėra' },
+  const BUSENA_FILTERS = [
+    { value: 'all', label: 'Būsena' },
+    ...Object.entries(UNIT_STATUS).map(([k, v]) => ({ value: k, label: v.label })),
   ]
 
   return (
     <div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
-        <div style={{ position: 'relative', flexShrink: 0, width: 200 }}>
-          <i className="ph ph-magnifying-glass" style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--ink-400)', fontSize: 16, pointerEvents: 'none' }} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, height: 36, background: 'var(--overlay-ink-04)', borderRadius: 'var(--radius-md)', padding: '0 10px', width: 200, flexShrink: 0, overflow: 'hidden', border: searchFocused ? '1.5px solid var(--brand-green)' : '1.5px solid transparent', boxSizing: 'border-box', transition: 'border-color 0.15s' }}>
+          <i className="ph ph-magnifying-glass" style={{ fontSize: 16, color: 'var(--ink-400)', flexShrink: 0 }} />
           <input
             type="text"
             placeholder="Ieškoti buto, savininko…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            style={{ width: '100%', paddingLeft: 32, paddingRight: search ? 28 : 10, paddingTop: 7, paddingBottom: 7, border: '1px solid var(--line-200)', borderRadius: 'var(--radius-md)', fontSize: 'var(--text-body)', background: 'var(--surface-card)', color: 'var(--ink-900)', outline: 'none', fontFamily: 'var(--font-sans)', boxSizing: 'border-box' }}
+            onFocus={() => setSearchFocused(true)}
+            onBlur={() => setSearchFocused(false)}
+            style={{ flex: 1, border: 'none', outline: 'none', background: 'transparent', fontSize: 'var(--text-body)', fontFamily: 'var(--font-sans)', color: 'var(--ink-900)', minWidth: 0 }}
           />
           {search && (
-            <button type="button" onClick={() => setSearch('')} style={{ position: 'absolute', right: 6, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', padding: 2, color: 'var(--ink-400)', display: 'flex', alignItems: 'center' }}>
+            <button type="button" onClick={() => setSearch('')} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, color: 'var(--ink-400)', display: 'flex', alignItems: 'center', flexShrink: 0 }}>
               <i className="ph ph-x" style={{ fontSize: 14 }} />
             </button>
           )}
         </div>
         {[
-          { key: 'type', value: filterType, set: setFilterType, options: TYPE_FILTERS },
-          { key: 'residents', value: filterResidents, set: setFilterResidents, options: RESIDENTS_FILTERS },
-          { key: 'photos', value: filterPhotos, set: setFilterPhotos, options: PHOTOS_FILTERS },
+          { key: 'aukstas', value: filterAukstas, set: setFilterAukstas, options: AUKSTAS_FILTERS },
+          { key: 'kambariai', value: filterKambariai, set: setFilterKambariai, options: KAMBARIAI_FILTERS },
+          { key: 'busena', value: filterBusena, set: setFilterBusena, options: BUSENA_FILTERS },
         ].map(({ key, value, set, options }) => {
           const active = value !== 'all'
           const currentLabel = options.find(o => o.value === value)?.label || options[0].label
@@ -937,7 +936,7 @@ function UnitsTab({ P }) {
             color: active ? 'var(--brand-green-dark, var(--brand-green))' : 'var(--ink-600)',
             fontFamily: 'var(--font-sans)', fontSize: 'var(--text-small)',
             cursor: 'pointer', fontWeight: active ? 'var(--fw-medium)' : 'var(--fw-regular)',
-            whiteSpace: 'nowrap',
+            whiteSpace: 'nowrap', appearance: 'none', outline: 'none',
           }
           return (
             <div key={key} data-filter-dropdown style={{ position: 'relative' }}>

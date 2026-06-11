@@ -175,7 +175,7 @@ const SEARCH_INDEX = Object.entries(ROLES).flatMap(([rk, r]) =>
   { icon: 'ph ph-user', label: 'Tomas Petraitis', to: '/admin/gyventojas/tomas-petraitis', role: 'Gyventojas', sub: 'Butas B-9 · t.petraitis@gmail.com' },
 ])
 
-function HeaderSearch({ role, open, onOpen, onClose, hideEls, hdrRRef }) {
+function HeaderSearch({ role, open, onOpen, onClose, hideEls }) {
   const navigate = useNavigate()
   const [query, setQuery] = React.useState('')
   const [inputVisible, setInputVisible] = React.useState(false)
@@ -194,34 +194,37 @@ function HeaderSearch({ role, open, onOpen, onClose, hideEls, hdrRRef }) {
     ).slice(0, 7)
   }, [query])
 
+  const EXPANDED_W = 360
+
   const expand = () => {
     onOpen()
     setInputVisible(true)
-    // grow hdr__r to fill header
-    if (hdrRRef?.current) gsap.to(hdrRRef.current, { flex: '1 1 auto', duration: 0.28, ease: 'power3.out' })
-    // animate siblings out
+    // icon slides right and fades out
+    gsap.to(iconBtnRef.current, { autoAlpha: 0, x: 6, duration: 0.14, ease: 'power2.in' })
+    // siblings (e.g. header actions) fade left
     if (hideEls?.current?.length) {
-      gsap.to(hideEls.current, { autoAlpha: 0, x: 8, duration: 0.18, ease: 'power2.in', stagger: 0.04 })
+      gsap.to(hideEls.current, { autoAlpha: 0, x: -6, duration: 0.16, ease: 'power2.in', stagger: 0.04 })
     }
-    // animate bar in
+    // bar grows leftward: right edge is anchored, width expands left
     gsap.fromTo(barRef.current,
-      { width: 36, opacity: 0 },
-      { width: '100%', opacity: 1, duration: 0.3, ease: 'power3.out', onComplete: () => inputRef.current?.focus() }
+      { width: 0, opacity: 0 },
+      { width: EXPANDED_W, opacity: 1, duration: 0.28, ease: 'power3.out',
+        onComplete: () => inputRef.current?.focus() }
     )
-    gsap.to(iconBtnRef.current, { autoAlpha: 0, duration: 0.15, ease: 'power2.in' })
   }
 
   const collapse = () => {
+    // bar shrinks back to the right
     gsap.to(barRef.current, {
-      width: 36, opacity: 0, duration: 0.22, ease: 'power3.in',
+      width: 0, opacity: 0, duration: 0.22, ease: 'power3.in',
       onComplete: () => { onClose(); setQuery(''); setInputVisible(false) }
     })
-    // shrink hdr__r back
-    if (hdrRRef?.current) gsap.to(hdrRRef.current, { flex: '0 0 auto', duration: 0.25, ease: 'power3.in', delay: 0.05 })
+    // icon returns
+    gsap.to(iconBtnRef.current, { autoAlpha: 1, x: 0, duration: 0.2, ease: 'power2.out', delay: 0.18 })
+    // siblings return
     if (hideEls?.current?.length) {
-      gsap.to(hideEls.current, { autoAlpha: 1, x: 0, duration: 0.2, ease: 'power2.out', stagger: 0.04, delay: 0.15 })
+      gsap.to(hideEls.current, { autoAlpha: 1, x: 0, duration: 0.2, ease: 'power2.out', delay: 0.14 })
     }
-    gsap.to(iconBtnRef.current, { autoAlpha: 1, duration: 0.2, ease: 'power2.out', delay: 0.2 })
   }
 
   const go = (item) => { collapse(); navigate(item.to) }
@@ -237,18 +240,18 @@ function HeaderSearch({ role, open, onOpen, onClose, hideEls, hdrRRef }) {
   }, [open])
 
   return (
-    <div ref={wrapRef} style={{ position: 'relative', display: 'flex', alignItems: 'center', flex: open ? '1 1 auto' : '0 0 auto' }}>
-      {/* icon button — always in DOM, hidden via GSAP when expanded */}
+    <div ref={wrapRef} style={{ position: 'relative', flexShrink: 0, width: 36, height: 36 }}>
+      {/* icon button */}
       <button ref={iconBtnRef} type="button" onClick={expand}
-        style={{ width: 36, height: 36, border: 'none', borderRadius: 'var(--radius-md)', background: 'var(--overlay-ink-04)', color: 'var(--ink-500)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, position: 'absolute', top: 0, left: 0 }}
+        style={{ position: 'absolute', top: 0, right: 0, width: 36, height: 36, border: 'none', borderRadius: 'var(--radius-md)', background: 'var(--overlay-ink-04)', color: 'var(--ink-500)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
         onMouseEnter={(e) => { if (!open) { e.currentTarget.style.background = 'var(--overlay-ink-08)'; e.currentTarget.style.color = 'var(--ink-900)' } }}
         onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--overlay-ink-04)'; e.currentTarget.style.color = 'var(--ink-500)' }}>
         <i className="ph ph-magnifying-glass" style={{ fontSize: 20 }} />
       </button>
 
-      {/* expanded bar — always in DOM, animated in/out */}
+      {/* expanded bar — anchored to right edge, grows leftward as width increases */}
       <div ref={barRef}
-        style={{ display: 'flex', alignItems: 'center', gap: 8, height: 36, background: 'var(--overlay-ink-04)', borderRadius: 'var(--radius-md)', padding: '0 10px', width: 36, opacity: 0, overflow: 'hidden', pointerEvents: inputVisible ? 'auto' : 'none' }}>
+        style={{ position: 'absolute', top: 0, right: 0, display: 'flex', alignItems: 'center', gap: 8, height: 36, width: 0, opacity: 0, background: 'var(--overlay-ink-04)', borderRadius: 'var(--radius-md)', padding: '0 10px', overflow: 'hidden', pointerEvents: inputVisible ? 'auto' : 'none' }}>
         <i className="ph ph-magnifying-glass" style={{ fontSize: 16, color: 'var(--ink-400)', flexShrink: 0 }} />
         <input
           ref={inputRef}
@@ -264,7 +267,7 @@ function HeaderSearch({ role, open, onOpen, onClose, hideEls, hdrRRef }) {
       </div>
 
       {open && results.length > 0 && (
-        <div style={{ position: 'absolute', top: 'calc(100% + 6px)', right: 0, minWidth: 280, width: '100%', background: 'var(--surface-card)', border: '1px solid var(--line-200)', borderRadius: 'var(--radius-lg)', boxShadow: '0 8px 24px rgba(0,0,0,0.10)', zIndex: 9999, overflow: 'hidden' }}>
+        <div style={{ position: 'absolute', top: 'calc(100% + 6px)', right: 0, width: 360, background: 'var(--surface-card)', border: '1px solid var(--line-200)', borderRadius: 'var(--radius-lg)', boxShadow: '0 8px 24px rgba(0,0,0,0.10)', zIndex: 9999, overflow: 'hidden' }}>
           {results.map((item, idx) => (
             <button key={idx} type="button" onMouseDown={() => go(item)}
               style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '9px 14px', border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left', borderBottom: idx < results.length - 1 ? '1px solid var(--line-100)' : 'none' }}
@@ -283,7 +286,7 @@ function HeaderSearch({ role, open, onOpen, onClose, hideEls, hdrRRef }) {
         </div>
       )}
       {open && query.trim().length > 0 && results.length === 0 && (
-        <div style={{ position: 'absolute', top: 'calc(100% + 6px)', right: 0, minWidth: 280, width: '100%', background: 'var(--surface-card)', border: '1px solid var(--line-200)', borderRadius: 'var(--radius-lg)', boxShadow: '0 8px 24px rgba(0,0,0,0.10)', zIndex: 9999, padding: '14px', textAlign: 'center' }}>
+        <div style={{ position: 'absolute', top: 'calc(100% + 6px)', right: 0, width: 360, background: 'var(--surface-card)', border: '1px solid var(--line-200)', borderRadius: 'var(--radius-lg)', boxShadow: '0 8px 24px rgba(0,0,0,0.10)', zIndex: 9999, padding: '14px', textAlign: 'center' }}>
           <span style={{ fontSize: 'var(--text-body)', color: 'var(--ink-400)' }}>Nieko nerasta pagal „{query}"</span>
         </div>
       )}
@@ -402,11 +405,10 @@ function Header({ title, subtitle, actions, onMenu, role, breadcrumbs }) {
   const hdrLeftRef = React.useRef(null)
   const hdrActionsRef = React.useRef(null)
   const hdrIoRef = React.useRef(null)
-  const hdrRRef = React.useRef(null)
   const hideEls = React.useRef([])
 
   React.useEffect(() => {
-    hideEls.current = []
+    hideEls.current = [hdrActionsRef.current].filter(Boolean)
   }, [])
 
   const r = ROLES[role] || ROLES.gyventojas
@@ -444,9 +446,9 @@ function Header({ title, subtitle, actions, onMenu, role, breadcrumbs }) {
           {subtitle && <p className="hdr__sub">{subtitle}</p>}
         </div>
       </div>
-      <div ref={hdrRRef} className="hdr__r" style={{ flex: '0 0 auto' }}>
+      <div className="hdr__r">
         {actions && <div ref={hdrActionsRef} className="hdr__actions">{actions}</div>}
-        <HeaderSearch role={role} open={searchOpen} onOpen={() => setSearchOpen(true)} onClose={() => setSearchOpen(false)} hideEls={hideEls} hdrRRef={hdrRRef} />
+        <HeaderSearch role={role} open={searchOpen} onOpen={() => setSearchOpen(true)} onClose={() => setSearchOpen(false)} hideEls={hideEls} />
         <span ref={hdrIoRef} className="hdr__io">
           {[
             { icon: 'ph ph-bell', dot: unreadCount > 0, label: 'Pranešimai', onClick: openNotif },

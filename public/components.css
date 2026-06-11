@@ -23,7 +23,7 @@
 .sb__toggle:hover { background: rgba(255,255,255,0.12); color: #fff; }
 .sb__toggle i { font-size: 20px; }
 .sb__nav { display: flex; flex-direction: column; gap: 2px; }
-.sb__nav button { height: auto !important; padding-top: 8px !important; padding-bottom: 8px !important; }
+.sb__nav button { height: auto !important; padding-top: 8px !important; padding-bottom: 8px !important; padding-left: 8px !important; padding-right: 8px !important; }
 .sb__divider { height: 1px; background: rgba(255,255,255,0.08); margin: 10px 12px; }
 .sb__spacer { flex: 1; }
 .sb__foot { display: flex; flex-direction: column; gap: 8px; }

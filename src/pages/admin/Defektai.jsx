@@ -178,8 +178,8 @@ function DefectDetailModal({ defect, onClose, onUpdate }) {
             <div className="between" style={{ padding: '11px 0', borderBottom: '1px solid var(--line-100)', alignItems: 'center' }}>
               <span style={{ fontSize: 'var(--text-body)', color: 'var(--ink-400)' }}>Meistras</span>
               {!worker ? (
-                <Button variant="ghost" size="sm" iconLeft="ph ph-user-plus"
-                  onClick={() => setPickingWorker((v) => !v)}>
+                <Button variant="accent" size="sm" iconLeft="ph ph-user-plus"
+                  onClick={() => setPickingWorker(true)}>
                   Priskirti
                 </Button>
               ) : (
@@ -189,7 +189,8 @@ function DefectDetailModal({ defect, onClose, onUpdate }) {
                     <span className="row__title">{worker.name}</span>
                     <span className="row__meta">{worker.role}<span className="dot">·</span>{worker.phone}</span>
                   </div>
-                  <button onClick={() => { setWorker(null); setPickingWorker(false) }}
+                  <Button variant="ghost" size="sm" onClick={() => setPickingWorker(true)}>Pakeisti</Button>
+                  <button onClick={() => setWorker(null)}
                     style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--ink-300)', padding: 4 }}>
                     <i className="ph ph-x" style={{ fontSize: 14 }} />
                   </button>
@@ -199,25 +200,27 @@ function DefectDetailModal({ defect, onClose, onUpdate }) {
           </div>
 
           {pickingWorker && (
-            <div className="stack-sm" style={{ gap: 6 }}>
-              {WORKERS.map((w) => (
-                <button key={w.name} type="button"
-                  onClick={() => { setWorker(w); setPickingWorker(false) }}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px',
-                    width: '100%', border: 'none', borderRadius: 'var(--radius-md)', cursor: 'pointer', textAlign: 'left',
-                    background: worker?.name === w.name ? 'var(--brand-green-faint)' : 'var(--surface-sunken)',
-                    outline: worker?.name === w.name ? '1.5px solid var(--brand-green)' : 'none',
-                  }}>
-                  {Avatar && <Avatar name={w.name} size={32} />}
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 'var(--text-body)', fontWeight: 'var(--fw-medium)', color: 'var(--ink-900)' }}>{w.name}</div>
-                    <div style={{ fontSize: 'var(--text-small)', color: 'var(--ink-400)' }}>{w.role}<span className="dot">·</span>{w.phone}</div>
-                  </div>
-                  {worker?.name === w.name && <i className="ph ph-check" style={{ color: 'var(--brand-green)', fontSize: 16 }} />}
-                </button>
-              ))}
-            </div>
+            <Modal title="Pasirinkti meistrą" onClose={() => setPickingWorker(false)} width={480}>
+              <div className="stack-sm" style={{ gap: 6 }}>
+                {WORKERS.map((w) => (
+                  <button key={w.name} type="button"
+                    onClick={() => { setWorker(w); setPickingWorker(false) }}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px',
+                      width: '100%', border: 'none', borderRadius: 'var(--radius-md)', cursor: 'pointer', textAlign: 'left',
+                      background: worker?.name === w.name ? 'var(--brand-green-faint)' : 'var(--surface-sunken)',
+                      outline: worker?.name === w.name ? '1.5px solid var(--brand-green)' : 'none',
+                    }}>
+                    {Avatar && <Avatar name={w.name} size={32} />}
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 'var(--text-body)', fontWeight: 'var(--fw-medium)', color: 'var(--ink-900)' }}>{w.name}</div>
+                      <div style={{ fontSize: 'var(--text-small)', color: 'var(--ink-400)' }}>{w.role}<span className="dot">·</span>{w.phone}</div>
+                    </div>
+                    {worker?.name === w.name && <i className="ph ph-check" style={{ color: 'var(--brand-green)', fontSize: 16 }} />}
+                  </button>
+                ))}
+              </div>
+            </Modal>
           )}
         </div>
       )}
