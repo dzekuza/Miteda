@@ -4,6 +4,7 @@ import Shell from '../../shared/Shell.jsx'
 import { useRepo, PanelHead, FilterChips, Modal } from '../../shared/UI.jsx'
 import repo from '../../lib/repo.js'
 import MD from '../../lib/data.js'
+import { toSlug } from './Specialistas.jsx'
 
 const RESIDENTS = [
   { slug: 'lukas-petrauskas', name: 'Lukas Petrauskas', role: 'Savininkas', apt: 'B-12', phone: '+370 612 34567', email: 'l.petrauskas@gmail.com' },
@@ -72,7 +73,8 @@ export default function Kontaktai() {
             {shown.map((c) => {
               const i = list.indexOf(c)
               return (
-                <div key={i} className="row" style={{ cursor: 'pointer', boxShadow: 'inset 0 0 0 1px var(--line-100)' }} onClick={() => openEdit(c, i)}>
+                <div key={i} className="row" style={{ cursor: 'pointer', boxShadow: 'inset 0 0 0 1px var(--line-100)' }}
+                  onClick={() => navigate(`/admin/specialistas/${toSlug(c.name)}`)}>
                   <Avatar name={c.name} size={40} />
                   <div className="row__main"><span className="row__title">{c.name}</span><span className="row__meta">{c.role}<span className="dot">·</span>{c.company}</span></div>
                   <Badge tone="neutral">{c.cat}</Badge>
