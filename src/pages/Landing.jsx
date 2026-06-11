@@ -24,14 +24,6 @@ export default function Landing() {
           <p style={{ margin: 0, fontSize: 'var(--text-title)', color: 'var(--ink-500)', maxWidth: 560 }}>
             Vienas portalas naujų gyvenamųjų pastatų valdymui — nuo statybos iki įsikėlimo ir kasdienio gyvenimo. Pasirinkite rolę, kad pamatytumėte jos vaizdą.
           </p>
-          <Link to="/login" style={{
-            display: 'inline-flex', alignItems: 'center', gap: 8,
-            padding: '10px 22px', borderRadius: 'var(--radius-pill)',
-            background: 'var(--brand-green)', color: '#fff',
-            textDecoration: 'none', fontSize: 'var(--text-body)', fontWeight: 'var(--fw-medium)',
-          }}>
-            Prisijungti
-          </Link>
         </div>
         <div style={{
           display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20,

@@ -1,6 +1,7 @@
 import React from 'react'
 import Shell from '../../shared/Shell.jsx'
-import { useRepo, PanelHead, Stat, PhotoTile } from '../../shared/UI.jsx'
+import { useRepo, PanelHead, Stat, PhotoTile, Modal, Composer, Thread } from '../../shared/UI.jsx'
+import MD from '../../lib/data.js'
 
 const PHOTO = ['#9bb7a4', '#c2b59b', '#8fa6b8', '#b7a99b']
 
@@ -33,16 +34,20 @@ export default function Darbai() {
   }
 
   const [R] = useRepo('getRepair')
+  const [chatOpen, setChatOpen] = React.useState(false)
+  const [messages, setMessages] = React.useState([
+    { who: R?.manager?.name || 'Vadovas', role: 'Darbų vadovas', text: 'Sveiki! Galite rašyti čia bet kuriuo klausimu dėl remonto darbų.', time: 'Vakar' },
+  ])
   if (!R) return null
 
   return (
     <Shell role="gyventojas" nav="darbai"
       title="Remonto darbai" subtitle="Jūsų buto remonto eiga, komanda ir išlaidos."
-      headerActions={<Button variant="secondary" iconLeft="ph ph-chat-circle">Rašyti vadovui</Button>}>
+      headerActions={<Button variant="secondary" iconLeft="ph ph-chat-circle" onClick={() => setChatOpen(true)}>Rašyti vadovui</Button>}>
       <div className="content grid-aside">
         <Card>
           <PanelHead title="Darbų eiga" subtitle="Naujausi komandos atnaujinimai su nuotraukomis" />
-          <div>
+          <div style={{ marginTop: 8 }}>
             {R.updates.map((u, i) => <UpdateItem key={i} u={u} i={i} last={i === R.updates.length - 1} />)}
           </div>
         </Card>
@@ -89,6 +94,15 @@ export default function Darbai() {
           </Card>
         </div>
       </div>
+      {chatOpen && (
+        <Modal title={`Žinutė — ${R.manager.name}`} subtitle={R.manager.role} onClose={() => setChatOpen(false)} width={520}>
+          <Thread items={messages} />
+          <div style={{ marginTop: 16 }}>
+            <Composer placeholder="Rašyti vadovui…" button="Siųsti"
+              onSend={(text) => setMessages((m) => [...m, { who: MD.user.name, role: 'Gyventojas', text, time: 'Ką tik' }])} />
+          </div>
+        </Modal>
+      )}
     </Shell>
   )
 }

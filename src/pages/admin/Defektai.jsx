@@ -322,7 +322,7 @@ export default function Defektai() {
           <Stat icon="ph ph-spinner" label="Vykdoma" value={counts.progress} />
           <Stat icon="ph ph-check-circle" label="Išspręsta" value={counts.resolved} accent />
         </div>
-        <Card style={{ paddingBottom: 16 }}>
+        <Card style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', maxHeight: 'calc(100vh - 268px)', paddingBottom: 0 }}>
           <PanelHead title="Visi defektai" subtitle="Filtruokite pagal objektą ir būseną"
             action={<FilterChips items={['Visos', 'Atviras', 'Vykdoma', 'Išspręsta']} value={s} onChange={setS} />} />
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', padding: '10px 0' }}>
@@ -333,9 +333,9 @@ export default function Defektai() {
               </Button>
             ))}
           </div>
-          <div style={{ overflowX: 'auto' }}>
+          <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
             <table className="tbl">
-              <thead><tr>
+              <thead><tr style={{ position: 'sticky', top: 0, zIndex: 4, background: 'var(--surface-card)' }}>
                 <th>ID</th><th>Problema</th><th>Butas</th><th>Objektas</th><th>Pateikė</th>
                 <th>Meistras</th><th>Data</th><th>Būsena</th><th></th>
               </tr></thead>

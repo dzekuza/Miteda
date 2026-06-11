@@ -122,7 +122,7 @@ export default function Defektai() {
         <Card>
           <PanelHead title="Mano defektai" subtitle="Jūsų pateikti pranešimai ir jų būsena"
             action={<FilterChips items={['Visi', 'Atviras', 'Vykdoma', 'Išspręsta']} value={filter} onChange={setFilter} />} />
-          <div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 8 }}>
             {shown.map((d) => <DefectRow key={d.id} d={d} onOpen={setOpen} />)}
             {shown.length === 0 && <p className="sec-sub">Nėra defektų pagal pasirinktą filtrą.</p>}
           </div>

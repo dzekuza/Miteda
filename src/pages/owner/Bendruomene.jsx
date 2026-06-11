@@ -66,16 +66,53 @@ export default function Bendruomene() {
     )
   }
 
+  function AddThreadModal({ onClose, onAdd }) {
+    const CATS = ['Bendri klausimai', 'Parkavimas', 'Aplinka', 'Renginiai', 'Kita']
+    const fld = { height: 36, padding: '0 10px', border: 'none', borderRadius: 'var(--radius-sm)', background: 'var(--surface-card)', boxShadow: 'inset 0 0 0 1px var(--line-200)', fontFamily: 'var(--font-sans)', fontSize: 'var(--text-body)', color: 'var(--ink-900)', outline: 'none', width: '100%', boxSizing: 'border-box' }
+    const [title, setTitle] = React.useState('')
+    const [body, setBody] = React.useState('')
+    const [cat, setCat] = React.useState(CATS[0])
+    const submit = () => {
+      if (!title.trim()) return
+      onAdd({ title: title.trim(), body: body.trim() || '—', cat, author: MD.user.name, time: 'Ką tik', replies: 0, likes: 0, views: 0, hot: false })
+      onClose()
+    }
+    return (
+      <Modal title="Nauja diskusija" subtitle="Pradėkite diskusiją su kaimynais." onClose={onClose} width={520}
+        footer={<><Button variant="ghost" onClick={onClose}>Atšaukti</Button><Button variant="accent" iconLeft="ph ph-paper-plane-tilt" onClick={submit}>Paskelbti</Button></>}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <span style={{ fontSize: 'var(--text-small)', color: 'var(--ink-400)' }}>Kategorija</span>
+            <select value={cat} onChange={(e) => setCat(e.target.value)} style={{ ...fld }}>
+              {CATS.map((c) => <option key={c}>{c}</option>)}
+            </select>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <span style={{ fontSize: 'var(--text-small)', color: 'var(--ink-400)' }}>Tema</span>
+            <input style={fld} value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Pvz. Ar galima įrengti dviračių laikiklį?" />
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <span style={{ fontSize: 'var(--text-small)', color: 'var(--ink-400)' }}>Aprašymas</span>
+            <textarea value={body} onChange={(e) => setBody(e.target.value)} placeholder="Parašykite daugiau apie savo klausimą ar pasiūlymą…"
+              style={{ ...fld, height: 100, padding: '8px 10px', resize: 'vertical', lineHeight: 'var(--lh-body)' }} />
+          </div>
+        </div>
+      </Modal>
+    )
+  }
+
   const [open, setOpen] = React.useState(null)
+  const [adding, setAdding] = React.useState(false)
   const [likes, setLikes] = React.useState({})
   const [threadsData] = useRepo('listThreads')
-  const threads = threadsData || []
-  const toggle = (i, base) => setLikes((l) => ({ ...l, [i]: l[i] ? 0 : 1 }))
+  const [extra, setExtra] = React.useState([])
+  const threads = [...(threadsData || []), ...extra]
+  const toggle = (i) => setLikes((l) => ({ ...l, [i]: l[i] ? 0 : 1 }))
 
   return (
     <Shell role="gyventojas" nav="bendruomene"
       title="Bendruomenė" subtitle="Diskusijos kaimynų temomis — dalinkitės, klauskite, padėkite."
-      headerActions={<Button variant="primary" iconLeft="ph ph-plus">Nauja diskusija</Button>}>
+      headerActions={<Button variant="primary" iconLeft="ph ph-plus" onClick={() => setAdding(true)}>Nauja diskusija</Button>}>
       <div className="content grid-aside">
         <div className="stack">
           {threads.map((t, i) => <ThreadCard key={i} t={t} onOpen={setOpen} liked={!!likes[i]} onLike={() => toggle(i)} />)}
@@ -107,6 +144,7 @@ export default function Bendruomene() {
         </div>
       </div>
       {open && <ThreadModal t={open} onClose={() => setOpen(null)} />}
+      {adding && <AddThreadModal onClose={() => setAdding(false)} onAdd={(t) => setExtra((e) => [t, ...e])} />}
     </Shell>
   )
 }

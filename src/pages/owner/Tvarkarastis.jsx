@@ -113,7 +113,7 @@ export default function Tvarkarastis() {
       <div className="content grid-aside">
         <Card>
           <PanelHead title="Artimiausi įvykiai" subtitle="Spustelėkite įvykį arba pasirinkite dieną kalendoriuje" />
-          <div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 8 }}>
             {events.map((e, i) => <EventRow key={i} e={e} active={e.day === sel} onClick={() => setSel(e.day)} />)}
           </div>
         </Card>

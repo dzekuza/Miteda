@@ -142,7 +142,7 @@ function AddModal({ onClose, onSubmit }) {
     <Modal title="Pridėti objektą" subtitle="Naujas pastatas atsiras objektų sąraše." onClose={onClose}
       footer={<React.Fragment>
         {Button && <Button variant="secondary" onClick={onClose}>Atšaukti</Button>}
-        {Button && <Button variant="accent" iconLeft="ph ph-plus" onClick={() => name.trim() && onSubmit({ name: name.trim(), address: addr.trim() || '—', units: parseInt(units) || 0, sold: 0, coverImage })}>Pridėti</Button>}
+        {Button && <Button variant="accent" iconLeft="ph ph-plus" onClick={() => name.trim() && onSubmit({ name: name.trim(), address: addr.trim() || '—', units: parseInt(units) || 0, sold: 0, coverImage, isNew: true })}>Pridėti</Button>}
       </React.Fragment>}>
       <div className="stack-sm" style={{ gap: 14 }}>
         <div className="field" style={{ marginBottom: 0 }}>

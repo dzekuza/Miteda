@@ -9,6 +9,7 @@ import InviteAccept from './auth/InviteAccept.jsx'
 
 // Landing
 import Landing from './pages/Landing.jsx'
+import PasswordGate from './shared/PasswordGate.jsx'
 
 // Owner pages (gyventojas)
 import OwnerPagrindinis from './pages/owner/Pagrindinis.jsx'
@@ -43,7 +44,7 @@ export default function App() {
   return (
     <AuthProvider>
       <Routes>
-        <Route path="/" element={<Landing />} />
+        <Route path="/" element={<PasswordGate><Landing /></PasswordGate>} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/invite" element={<InviteAccept />} />

@@ -70,6 +70,13 @@ const DETAIL_TABS = [
   { key: 'owner', label: 'Savininkas' },
   { key: 'contracts', label: 'Sutartys' },
 ]
+const DEMO_RESIDENTS = [
+  { name: 'Lukas Petrauskas', apt: 'B-12', role: 'Savininkas', phone: '+370 612 34567' },
+  { name: 'Greta Janušienė', apt: 'A-4', role: 'Savininkė', phone: '+370 600 22113' },
+  { name: 'Mantas Šimkus', apt: 'C-21', role: 'Nuomininkas', phone: '+370 633 88221' },
+  { name: 'Rūta Kazlauskaitė', apt: 'A-7', role: 'Savininkė', phone: '+370 644 55009' },
+  { name: 'Tomas Petraitis', apt: 'B-9', role: 'Savininkas', phone: '+370 655 11447' },
+]
 
 function UnitDetailModal({ unit, idx, onClose, onSaveUnit }) {
   const DS = window.MitedaDesignSystem_acc833
@@ -190,11 +197,9 @@ function UnitDetailModal({ unit, idx, onClose, onSaveUnit }) {
       <div className="between" style={{ marginBottom: 16 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <span style={{ fontSize: 'var(--text-small)', color: 'var(--ink-400)' }}>Būsena:</span>
-          <div style={{ position: 'relative' }}>
-            <button type="button" onClick={() => setStatusPicker((v) => !v)} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '2px 8px 2px 8px', border: 'none', borderRadius: 'var(--radius-pill)', background: 'transparent', cursor: 'pointer', fontFamily: 'var(--font-sans)' }}>
+          <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', gap: 5, padding: '2px 8px', borderRadius: 'var(--radius-pill)', cursor: 'pointer' }} onClick={() => setStatusPicker((v) => !v)}>
               <Badge tone={UNIT_STATUS[form.st]?.tone}>{UNIT_STATUS[form.st]?.label}</Badge>
               <i className="ph ph-pencil-simple" style={{ fontSize: 12, color: 'var(--ink-400)' }} />
-            </button>
           {statusPicker && (
             <div style={{ position: 'absolute', right: 0, top: '100%', marginTop: 4, background: 'var(--surface-card)', borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.10)', padding: 8, zIndex: 100, minWidth: 160 }} onMouseDown={(e) => e.stopPropagation()}>
               {Object.entries(UNIT_STATUS).map(([key, { label, tone }]) => (
@@ -781,30 +786,8 @@ function AddUnitModal({ units, onAdd, onClose, initial, onSave }) {
   )
 }
 
-function UnitsTab({ P }) {
-  const DS = window.MitedaDesignSystem_acc833
-  const { Button, IconButton, Badge, Checkbox } = DS
-
-  const [units, setUnits] = useState(() => makeUnits(P))
-  const [sel, setSel] = useState({})
-  const [detail, setDetail] = useState(null)
-  const [adding, setAdding] = useState(false)
-  const [editing, setEditing] = useState(null)
-  const [popover, setPopover] = useState(null)
-  const [confirmDelete, setConfirmDelete] = useState(null)
-  const [search, setSearch] = useState('')
-  const [searchFocused, setSearchFocused] = useState(false)
-  const [filterAukstas, setFilterAukstas] = useState('all')
-  const [filterKambariai, setFilterKambariai] = useState('all')
-  const [filterBusena, setFilterBusena] = useState('all')
-  const [openDropdown, setOpenDropdown] = useState(null)
-
-  React.useEffect(() => {
-    if (popover === null) return
-    const close = () => setPopover(null)
-    document.addEventListener('mousedown', close)
-    return () => document.removeEventListener('mousedown', close)
-  }, [popover])
+function UnitsToolbar({ maxFloor, search, setSearch, searchFocused, setSearchFocused, filterAukstas, setFilterAukstas, filterKambariai, setFilterKambariai, filterBusena, setFilterBusena, openDropdown, setOpenDropdown, onAdd }) {
+  const { Button } = window.MitedaDesignSystem_acc833
 
   React.useEffect(() => {
     if (openDropdown === null) return
@@ -813,6 +796,110 @@ function UnitsTab({ P }) {
     return () => document.removeEventListener('mousedown', close)
   }, [openDropdown])
 
+  const AUKSTAS_FILTERS = [
+    { value: 'all', label: 'Aukštas' },
+    ...Array.from({ length: maxFloor }, (_, i) => ({ value: String(i + 1), label: `${i + 1} aukštas` })),
+  ]
+  const KAMBARIAI_FILTERS = [
+    { value: 'all', label: 'Kambariai' },
+    { value: '1', label: '1 kamb.' },
+    { value: '2', label: '2 kamb.' },
+    { value: '3', label: '3+ kamb.' },
+  ]
+  const BUSENA_FILTERS = [
+    { value: 'all', label: 'Būsena' },
+    ...Object.entries(UNIT_STATUS).map(([k, v]) => ({ value: k, label: v.label })),
+  ]
+
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', padding: '12px 0', borderBottom: '1px solid var(--line-100)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, height: 36, background: 'var(--overlay-ink-04)', borderRadius: 'var(--radius-md)', padding: '0 10px', width: 200, flexShrink: 0, overflow: 'hidden', border: searchFocused ? '1.5px solid var(--brand-green)' : '1.5px solid transparent', boxSizing: 'border-box', transition: 'border-color 0.15s' }}>
+        <i className="ph ph-magnifying-glass" style={{ fontSize: 16, color: 'var(--ink-400)', flexShrink: 0 }} />
+        <input
+          type="text"
+          placeholder="Ieškoti buto, savininko…"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          onFocus={() => setSearchFocused(true)}
+          onBlur={() => setSearchFocused(false)}
+          style={{ flex: 1, border: 'none', outline: 'none', background: 'transparent', fontSize: 'var(--text-body)', fontFamily: 'var(--font-sans)', color: 'var(--ink-900)', minWidth: 0 }}
+        />
+        {search && (
+          <button type="button" onClick={() => setSearch('')} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, color: 'var(--ink-400)', display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+            <i className="ph ph-x" style={{ fontSize: 14 }} />
+          </button>
+        )}
+      </div>
+      {[
+        { key: 'aukstas', value: filterAukstas, set: setFilterAukstas, options: AUKSTAS_FILTERS },
+        { key: 'kambariai', value: filterKambariai, set: setFilterKambariai, options: KAMBARIAI_FILTERS },
+        { key: 'busena', value: filterBusena, set: setFilterBusena, options: BUSENA_FILTERS },
+      ].map(({ key, value, set, options }) => {
+        const active = value !== 'all'
+        const currentLabel = options.find(o => o.value === value)?.label || options[0].label
+        const isOpen = openDropdown === key
+        const btnStyle = {
+          display: 'flex', alignItems: 'center', gap: 6,
+          padding: '6px 12px', borderRadius: 'var(--radius-md)',
+          border: `1.5px solid ${active ? 'var(--brand-green)' : 'var(--line-200)'}`,
+          background: active ? 'var(--brand-green-faint)' : 'var(--surface-card)',
+          color: active ? 'var(--brand-green-dark, var(--brand-green))' : 'var(--ink-600)',
+          fontFamily: 'var(--font-sans)', fontSize: 'var(--text-small)',
+          cursor: 'pointer', fontWeight: active ? 'var(--fw-medium)' : 'var(--fw-regular)',
+          whiteSpace: 'nowrap', appearance: 'none', outline: 'none', height: 36, boxSizing: 'border-box',
+        }
+        return (
+          <div key={key} data-filter-dropdown style={{ position: 'relative' }}>
+            <button type="button" style={btnStyle} onClick={() => setOpenDropdown(isOpen ? null : key)}>
+              {currentLabel}
+              <i className={`ph ph-caret-${isOpen ? 'up' : 'down'}`} style={{ fontSize: 11, opacity: 0.7 }} />
+            </button>
+            {isOpen && (
+              <div style={{ position: 'absolute', top: 'calc(100% + 4px)', left: 0, zIndex: 200, background: 'var(--surface-card)', borderRadius: 'var(--radius-md)', boxShadow: '0 4px 20px rgba(0,0,0,0.12)', border: '1px solid var(--line-100)', minWidth: 150, padding: 4 }}>
+                {options.map(o => (
+                  <button key={o.value} type="button"
+                    onClick={() => { set(o.value); setOpenDropdown(null) }}
+                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', textAlign: 'left', padding: '8px 12px', borderRadius: 'var(--radius-sm)', border: 'none', background: value === o.value ? 'var(--brand-green-faint)' : 'transparent', color: value === o.value ? 'var(--brand-green-dark, var(--brand-green))' : 'var(--ink-700)', fontFamily: 'var(--font-sans)', fontSize: 'var(--text-small)', cursor: 'pointer', fontWeight: value === o.value ? 'var(--fw-medium)' : 'var(--fw-regular)' }}>
+                    {o.label}
+                    {value === o.value && <i className="ph ph-check" style={{ fontSize: 13 }} />}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )
+      })}
+      <div style={{ flex: 1 }} />
+      <Button variant="accent" size="sm" iconLeft="ph ph-plus" onClick={onAdd}>Pridėti</Button>
+    </div>
+  )
+}
+
+function UnitsTab({ P, propIdx, search, filterAukstas, filterKambariai, filterBusena, adding, setAdding }) {
+  const DS = window.MitedaDesignSystem_acc833
+  const { IconButton, Badge, Checkbox } = DS
+
+  const [units, setUnits] = useState(() => {
+    const seeded = localStorage.getItem('miteda_seeded_units_' + propIdx)
+    if (seeded !== null) {
+      const saved = localStorage.getItem('miteda_units_' + propIdx)
+      return saved ? JSON.parse(saved) : []
+    }
+    return P.isNew ? [] : makeUnits(P)
+  })
+  const [sel, setSel] = useState({})
+  const [detail, setDetail] = useState(null)
+  const [editing, setEditing] = useState(null)
+  const [popover, setPopover] = useState(null)
+  const [confirmDelete, setConfirmDelete] = useState(null)
+
+  React.useEffect(() => {
+    if (popover === null) return
+    const close = () => setPopover(null)
+    document.addEventListener('mousedown', close)
+    return () => document.removeEventListener('mousedown', close)
+  }, [popover])
+
   const selCount = Object.values(sel).filter(Boolean).length
   const allSelected = units.length > 0 && selCount === units.length
   const toggleAll = () => {
@@ -820,6 +907,11 @@ function UnitsTab({ P }) {
     else { const all = {}; units.forEach((_, i) => { all[i] = true }); setSel(all) }
   }
   const markSold = () => { setUnits((us) => us.map((u, i) => sel[i] ? { ...u, st: 'sold' } : u)); setSel({}) }
+  React.useEffect(() => {
+    localStorage.setItem('miteda_units_' + propIdx, JSON.stringify(units))
+    localStorage.setItem('miteda_seeded_units_' + propIdx, '1')
+  }, [units, propIdx])
+
   const saveStatus = (st) => { setUnits((us) => us.map((u, i) => i === detail.idx ? { ...u, st } : u)) }
   const addUnit = (u) => setUnits((us) => [...us, u])
   const updateUnit = (idx, data) => setUnits((us) => us.map((u, i) => i === idx ? { ...u, ...data } : u))
@@ -837,84 +929,10 @@ function UnitsTab({ P }) {
     return true
   })
 
-  const maxFloor = Math.max(...units.map((u) => u.floor), 1)
-  const AUKSTAS_FILTERS = [
-    { value: 'all', label: 'Aukštas' },
-    ...Array.from({ length: maxFloor }, (_, i) => ({ value: String(i + 1), label: `${i + 1} aukštas` })),
-  ]
-  const KAMBARIAI_FILTERS = [
-    { value: 'all', label: 'Kambariai' },
-    { value: '1', label: '1 kamb.' },
-    { value: '2', label: '2 kamb.' },
-    { value: '3', label: '3+ kamb.' },
-  ]
-  const BUSENA_FILTERS = [
-    { value: 'all', label: 'Būsena' },
-    ...Object.entries(UNIT_STATUS).map(([k, v]) => ({ value: k, label: v.label })),
-  ]
 
   return (
     <div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, flexWrap: 'wrap', position: 'sticky', top: 0, background: 'var(--surface-card)', zIndex: 10, paddingTop: 4 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, height: 36, background: 'var(--overlay-ink-04)', borderRadius: 'var(--radius-md)', padding: '0 10px', width: 200, flexShrink: 0, overflow: 'hidden', border: searchFocused ? '1.5px solid var(--brand-green)' : '1.5px solid transparent', boxSizing: 'border-box', transition: 'border-color 0.15s' }}>
-          <i className="ph ph-magnifying-glass" style={{ fontSize: 16, color: 'var(--ink-400)', flexShrink: 0 }} />
-          <input
-            type="text"
-            placeholder="Ieškoti buto, savininko…"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            onFocus={() => setSearchFocused(true)}
-            onBlur={() => setSearchFocused(false)}
-            style={{ flex: 1, border: 'none', outline: 'none', background: 'transparent', fontSize: 'var(--text-body)', fontFamily: 'var(--font-sans)', color: 'var(--ink-900)', minWidth: 0 }}
-          />
-          {search && (
-            <button type="button" onClick={() => setSearch('')} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, color: 'var(--ink-400)', display: 'flex', alignItems: 'center', flexShrink: 0 }}>
-              <i className="ph ph-x" style={{ fontSize: 14 }} />
-            </button>
-          )}
-        </div>
-        {[
-          { key: 'aukstas', value: filterAukstas, set: setFilterAukstas, options: AUKSTAS_FILTERS },
-          { key: 'kambariai', value: filterKambariai, set: setFilterKambariai, options: KAMBARIAI_FILTERS },
-          { key: 'busena', value: filterBusena, set: setFilterBusena, options: BUSENA_FILTERS },
-        ].map(({ key, value, set, options }) => {
-          const active = value !== 'all'
-          const currentLabel = options.find(o => o.value === value)?.label || options[0].label
-          const isOpen = openDropdown === key
-          const btnStyle = {
-            display: 'flex', alignItems: 'center', gap: 6,
-            padding: '6px 12px', borderRadius: 'var(--radius-md)',
-            border: `1.5px solid ${active ? 'var(--brand-green)' : 'var(--line-200)'}`,
-            background: active ? 'var(--brand-green-faint)' : 'var(--surface-card)',
-            color: active ? 'var(--brand-green-dark, var(--brand-green))' : 'var(--ink-600)',
-            fontFamily: 'var(--font-sans)', fontSize: 'var(--text-small)',
-            cursor: 'pointer', fontWeight: active ? 'var(--fw-medium)' : 'var(--fw-regular)',
-            whiteSpace: 'nowrap', appearance: 'none', outline: 'none', height: 36, boxSizing: 'border-box',
-          }
-          return (
-            <div key={key} data-filter-dropdown style={{ position: 'relative' }}>
-              <button type="button" style={btnStyle} onClick={() => setOpenDropdown(isOpen ? null : key)}>
-                {currentLabel}
-                <i className={`ph ph-caret-${isOpen ? 'up' : 'down'}`} style={{ fontSize: 11, opacity: 0.7 }} />
-              </button>
-              {isOpen && (
-                <div style={{ position: 'absolute', top: 'calc(100% + 4px)', left: 0, zIndex: 200, background: 'var(--surface-card)', borderRadius: 'var(--radius-md)', boxShadow: '0 4px 20px rgba(0,0,0,0.12)', border: '1px solid var(--line-100)', minWidth: 150, padding: 4 }}>
-                  {options.map(o => (
-                    <button key={o.value} type="button"
-                      onClick={() => { set(o.value); setOpenDropdown(null) }}
-                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', textAlign: 'left', padding: '8px 12px', borderRadius: 'var(--radius-sm)', border: 'none', background: value === o.value ? 'var(--brand-green-faint)' : 'transparent', color: value === o.value ? 'var(--brand-green-dark, var(--brand-green))' : 'var(--ink-700)', fontFamily: 'var(--font-sans)', fontSize: 'var(--text-small)', cursor: 'pointer', fontWeight: value === o.value ? 'var(--fw-medium)' : 'var(--fw-regular)' }}>
-                      {o.label}
-                      {value === o.value && <i className="ph ph-check" style={{ fontSize: 13 }} />}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          )
-        })}
-        <div style={{ flex: 1 }} />
-        <Button variant="accent" size="sm" iconLeft="ph ph-plus" onClick={() => setAdding(true)}>Pridėti</Button>
-      </div>
+
       <div style={{ marginBottom: 12 }}>
         <span style={{ fontSize: 'var(--text-small)', color: 'var(--ink-400)' }}>
           {filtered.length !== units.length ? `${filtered.length} iš ${units.length} butų` : `${units.length} butų iš viso`}
@@ -929,9 +947,8 @@ function UnitsTab({ P }) {
           </div>
         </div>
       )}
-      <div style={{ overflowX: 'auto' }}>
-        <table className="tbl">
-          <thead><tr>
+      <table className="tbl">
+          <thead><tr style={{ position: 'sticky', top: 40, zIndex: 4, background: 'var(--surface-card)' }}>
             <th style={{ width: 36 }}><Checkbox checked={allSelected} onChange={toggleAll} /></th>
             <th>Butas</th><th>Aukštas</th><th>Plotas</th><th>Kamb.</th><th>Būsena</th>
             <th>Savininkas</th><th>Telefonas</th><th>Nuo</th><th></th>
@@ -1009,8 +1026,7 @@ function UnitsTab({ P }) {
               )
             })}
           </tbody>
-        </table>
-      </div>
+      </table>
       {adding && (
         <AddUnitModal units={units} onAdd={addUnit} onClose={() => setAdding(false)} />
       )}
@@ -1041,9 +1057,8 @@ function UnitsTab({ P }) {
 
 function ResidentDetailModal({ resident, onClose, onSave }) {
   const DS = window.MitedaDesignSystem_acc833
-  const { Avatar, Badge, Button } = DS
+  const { Badge, Button } = DS
   const [tab, setTab] = useState('owner')
-  const [isEditing, setIsEditing] = useState(false)
 
   const contracts = CONTRACT_TPLS.slice(0, 3).map((c, i) => ({ ...c, id: `SUT-${200 + i}` }))
   const photos = PHOTO_COLS.slice(0, 6)
@@ -1065,17 +1080,16 @@ function ResidentDetailModal({ resident, onClose, onSave }) {
   const [form, setForm] = useState(initForm)
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }))
 
-  const startEdit = () => { setForm(initForm()); setIsEditing(true) }
-  const cancelEdit = () => { setForm(initForm()); setIsEditing(false) }
-  const saveEdit = () => { onSave({ ...resident, ...form }); setIsEditing(false) }
+  const saveEdit = () => { onSave({ ...resident, ...form }) }
 
-  const fld = { height: 36, padding: '0 10px', border: 'none', borderRadius: 'var(--radius-sm)', background: 'var(--surface-card)', boxShadow: 'inset 0 0 0 1px var(--line-200)', fontFamily: 'var(--font-sans)', fontSize: 'var(--text-body)', color: 'var(--ink-900)', outline: 'none', width: '100%', boxSizing: 'border-box' }
-  const selFld = { ...fld, paddingRight: 30 }
+  const inp = { border: 'none', background: 'transparent', fontSize: 'var(--text-body)', fontWeight: 'var(--fw-medium)', color: 'var(--ink-900)', outline: 'none', fontFamily: 'var(--font-sans)', width: '100%' }
 
-  const EditRow = ({ label, children }) => (
+  const FieldBox = ({ label, disabled, children }) => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-      <span style={{ fontSize: 'var(--text-small)', color: 'var(--ink-400)' }}>{label}</span>
-      {children}
+      <span style={{ fontSize: 'var(--text-small)', color: 'var(--ink-400)', fontWeight: 'var(--fw-medium)' }}>{label}</span>
+      <div style={{ display: 'flex', alignItems: 'center', height: 40, padding: '0 12px', background: 'var(--surface-card)', borderRadius: 'var(--radius-sm)', boxShadow: disabled ? 'inset 0 0 0 1px var(--line-100)' : 'inset 0 0 0 1px var(--line-200)', opacity: disabled ? 0.5 : 1, transition: 'box-shadow 150ms' }}>
+        {children}
+      </div>
     </div>
   )
 
@@ -1085,83 +1099,34 @@ function ResidentDetailModal({ resident, onClose, onSave }) {
       subtitle={`Butas ${resident.apt} · ${resident.role}`}
       onClose={onClose}
       width={580}
-      footer={isEditing
-        ? <><Button variant="ghost" onClick={cancelEdit}>Atšaukti</Button><Button variant="accent" iconLeft="ph ph-floppy-disk" onClick={saveEdit}>Išsaugoti</Button></>
-        : null}
+      footer={<><Button variant="ghost" onClick={onClose}>Atšaukti</Button><Button variant="accent" iconLeft="ph ph-floppy-disk" onClick={saveEdit}>Išsaugoti</Button></>}
     >
-      {/* Edit toggle */}
-      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 16 }}>
-        {!isEditing
-          ? <button type="button" onClick={startEdit}
-              style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', border: '1px solid var(--line-200)', borderRadius: 'var(--radius-md)', background: 'var(--surface-card)', color: 'var(--ink-600)', fontFamily: 'var(--font-sans)', fontSize: 'var(--text-small)', cursor: 'pointer' }}
-              onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--brand-green)'; e.currentTarget.style.color = 'var(--brand-green)' }}
-              onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--line-200)'; e.currentTarget.style.color = 'var(--ink-600)' }}>
-              <i className="ph ph-pencil-simple" style={{ fontSize: 15 }} />
-              Redaguoti
-            </button>
-          : <span style={{ fontSize: 'var(--text-small)', color: 'var(--brand-green)', display: 'flex', alignItems: 'center', gap: 5 }}>
-              <i className="ph ph-pencil-simple" style={{ fontSize: 14 }} /> Redagavimo režimas
-            </span>
-        }
-      </div>
-
       <div style={{ marginBottom: 16 }}>
         <Tabs tabs={detailTabs} value={tab} onChange={setTab} />
       </div>
 
-      {tab === 'owner' && !isEditing && (
-        <div className="stack-sm">
-          <div className="row" style={{ marginBottom: 4 }}>
-            {Avatar && <Avatar name={resident.name} size={48} />}
-            <div className="row__main">
-              <span className="row__title">{resident.name}</span>
-              <span className="row__meta">Butas {resident.apt}<span className="dot">·</span>{resident.phone}</span>
-            </div>
-            <Badge tone={resident.role === 'Nuomininkas' ? 'neutral' : 'success'}>{resident.role}</Badge>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-            {[
-              { icon: 'ph ph-phone', label: 'Telefonas', value: resident.phone },
-              { icon: 'ph ph-envelope', label: 'El. paštas', value: resident.name.split(' ')[0].toLowerCase() + '@gmail.com' },
-              { icon: 'ph ph-calendar', label: 'Gyventojas nuo', value: '2024-01-10' },
-              { icon: 'ph ph-map-pin', label: 'Adresas', value: `Butas ${resident.apt}` },
-            ].map((f) => (
-              <div key={f.label} style={{ padding: '12px 14px', borderRadius: 'var(--radius-md)', background: 'var(--surface-sunken)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-                  <i className={f.icon} style={{ fontSize: 14, color: 'var(--ink-400)' }} aria-hidden="true" />
-                  <span style={{ fontSize: 'var(--text-small)', color: 'var(--ink-400)' }}>{f.label}</span>
-                </div>
-                <span style={{ fontSize: 'var(--text-body)', fontWeight: 'var(--fw-medium)', color: 'var(--ink-900)' }}>{f.value}</span>
-              </div>
-            ))}
-          </div>
-          <div style={{ display: 'flex', gap: 8, marginTop: 4, flexWrap: 'wrap' }}>
-            <Button variant="secondary" iconLeft="ph ph-chat-circle" size="sm">Siųsti žinutę</Button>
-            <Button variant="secondary" iconLeft="ph ph-phone" size="sm">Skambinti</Button>
-          </div>
-        </div>
-      )}
-
-      {tab === 'owner' && isEditing && (
+      {tab === 'owner' && (
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-          <EditRow label="Vardas, pavardė">
-            <input style={fld} value={form.name} onChange={(e) => set('name', e.target.value)} />
-          </EditRow>
-          <EditRow label="Telefonas">
-            <input style={fld} value={form.phone} onChange={(e) => set('phone', e.target.value)} />
-          </EditRow>
-          <EditRow label="El. paštas">
-            <input style={fld} value={form.email} onChange={(e) => set('email', e.target.value)} />
-          </EditRow>
-          <EditRow label="Gyventojas nuo">
-            <input style={fld} value={form.since} onChange={(e) => set('since', e.target.value)} />
-          </EditRow>
-          <EditRow label="Butas">
-            <input style={fld} value={form.apt} onChange={(e) => set('apt', e.target.value)} />
-          </EditRow>
-          <EditRow label="Rolė">
-            <DSSelect value={form.role} onChange={(v) => set('role', v)} options={['Savininkas', 'Savininkė', 'Nuomininkas', 'Nuomininkė']} />
-          </EditRow>
+          <FieldBox label="Vardas, pavardė">
+            <input style={inp} value={form.name} onChange={(e) => set('name', e.target.value)} />
+          </FieldBox>
+          <FieldBox label="Telefonas">
+            <input style={inp} value={form.phone} onChange={(e) => set('phone', e.target.value)} />
+          </FieldBox>
+          <FieldBox label="El. paštas">
+            <input style={inp} value={form.email} onChange={(e) => set('email', e.target.value)} />
+          </FieldBox>
+          <FieldBox label="Gyventojas nuo">
+            <input style={inp} type="date" value={form.since} onChange={(e) => set('since', e.target.value)} />
+          </FieldBox>
+          <FieldBox label="Butas">
+            <input style={inp} value={form.apt} onChange={(e) => set('apt', e.target.value)} />
+          </FieldBox>
+          <FieldBox label="Rolė">
+            <select style={{ ...inp, cursor: 'pointer' }} value={form.role} onChange={(e) => set('role', e.target.value)}>
+              {['Savininkas', 'Savininkė', 'Nuomininkas', 'Nuomininkė'].map((r) => <option key={r} value={r}>{r}</option>)}
+            </select>
+          </FieldBox>
         </div>
       )}
 
@@ -1258,19 +1223,25 @@ function AddResidentModal({ onClose, onAdd, units = [] }) {
   )
 }
 
-function ResidentsTab({ P }) {
+function ResidentsTab({ P, propIdx }) {
   const DS = window.MitedaDesignSystem_acc833
   const { Avatar, Badge, IconButton, Button } = DS
 
-  const [residents, setResidents] = useState([
-    { name: 'Lukas Petrauskas', apt: 'B-12', role: 'Savininkas', phone: '+370 612 34567' },
-    { name: 'Greta Janušienė', apt: 'A-4', role: 'Savininkė', phone: '+370 600 22113' },
-    { name: 'Mantas Šimkus', apt: 'C-21', role: 'Nuomininkas', phone: '+370 633 88221' },
-    { name: 'Rūta Kazlauskaitė', apt: 'A-7', role: 'Savininkė', phone: '+370 644 55009' },
-    { name: 'Tomas Petraitis', apt: 'B-9', role: 'Savininkas', phone: '+370 655 11447' },
-  ])
+  const [residents, setResidents] = useState(() => {
+    const seeded = localStorage.getItem('miteda_seeded_residents_' + propIdx)
+    if (seeded !== null) {
+      const saved = localStorage.getItem('miteda_residents_' + propIdx)
+      return saved ? JSON.parse(saved) : []
+    }
+    return P.isNew ? [] : DEMO_RESIDENTS
+  })
   const [selected, setSelected] = useState(null)
   const [adding, setAdding] = useState(false)
+
+  React.useEffect(() => {
+    localStorage.setItem('miteda_residents_' + propIdx, JSON.stringify(residents))
+    localStorage.setItem('miteda_seeded_residents_' + propIdx, '1')
+  }, [residents, propIdx])
 
   const saveResident = (updated) => {
     setResidents((rs) => rs.map((r) => r.name === selected.name && r.apt === selected.apt ? updated : r))
@@ -1311,10 +1282,10 @@ function ResidentsTab({ P }) {
   )
 }
 
-function PhotosTab() {
+function PhotosTab({ P, propIdx }) {
   const { Button } = window.MitedaDesignSystem_acc833
   const fileRef = React.useRef()
-  const [photos, setPhotos] = useState(PHOTO_COLS)
+  const [photos, setPhotos] = useState(() => P.isNew ? [] : PHOTO_COLS)
   const addPhotos = (e) => {
     const files = Array.from(e.target.files || [])
     const urls = files.map((f) => URL.createObjectURL(f))
@@ -1360,14 +1331,34 @@ function AddContactModal({ onClose, onAdd }) {
   )
 }
 
-function ContactsTab() {
+function ContactsTab({ P, propIdx }) {
   const DS = window.MitedaDesignSystem_acc833
   const { Avatar, IconButton, Button } = DS
+  const [allContactsData] = useRepo('listContacts')
 
-  const [contactsData] = useRepo('listContacts')
-  const [extra, setExtra] = useState([])
+  const [contacts, setContacts] = useState(() => {
+    const seeded = localStorage.getItem('miteda_seeded_contacts_' + propIdx)
+    if (seeded !== null) {
+      const saved = localStorage.getItem('miteda_contacts_' + propIdx)
+      return saved ? JSON.parse(saved) : []
+    }
+    return []
+  })
   const [adding, setAdding] = useState(false)
-  const contacts = [...(contactsData || []), ...extra]
+
+  React.useEffect(() => {
+    if (P.isNew) { localStorage.setItem('miteda_seeded_contacts_' + propIdx, '1'); return }
+    if (localStorage.getItem('miteda_seeded_contacts_' + propIdx) !== null) return
+    if (!allContactsData) return
+    const demo = allContactsData.filter((c) => c.objektai && c.objektai.includes(P.name))
+    setContacts(demo.length > 0 ? demo : [])
+    localStorage.setItem('miteda_seeded_contacts_' + propIdx, '1')
+  }, [allContactsData, P.isNew, P.name, propIdx])
+
+  React.useEffect(() => {
+    localStorage.setItem('miteda_contacts_' + propIdx, JSON.stringify(contacts))
+  }, [contacts, propIdx])
+
   return (
     <div>
       <div className="between" style={{ marginBottom: 12 }}>
@@ -1375,7 +1366,7 @@ function ContactsTab() {
         <Button variant="accent" size="sm" iconLeft="ph ph-plus" onClick={() => setAdding(true)}>Pridėti kontaktą</Button>
       </div>
       <div className="grid-2" style={{ alignItems: 'stretch' }}>
-        {contacts.slice(0, 4 + extra.length).map((c, i) => (
+        {contacts.map((c, i) => (
           <div key={i} className="row" style={{ marginTop: 0, alignItems: 'center' }}>
             <Avatar name={c.name} size={40} />
             <div className="row__main"><span className="row__title">{c.name}</span><span className="row__meta">{c.role}<span className="dot">·</span>{c.company}</span></div>
@@ -1383,7 +1374,7 @@ function ContactsTab() {
           </div>
         ))}
       </div>
-      {adding && <AddContactModal onClose={() => setAdding(false)} onAdd={(c) => setExtra((e) => [...e, c])} />}
+      {adding && <AddContactModal onClose={() => setAdding(false)} onAdd={(c) => setContacts((prev) => [...prev, c])} />}
     </div>
   )
 }
@@ -1459,6 +1450,13 @@ export default function Objektas() {
   const idx = +(searchParams.get('b') || 0)
 
   const [tab, setTab] = useState('units')
+  const [unitsSearch, setUnitsSearch] = useState('')
+  const [unitsSearchFocused, setUnitsSearchFocused] = useState(false)
+  const [unitsFilterAukstas, setUnitsFilterAukstas] = useState('all')
+  const [unitsFilterKambariai, setUnitsFilterKambariai] = useState('all')
+  const [unitsFilterBusena, setUnitsFilterBusena] = useState('all')
+  const [unitsOpenDropdown, setUnitsOpenDropdown] = useState(null)
+  const [unitsAdding, setUnitsAdding] = useState(false)
   const [propsData] = useRepo('listProperties')
   const props = propsData || []
   const baseP = props[idx] || props[0]
@@ -1510,11 +1508,30 @@ export default function Objektas() {
         <div ref={cardRef} className="scroll-reveal">
           <Card style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', maxHeight: 'calc(100vh - 268px)' }}>
             <PanelHead title="Pastato valdymas" description="Valdykite butus, gyventojus, nuotraukas ir kontaktus." action={<Tabs tabs={tabs} value={tab} onChange={setTab} />} />
-            <div style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
-              {tab === 'units' && <UnitsTab P={P} />}
-              {tab === 'residents' && <ResidentsTab P={P} />}
-              {tab === 'photos' && <PhotosTab />}
-              {tab === 'contacts' && <ContactsTab />}
+            {tab === 'units' && (
+              <UnitsToolbar
+                maxFloor={Math.ceil(P.units / 12)}
+                search={unitsSearch} setSearch={setUnitsSearch}
+                searchFocused={unitsSearchFocused} setSearchFocused={setUnitsSearchFocused}
+                filterAukstas={unitsFilterAukstas} setFilterAukstas={setUnitsFilterAukstas}
+                filterKambariai={unitsFilterKambariai} setFilterKambariai={setUnitsFilterKambariai}
+                filterBusena={unitsFilterBusena} setFilterBusena={setUnitsFilterBusena}
+                openDropdown={unitsOpenDropdown} setOpenDropdown={setUnitsOpenDropdown}
+                onAdd={() => setUnitsAdding(true)}
+              />
+            )}
+            <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
+              {tab === 'units' && <UnitsTab P={P} propIdx={idx}
+                search={unitsSearch}
+                filterAukstas={unitsFilterAukstas}
+                filterKambariai={unitsFilterKambariai}
+                filterBusena={unitsFilterBusena}
+                adding={unitsAdding}
+                setAdding={setUnitsAdding}
+              />}
+              {tab === 'residents' && <ResidentsTab P={P} propIdx={idx} />}
+              {tab === 'photos' && <PhotosTab P={P} propIdx={idx} />}
+              {tab === 'contacts' && <ContactsTab P={P} propIdx={idx} />}
             </div>
           </Card>
         </div>
