@@ -158,11 +158,96 @@ const NOTIFICATIONS = [
   { id: 5, icon: 'ph ph-users-three', tone: 'neutral', title: 'Bendruomenės žinutė', body: 'C-21 · M. Šimkus parašė į bendruomenės forumą.', time: 'Vakar', unread: false },
 ]
 
+const SEARCH_INDEX = Object.entries(ROLES).flatMap(([rk, r]) =>
+  r.nav.map((n) => ({ icon: n.icon, label: n.label, to: n.to, role: r.label }))
+).concat([
+  { icon: 'ph ph-buildings', label: 'Kalnų Terasos', to: '/admin/objektai', role: 'Objektai', sub: 'Blokas A · 48 butai' },
+  { icon: 'ph ph-buildings', label: 'Saulės Slėnis', to: '/admin/objektai', role: 'Objektai', sub: 'Blokas B · 36 butai' },
+  { icon: 'ph ph-warning-octagon', label: 'Defektas D-024', to: '/admin/defektai', role: 'Defektai', sub: 'Stogo nuotėkis · Butas A-12' },
+  { icon: 'ph ph-warning-octagon', label: 'Defektas D-025', to: '/admin/defektai', role: 'Defektai', sub: 'Langų kondensatas · Butas B-07' },
+  { icon: 'ph ph-user', label: 'Lukas Petrauskas', to: '/admin/kontaktai', role: 'Kontaktai', sub: 'lukas.petrauskas@gmail.com' },
+  { icon: 'ph ph-user', label: 'Greta Janušienė', to: '/admin/kontaktai', role: 'Kontaktai', sub: 'greta.janusiene@gmail.com' },
+])
+
+function HeaderSearch({ role }) {
+  const navigate = useNavigate()
+  const [query, setQuery] = React.useState('')
+  const [open, setOpen] = React.useState(false)
+  const wrapRef = React.useRef(null)
+
+  const results = React.useMemo(() => {
+    const q = query.trim().toLowerCase()
+    if (!q) return []
+    return SEARCH_INDEX.filter((item) =>
+      item.label.toLowerCase().includes(q) ||
+      (item.sub && item.sub.toLowerCase().includes(q)) ||
+      item.role.toLowerCase().includes(q)
+    ).slice(0, 7)
+  }, [query])
+
+  React.useEffect(() => {
+    const handler = (e) => { if (wrapRef.current && !wrapRef.current.contains(e.target)) setOpen(false) }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
+
+  const go = (item) => { setOpen(false); setQuery(''); navigate(item.to) }
+
+  const onKeyDown = (e) => {
+    if (e.key === 'Escape') { setOpen(false); setQuery('') }
+  }
+
+  return (
+    <div ref={wrapRef} style={{ position: 'relative', width: 264 }} className="hdr__search-wrap">
+      <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+        <i className="ph ph-magnifying-glass" style={{ position: 'absolute', left: 10, fontSize: 16, color: 'var(--ink-400)', pointerEvents: 'none' }} />
+        <input
+          type="text"
+          value={query}
+          onChange={(e) => { setQuery(e.target.value); setOpen(true) }}
+          onFocus={() => { if (query) setOpen(true) }}
+          onKeyDown={onKeyDown}
+          placeholder="Ieškoti…"
+          style={{ width: '100%', paddingLeft: 34, paddingRight: query ? 30 : 10, paddingTop: 8, paddingBottom: 8, border: '1px solid var(--line-200)', borderRadius: 'var(--radius-md)', fontSize: 'var(--text-body)', background: 'var(--surface-card)', color: 'var(--ink-900)', outline: 'none', fontFamily: 'var(--font-sans)', boxSizing: 'border-box', boxShadow: open && results.length ? '0 0 0 2px var(--brand-green-faint)' : 'none', borderColor: open && results.length ? 'var(--brand-green)' : 'var(--line-200)', transition: 'border-color 0.15s, box-shadow 0.15s' }}
+        />
+        {query && (
+          <button type="button" onClick={() => { setQuery(''); setOpen(false) }} style={{ position: 'absolute', right: 6, background: 'none', border: 'none', cursor: 'pointer', padding: 2, color: 'var(--ink-400)', display: 'flex', alignItems: 'center' }}>
+            <i className="ph ph-x" style={{ fontSize: 14 }} />
+          </button>
+        )}
+      </div>
+      {open && results.length > 0 && (
+        <div style={{ position: 'absolute', top: 'calc(100% + 6px)', left: 0, width: '100%', minWidth: 300, background: 'var(--surface-card)', border: '1px solid var(--line-200)', borderRadius: 'var(--radius-lg)', boxShadow: '0 8px 24px rgba(0,0,0,0.10)', zIndex: 9999, overflow: 'hidden' }}>
+          {results.map((item, idx) => (
+            <button key={idx} type="button" onMouseDown={() => go(item)}
+              style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '9px 14px', border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left', borderBottom: idx < results.length - 1 ? '1px solid var(--line-100)' : 'none' }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--overlay-ink-04)' }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = 'none' }}>
+              <span style={{ width: 30, height: 30, borderRadius: 'var(--radius-sm)', background: 'var(--overlay-ink-04)', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: '0 0 auto' }}>
+                <i className={item.icon} style={{ fontSize: 16, color: 'var(--ink-600)' }} />
+              </span>
+              <span style={{ flex: 1, minWidth: 0 }}>
+                <span style={{ display: 'block', fontSize: 'var(--text-body)', color: 'var(--ink-900)', fontWeight: 'var(--fw-medium)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.label}</span>
+                {item.sub && <span style={{ display: 'block', fontSize: 'var(--text-small)', color: 'var(--ink-400)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.sub}</span>}
+              </span>
+              <span style={{ fontSize: 11, color: 'var(--ink-300)', flex: '0 0 auto' }}>{item.role}</span>
+            </button>
+          ))}
+        </div>
+      )}
+      {open && query.trim().length > 0 && results.length === 0 && (
+        <div style={{ position: 'absolute', top: 'calc(100% + 6px)', left: 0, width: '100%', background: 'var(--surface-card)', border: '1px solid var(--line-200)', borderRadius: 'var(--radius-lg)', boxShadow: '0 8px 24px rgba(0,0,0,0.10)', zIndex: 9999, padding: '18px 14px', textAlign: 'center' }}>
+          <span style={{ fontSize: 'var(--text-body)', color: 'var(--ink-400)' }}>Nieko nerasta pagal „{query}"</span>
+        </div>
+      )}
+    </div>
+  )
+}
+
 function Header({ title, subtitle, actions, onMenu, role, breadcrumbs }) {
   const DS = getDS()
   const IconButton = DS.IconButton
-  const Input = DS.Input
-  const navigate = useNavigate()
+  const navigate = useNavigate()  // eslint-disable-line
   const [notifOpen, setNotifOpen] = React.useState(false)
   const [popoverPos, setPopoverPos] = React.useState({ top: 0, left: 8, width: 360 })
   const [read, setRead] = React.useState(new Set())
@@ -222,7 +307,7 @@ function Header({ title, subtitle, actions, onMenu, role, breadcrumbs }) {
       </div>
       <div className="hdr__r">
         {actions && <div className="hdr__actions">{actions}</div>}
-        {Input && <Input className="hdr__search" placeholder="Ieškoti…" iconLeft="ph ph-magnifying-glass" />}
+        <HeaderSearch role={role} />
         <span className="hdr__io">
           {IconButton && <>
             <span ref={notifRef} style={{ position: 'relative' }}>

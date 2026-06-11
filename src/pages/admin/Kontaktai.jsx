@@ -4,35 +4,37 @@ import { useRepo, PanelHead, FilterChips, Modal } from '../../shared/UI.jsx'
 import repo from '../../lib/repo.js'
 import MD from '../../lib/data.js'
 
+function EditModal({ value, onChange, onSave, onClose, isNew }) {
+  const DS = window.MitedaDesignSystem_acc833
+  const { Button, Avatar, Input } = DS
+  return (
+    <Modal title={isNew ? 'Naujas kontaktas' : 'Redaguoti kontaktą'} onClose={onClose} width={480}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+        {!isNew && <div className="rowflex" style={{ gap: 12 }}><Avatar name={value.name || '?'} size={48} /><span className="muted" style={{ fontSize: 'var(--text-small)' }}>{value.cat}</span></div>}
+        <Input label="Vardas ir pavardė" value={value.name} onChange={(e) => onChange({ ...value, name: e.target.value })} />
+        <Input label="Pareigos" value={value.role} onChange={(e) => onChange({ ...value, role: e.target.value })} />
+        <Input label="Įmonė" value={value.company} onChange={(e) => onChange({ ...value, company: e.target.value })} />
+        <div className="field" style={{ margin: 0 }}>
+          <label>Kategorija</label>
+          <select value={value.cat} onChange={(e) => onChange({ ...value, cat: e.target.value })}>
+            {MD.contactCats.filter((c) => c !== 'Visi').map((c) => <option key={c}>{c}</option>)}
+          </select>
+        </div>
+        <Input label="Telefonas" value={value.phone} onChange={(e) => onChange({ ...value, phone: e.target.value })} />
+        <Input label="El. paštas" value={value.email} onChange={(e) => onChange({ ...value, email: e.target.value })} />
+        <div className="rowflex" style={{ gap: 10, marginTop: 4 }}>
+          <Button variant="accent" iconLeft="ph ph-check" onClick={onSave} fullWidth>Išsaugoti</Button>
+        </div>
+      </div>
+    </Modal>
+  )
+}
+
 export default function Kontaktai() {
   const DS = window.MitedaDesignSystem_acc833
-  const { Card, Button, IconButton, Avatar, Badge, Input } = DS
+  const { Card, Button, IconButton, Avatar, Badge } = DS
 
   const blank = { name: '', role: '', company: '', cat: 'Administracija', phone: '', email: '' }
-
-  function EditModal({ value, onChange, onSave, onClose, isNew }) {
-    return (
-      <Modal title={isNew ? 'Naujas kontaktas' : 'Redaguoti kontaktą'} onClose={onClose} width={480}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          {!isNew && <div className="rowflex" style={{ gap: 12 }}><Avatar name={value.name || '?'} size={48} /><span className="muted" style={{ fontSize: 'var(--text-small)' }}>{value.cat}</span></div>}
-          <Input label="Vardas ir pavardė" value={value.name} onChange={(e) => onChange({ ...value, name: e.target.value })} />
-          <Input label="Pareigos" value={value.role} onChange={(e) => onChange({ ...value, role: e.target.value })} />
-          <Input label="Įmonė" value={value.company} onChange={(e) => onChange({ ...value, company: e.target.value })} />
-          <div className="field" style={{ margin: 0 }}>
-            <label>Kategorija</label>
-            <select value={value.cat} onChange={(e) => onChange({ ...value, cat: e.target.value })}>
-              {MD.contactCats.filter((c) => c !== 'Visi').map((c) => <option key={c}>{c}</option>)}
-            </select>
-          </div>
-          <Input label="Telefonas" value={value.phone} onChange={(e) => onChange({ ...value, phone: e.target.value })} />
-          <Input label="El. paštas" value={value.email} onChange={(e) => onChange({ ...value, email: e.target.value })} />
-          <div className="rowflex" style={{ gap: 10, marginTop: 4 }}>
-            <Button variant="accent" iconLeft="ph ph-check" onClick={onSave} fullWidth>Išsaugoti</Button>
-          </div>
-        </div>
-      </Modal>
-    )
-  }
 
   const [listData, refresh] = useRepo('listContacts')
   const list = listData || []

@@ -528,6 +528,10 @@ function UnitsTab({ P }) {
   const [adding, setAdding] = useState(false)
   const [editing, setEditing] = useState(null)
   const [popover, setPopover] = useState(null)
+  const [search, setSearch] = useState('')
+  const [filterType, setFilterType] = useState('all')
+  const [filterResidents, setFilterResidents] = useState('all')
+  const [filterPhotos, setFilterPhotos] = useState('all')
 
   React.useEffect(() => {
     if (popover === null) return
@@ -548,11 +552,84 @@ function UnitsTab({ P }) {
   const updateUnit = (idx, data) => setUnits((us) => us.map((u, i) => i === idx ? { ...u, ...data } : u))
   const deleteUnit = (idx) => { setUnits((us) => us.filter((_, i) => i !== idx)); setSel((s) => { const n = {}; Object.keys(s).forEach((k) => { if (+k < idx) n[k] = s[k]; else if (+k > idx) n[+k - 1] = s[k] }); return n }) }
 
+  const filtered = units.filter((u) => {
+    const rooms = u.area <= 53 ? 1 : u.area <= 75 ? 2 : 3
+    const hasResidents = u.st !== 'free'
+    const hasPhotos = Array.isArray(u.photos) && u.photos.length > 0
+    const q = search.trim().toLowerCase()
+    if (q && !u.id.toLowerCase().includes(q) && !(u.owner && u.owner.name.toLowerCase().includes(q))) return false
+    if (filterType !== 'all' && rooms !== +filterType) return false
+    if (filterResidents === 'yes' && !hasResidents) return false
+    if (filterResidents === 'no' && hasResidents) return false
+    if (filterPhotos === 'yes' && !hasPhotos) return false
+    if (filterPhotos === 'no' && hasPhotos) return false
+    return true
+  })
+
+  const TYPE_FILTERS = [
+    { value: 'all', label: 'Butai' },
+    { value: '1', label: '1 kamb.' },
+    { value: '2', label: '2 kamb.' },
+    { value: '3', label: '3+ kamb.' },
+  ]
+  const RESIDENTS_FILTERS = [
+    { value: 'all', label: 'Gyventojai' },
+    { value: 'yes', label: 'Yra' },
+    { value: 'no', label: 'Nėra' },
+  ]
+  const PHOTOS_FILTERS = [
+    { value: 'all', label: 'Nuotraukos' },
+    { value: 'yes', label: 'Yra' },
+    { value: 'no', label: 'Nėra' },
+  ]
+
   return (
     <div>
-      <div className="between" style={{ marginBottom: 12 }}>
-        <span style={{ fontSize: 'var(--text-small)', color: 'var(--ink-400)' }}>{units.length} butų iš viso</span>
-        <Button variant="secondary" size="sm" iconLeft="ph ph-plus" onClick={() => setAdding(true)}>Pridėti butą</Button>
+      <div className="between" style={{ marginBottom: 12, gap: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1 }}>
+          <div style={{ position: 'relative', flex: 1, maxWidth: 280 }}>
+            <i className="ph ph-magnifying-glass" style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--ink-400)', fontSize: 16, pointerEvents: 'none' }} />
+            <input
+              type="text"
+              placeholder="Ieškoti buto, savininko…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              style={{ width: '100%', paddingLeft: 32, paddingRight: search ? 28 : 10, paddingTop: 7, paddingBottom: 7, border: '1px solid var(--line-200)', borderRadius: 'var(--radius-md)', fontSize: 'var(--text-body)', background: 'var(--surface-card)', color: 'var(--ink-900)', outline: 'none', fontFamily: 'var(--font-sans)', boxSizing: 'border-box' }}
+            />
+            {search && (
+              <button type="button" onClick={() => setSearch('')} style={{ position: 'absolute', right: 6, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', padding: 2, color: 'var(--ink-400)', display: 'flex', alignItems: 'center' }}>
+                <i className="ph ph-x" style={{ fontSize: 14 }} />
+              </button>
+            )}
+          </div>
+          <div style={{ display: 'flex', gap: 4 }}>
+            {TYPE_FILTERS.map(({ value, label }) => (
+              <button key={value} type="button" onClick={() => setFilterType(value)} style={{ padding: '6px 12px', borderRadius: 'var(--radius-md)', border: '1px solid', borderColor: filterType === value ? 'var(--brand-green)' : 'var(--line-200)', background: filterType === value ? 'var(--brand-green-faint)' : 'var(--surface-card)', color: filterType === value ? 'var(--brand-green-dark, var(--brand-green))' : 'var(--ink-600)', fontFamily: 'var(--font-sans)', fontSize: 'var(--text-small)', cursor: 'pointer', fontWeight: filterType === value ? 'var(--fw-medium)' : 'var(--fw-regular)' }}>
+                {label}
+              </button>
+            ))}
+          </div>
+          <div style={{ display: 'flex', gap: 4 }}>
+            {RESIDENTS_FILTERS.map(({ value, label }) => (
+              <button key={value} type="button" onClick={() => setFilterResidents(value)} style={{ padding: '6px 12px', borderRadius: 'var(--radius-md)', border: '1px solid', borderColor: filterResidents === value ? 'var(--brand-green)' : 'var(--line-200)', background: filterResidents === value ? 'var(--brand-green-faint)' : 'var(--surface-card)', color: filterResidents === value ? 'var(--brand-green-dark, var(--brand-green))' : 'var(--ink-600)', fontFamily: 'var(--font-sans)', fontSize: 'var(--text-small)', cursor: 'pointer', fontWeight: filterResidents === value ? 'var(--fw-medium)' : 'var(--fw-regular)' }}>
+                {label}
+              </button>
+            ))}
+          </div>
+          <div style={{ display: 'flex', gap: 4 }}>
+            {PHOTOS_FILTERS.map(({ value, label }) => (
+              <button key={value} type="button" onClick={() => setFilterPhotos(value)} style={{ padding: '6px 12px', borderRadius: 'var(--radius-md)', border: '1px solid', borderColor: filterPhotos === value ? 'var(--brand-green)' : 'var(--line-200)', background: filterPhotos === value ? 'var(--brand-green-faint)' : 'var(--surface-card)', color: filterPhotos === value ? 'var(--brand-green-dark, var(--brand-green))' : 'var(--ink-600)', fontFamily: 'var(--font-sans)', fontSize: 'var(--text-small)', cursor: 'pointer', fontWeight: filterPhotos === value ? 'var(--fw-medium)' : 'var(--fw-regular)' }}>
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+        <Button variant="accent" size="sm" iconLeft="ph ph-plus" onClick={() => setAdding(true)}>Pridėti</Button>
+      </div>
+      <div style={{ marginBottom: 12 }}>
+        <span style={{ fontSize: 'var(--text-small)', color: 'var(--ink-400)' }}>
+          {filtered.length !== units.length ? `${filtered.length} iš ${units.length} butų` : `${units.length} butų iš viso`}
+        </span>
       </div>
       {selCount > 0 && (
         <div className="between" style={{ marginBottom: 16, padding: '12px 16px', borderRadius: 'var(--radius-md)', background: 'var(--brand-green-faint)' }}>
@@ -571,7 +648,11 @@ function UnitsTab({ P }) {
             <th>Savininkas</th><th>Telefonas</th><th>Nuo</th><th></th>
           </tr></thead>
           <tbody>
-            {units.map((u, i) => {
+            {filtered.length === 0 && (
+              <tr><td colSpan={10} style={{ textAlign: 'center', padding: '32px 0', color: 'var(--ink-400)', fontSize: 'var(--text-body)' }}>Nėra atitinkančių butų</td></tr>
+            )}
+            {filtered.map((u) => {
+              const i = units.indexOf(u)
               const rooms = u.area <= 53 ? 1 : u.area <= 75 ? 2 : 3
               const owner = u.st !== 'free' ? (u.owner || OWNERS[i % OWNERS.length]) : null
               return (

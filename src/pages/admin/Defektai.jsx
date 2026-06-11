@@ -263,6 +263,14 @@ export default function Defektai() {
   const [selected, setSelected] = useState(null)
   const [creating, setCreating] = useState(false)
   const [defects, setDefects] = useState(null)
+  const [popover, setPopover] = useState(null)
+
+  React.useEffect(() => {
+    if (popover === null) return
+    const close = () => setPopover(null)
+    document.addEventListener('mousedown', close)
+    return () => document.removeEventListener('mousedown', close)
+  }, [popover])
 
   const [adRaw] = useRepo('listAdminDefects')
 
@@ -291,6 +299,7 @@ export default function Defektai() {
     setDefects((prev) => (prev || []).map((d) => d.id === updated.id ? updated : d))
     setSelected((prev) => prev?.id === updated.id ? updated : prev)
   }
+  const deleteDefect = (id) => setDefects((prev) => (prev || []).filter((d) => d.id !== id))
 
   return (
     <Shell role="admin" nav="defektai"
@@ -341,9 +350,41 @@ export default function Defektai() {
                     </td>
                     <td className="muted">{d.date}</td>
                     <td><StatusBadge map={ST} value={d.status} /></td>
-                    <td style={{ textAlign: 'right' }}>
-                      <IconButton icon="ph ph-arrow-up-right" variant="ghost" size="sm" ariaLabel="Atidaryti"
-                        onClick={(e) => { e.stopPropagation(); setSelected(d) }} />
+                    <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }} onClick={(e) => e.stopPropagation()}>
+                      <div style={{ display: 'inline-flex', alignItems: 'center', gap: 2 }}>
+                        <IconButton icon="ph ph-arrow-up-right" variant="ghost" size="sm" ariaLabel="Atidaryti"
+                          onClick={(e) => { e.stopPropagation(); setSelected(d) }} />
+                        <div style={{ position: 'relative' }}>
+                          <IconButton icon="ph ph-dots-three-vertical" variant="ghost" size="sm" ariaLabel="Veiksmai"
+                            onClick={(e) => { e.stopPropagation(); setPopover(popover === d.id ? null : d.id) }} />
+                          {popover === d.id && (
+                            <div onMouseDown={(e) => e.stopPropagation()} style={{
+                              position: 'absolute', top: 'calc(100% + 4px)', right: 0, zIndex: 50,
+                              background: 'var(--surface-card)', border: '1px solid var(--line-200)',
+                              borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-lg)',
+                              minWidth: 160, overflow: 'hidden',
+                            }}>
+                              {[
+                                { icon: 'ph ph-arrow-up-right', label: 'Atidaryti', action: () => { setSelected(d); setPopover(null) } },
+                                { icon: 'ph ph-pencil', label: 'Redaguoti', action: () => { setSelected(d); setPopover(null) } },
+                                { icon: 'ph ph-trash', label: 'Ištrinti', danger: true, action: () => { deleteDefect(d.id); setPopover(null) } },
+                              ].map(({ icon, label, action, danger }) => (
+                                <button key={label} type="button" onClick={action} style={{
+                                  display: 'flex', alignItems: 'center', gap: 10, width: '100%',
+                                  padding: '10px 14px', border: 'none', background: 'transparent',
+                                  cursor: 'pointer', fontFamily: 'var(--font-sans)', fontSize: 'var(--text-body)',
+                                  color: danger ? 'var(--orange)' : 'var(--ink-800)', textAlign: 'left',
+                                }}
+                                  onMouseEnter={(e) => e.currentTarget.style.background = 'var(--surface-sunken)'}
+                                  onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
+                                  <i className={icon} style={{ fontSize: 16 }} />
+                                  {label}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     </td>
                   </tr>
                 ))}
