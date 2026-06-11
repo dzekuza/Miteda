@@ -28,6 +28,7 @@ import AdminObjektai from './pages/admin/Objektai.jsx'
 import AdminObjektas from './pages/admin/Objektas.jsx'
 import AdminDefektai from './pages/admin/Defektai.jsx'
 import AdminKontaktai from './pages/admin/Kontaktai.jsx'
+import AdminGyventojas from './pages/admin/Gyventojas.jsx'
 import AdminDarbai from './pages/admin/Darbai.jsx'
 import AdminDarbuEiga from './pages/admin/DarbuEiga.jsx'
 import AdminZinutes from './pages/admin/Zinutes.jsx'
@@ -63,6 +64,7 @@ export default function App() {
         <Route path="/admin/objektas" element={<AdminObjektas />} />
         <Route path="/admin/defektai" element={<AdminDefektai />} />
         <Route path="/admin/kontaktai" element={<AdminKontaktai />} />
+        <Route path="/admin/gyventojas/:slug" element={<AdminGyventojas />} />
         <Route path="/admin/darbai" element={<AdminDarbai />} />
         <Route path="/admin/darbu-eiga" element={<AdminDarbuEiga />} />
         <Route path="/admin/zinutes" element={<AdminZinutes />} />

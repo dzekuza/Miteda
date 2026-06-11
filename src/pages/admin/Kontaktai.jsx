@@ -1,8 +1,17 @@
 import React, { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import Shell from '../../shared/Shell.jsx'
 import { useRepo, PanelHead, FilterChips, Modal } from '../../shared/UI.jsx'
 import repo from '../../lib/repo.js'
 import MD from '../../lib/data.js'
+
+const RESIDENTS = [
+  { slug: 'lukas-petrauskas', name: 'Lukas Petrauskas', role: 'Savininkas', apt: 'B-12', phone: '+370 612 34567', email: 'l.petrauskas@gmail.com' },
+  { slug: 'greta-janusiene', name: 'Greta Janušienė', role: 'Savininkė', apt: 'A-4', phone: '+370 600 22113', email: 'g.janusiene@gmail.com' },
+  { slug: 'mantas-simkus', name: 'Mantas Šimkus', role: 'Nuomininkas', apt: 'C-21', phone: '+370 633 88221', email: 'm.simkus@gmail.com' },
+  { slug: 'ruta-kazlauskaite', name: 'Rūta Kazlauskaitė', role: 'Savininkė', apt: 'A-7', phone: '+370 644 55009', email: 'r.kazlauskaite@gmail.com' },
+  { slug: 'tomas-petraitis', name: 'Tomas Petraitis', role: 'Savininkas', apt: 'B-9', phone: '+370 655 11447', email: 't.petraitis@gmail.com' },
+]
 
 function EditModal({ value, onChange, onSave, onClose, isNew }) {
   const DS = window.MitedaDesignSystem_acc833
@@ -33,6 +42,7 @@ function EditModal({ value, onChange, onSave, onClose, isNew }) {
 export default function Kontaktai() {
   const DS = window.MitedaDesignSystem_acc833
   const { Card, Button, IconButton, Avatar, Badge } = DS
+  const navigate = useNavigate()
 
   const blank = { name: '', role: '', company: '', cat: 'Administracija', phone: '', email: '' }
 
@@ -74,6 +84,26 @@ export default function Kontaktai() {
             })}
           </div>
         </Card>
+        <div style={{ marginTop: 16 }}>
+          <Card>
+            <PanelHead title="Gyventojai" subtitle={`${RESIDENTS.length} gyventojai`} />
+            <div className="stack-sm" style={{ gap: 4 }}>
+              {RESIDENTS.map((r) => (
+                <div key={r.slug} className="row" style={{ cursor: 'pointer', boxShadow: 'inset 0 0 0 1px var(--line-100)' }}
+                  onClick={() => navigate(`/admin/gyventojas/${r.slug}`)}>
+                  <Avatar name={r.name} size={40} />
+                  <div className="row__main">
+                    <span className="row__title">{r.name}</span>
+                    <span className="row__meta">Butas {r.apt}<span className="dot">·</span>{r.phone}</span>
+                  </div>
+                  <Badge tone={r.role === 'Nuomininkas' ? 'neutral' : 'success'}>{r.role}</Badge>
+                  <IconButton icon="ph ph-arrow-right" variant="ghost" size="sm" ariaLabel="Peržiūrėti"
+                    onClick={(e) => { e.stopPropagation(); navigate(`/admin/gyventojas/${r.slug}`) }} />
+                </div>
+              ))}
+            </div>
+          </Card>
+        </div>
       </div>
       {editing !== null && <EditModal value={draft} onChange={setDraft} onSave={save} onClose={() => setEditing(null)} isNew={editing === 'new'} />}
     </Shell>

@@ -165,8 +165,11 @@ const SEARCH_INDEX = Object.entries(ROLES).flatMap(([rk, r]) =>
   { icon: 'ph ph-buildings', label: 'Saulės Slėnis', to: '/admin/objektai', role: 'Objektai', sub: 'Blokas B · 36 butai' },
   { icon: 'ph ph-warning-octagon', label: 'Defektas D-024', to: '/admin/defektai', role: 'Defektai', sub: 'Stogo nuotėkis · Butas A-12' },
   { icon: 'ph ph-warning-octagon', label: 'Defektas D-025', to: '/admin/defektai', role: 'Defektai', sub: 'Langų kondensatas · Butas B-07' },
-  { icon: 'ph ph-user', label: 'Lukas Petrauskas', to: '/admin/kontaktai', role: 'Kontaktai', sub: 'lukas.petrauskas@gmail.com' },
-  { icon: 'ph ph-user', label: 'Greta Janušienė', to: '/admin/kontaktai', role: 'Kontaktai', sub: 'greta.janusiene@gmail.com' },
+  { icon: 'ph ph-user', label: 'Lukas Petrauskas', to: '/admin/gyventojas/lukas-petrauskas', role: 'Gyventojas', sub: 'Butas B-12 · l.petrauskas@gmail.com' },
+  { icon: 'ph ph-user', label: 'Greta Janušienė', to: '/admin/gyventojas/greta-janusiene', role: 'Gyventojas', sub: 'Butas A-4 · g.janusiene@gmail.com' },
+  { icon: 'ph ph-user', label: 'Mantas Šimkus', to: '/admin/gyventojas/mantas-simkus', role: 'Gyventojas', sub: 'Butas C-21 · m.simkus@gmail.com' },
+  { icon: 'ph ph-user', label: 'Rūta Kazlauskaitė', to: '/admin/gyventojas/ruta-kazlauskaite', role: 'Gyventojas', sub: 'Butas A-7 · r.kazlauskaite@gmail.com' },
+  { icon: 'ph ph-user', label: 'Tomas Petraitis', to: '/admin/gyventojas/tomas-petraitis', role: 'Gyventojas', sub: 'Butas B-9 · t.petraitis@gmail.com' },
 ])
 
 function HeaderSearch({ role }) {
