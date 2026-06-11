@@ -1240,6 +1240,15 @@ function ResidentDetailModal({ resident, onClose, onSave }) {
   )
 }
 
+function FormRow({ label, children }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+      <span style={{ fontSize: 'var(--text-small)', color: 'var(--ink-400)' }}>{label}</span>
+      {children}
+    </div>
+  )
+}
+
 function AddResidentModal({ onClose, onAdd, units = [] }) {
   const { Button } = window.MitedaDesignSystem_acc833
   const fld = { height: 36, padding: '0 10px', border: 'none', borderRadius: 'var(--radius-sm)', background: 'var(--surface-card)', boxShadow: 'inset 0 0 0 1px var(--line-200)', fontFamily: 'var(--font-sans)', fontSize: 'var(--text-body)', color: 'var(--ink-900)', outline: 'none', width: '100%', boxSizing: 'border-box' }
@@ -1248,19 +1257,13 @@ function AddResidentModal({ onClose, onAdd, units = [] }) {
   const [aptOpen, setAptOpen] = useState(false)
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }))
   const submit = () => { if (!form.name.trim() || !form.apt.trim()) return; onAdd(form); onClose() }
-  const Row = ({ label, children }) => (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-      <span style={{ fontSize: 'var(--text-small)', color: 'var(--ink-400)' }}>{label}</span>
-      {children}
-    </div>
-  )
   const filteredUnits = units.filter((id) => id.toLowerCase().includes(aptSearch.toLowerCase()))
   return (
     <Modal title="Pridėti gyventoją" onClose={onClose} width={520}
       footer={<><Button variant="ghost" onClick={onClose}>Atšaukti</Button><Button variant="accent" iconLeft="ph ph-plus" onClick={submit}>Pridėti</Button></>}>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-        <Row label="Vardas, pavardė"><input style={fld} value={form.name} onChange={(e) => set('name', e.target.value)} placeholder="Vardas Pavardė" /></Row>
-        <Row label="Butas">
+        <FormRow label="Vardas, pavardė"><input style={fld} value={form.name} onChange={(e) => set('name', e.target.value)} placeholder="Vardas Pavardė" /></FormRow>
+        <FormRow label="Butas">
           {units.length > 0 ? (
             <div style={{ position: 'relative' }}>
               <input style={{ ...fld, paddingRight: 28 }} value={aptSearch || form.apt} placeholder="Ieškoti buto…"
@@ -1293,10 +1296,10 @@ function AddResidentModal({ onClose, onAdd, units = [] }) {
           ) : (
             <input style={fld} value={form.apt} onChange={(e) => set('apt', e.target.value)} placeholder="A-1" />
           )}
-        </Row>
-        <Row label="Telefonas"><input style={fld} value={form.phone} onChange={(e) => set('phone', e.target.value)} placeholder="+370 6xx xxxxx" /></Row>
-        <Row label="El. paštas"><input style={fld} value={form.email} onChange={(e) => set('email', e.target.value)} placeholder="vardas@gmail.com" /></Row>
-        <Row label="Rolė"><DSSelect value={form.role} onChange={(v) => set('role', v)} options={['Savininkas', 'Savininkė', 'Nuomininkas', 'Nuomininkė']} /></Row>
+        </FormRow>
+        <FormRow label="Telefonas"><input style={fld} value={form.phone} onChange={(e) => set('phone', e.target.value)} placeholder="+370 6xx xxxxx" /></FormRow>
+        <FormRow label="El. paštas"><input style={fld} value={form.email} onChange={(e) => set('email', e.target.value)} placeholder="vardas@gmail.com" /></FormRow>
+        <FormRow label="Rolė"><DSSelect value={form.role} onChange={(v) => set('role', v)} options={['Savininkas', 'Savininkė', 'Nuomininkas', 'Nuomininkė']} /></FormRow>
       </div>
     </Modal>
   )
@@ -1395,10 +1398,10 @@ function AddContactModal({ onClose, onAdd }) {
     <Modal title="Pridėti kontaktą" onClose={onClose} width={480}
       footer={<><Button variant="ghost" onClick={onClose}>Atšaukti</Button><Button variant="accent" iconLeft="ph ph-plus" onClick={submit}>Pridėti</Button></>}>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-        <Row label="Vardas, pavardė"><input style={fld} value={form.name} onChange={(e) => set('name', e.target.value)} placeholder="Vardas Pavardė" /></Row>
-        <Row label="Telefonas"><input style={fld} value={form.phone} onChange={(e) => set('phone', e.target.value)} placeholder="+370 6xx xxxxx" /></Row>
-        <Row label="Rolė"><input style={fld} value={form.role} onChange={(e) => set('role', e.target.value)} placeholder="Vadybininkas" /></Row>
-        <Row label="Įmonė"><input style={fld} value={form.company} onChange={(e) => set('company', e.target.value)} placeholder="UAB Įmonė" /></Row>
+        <FormRow label="Vardas, pavardė"><input style={fld} value={form.name} onChange={(e) => set('name', e.target.value)} placeholder="Vardas Pavardė" /></FormRow>
+        <FormRow label="Telefonas"><input style={fld} value={form.phone} onChange={(e) => set('phone', e.target.value)} placeholder="+370 6xx xxxxx" /></FormRow>
+        <FormRow label="Rolė"><input style={fld} value={form.role} onChange={(e) => set('role', e.target.value)} placeholder="Vadybininkas" /></FormRow>
+        <FormRow label="Įmonė"><input style={fld} value={form.company} onChange={(e) => set('company', e.target.value)} placeholder="UAB Įmonė" /></FormRow>
       </div>
     </Modal>
   )

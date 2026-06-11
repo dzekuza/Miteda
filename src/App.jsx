@@ -33,6 +33,7 @@ import AdminSpecialistas from './pages/admin/Specialistas.jsx'
 import AdminDarbai from './pages/admin/Darbai.jsx'
 import AdminDarbuEiga from './pages/admin/DarbuEiga.jsx'
 import AdminZinutes from './pages/admin/Zinutes.jsx'
+import AdminBendruomene from './pages/admin/Bendruomene.jsx'
 
 // Statyba pages
 import StatybaVadovas from './pages/statyba/Vadovas.jsx'
@@ -70,6 +71,7 @@ export default function App() {
         <Route path="/admin/darbai" element={<AdminDarbai />} />
         <Route path="/admin/darbu-eiga" element={<AdminDarbuEiga />} />
         <Route path="/admin/zinutes" element={<AdminZinutes />} />
+        <Route path="/admin/bendruomene" element={<AdminBendruomene />} />
 
         {/* Statyba */}
         <Route path="/statyba/vadovas" element={<StatybaVadovas />} />

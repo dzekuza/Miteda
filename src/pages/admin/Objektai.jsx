@@ -77,7 +77,7 @@ export default function Objektai() {
           <Stat label="Iš viso butų" value={totalUnits} />
           <Stat label="Parduota" value={totalSold + ' / ' + totalUnits} accent />
         </div>
-        <div className="grid-2">
+        <div className="grid-4">
           {props.map((p, i) => <PropertyCard key={i} p={p} i={i} />)}
         </div>
       </div>

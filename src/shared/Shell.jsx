@@ -46,6 +46,7 @@ const ROLES = {
       { key: 'darbai', icon: 'ph ph-wrench', label: 'Remonto darbai', to: '/admin/darbai' },
       { key: 'darbu-eiga', icon: 'ph ph-megaphone', label: 'Darbų eiga', to: '/admin/darbu-eiga' },
       { key: 'zinutes', icon: 'ph ph-chat-circle', label: 'Žinutės', to: '/admin/zinutes' },
+      { key: 'bendruomene', icon: 'ph ph-users-three', label: 'Bendruomenė', to: '/admin/bendruomene' },
     ],
   },
   statyba: {
