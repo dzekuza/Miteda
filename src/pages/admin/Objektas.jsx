@@ -1,4 +1,5 @@
 import React, { useState, useLayoutEffect, useRef } from 'react'
+import ReactDOM from 'react-dom'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 gsap.registerPlugin(ScrollTrigger)
@@ -29,9 +30,9 @@ function ConfirmDialog({ title, message, confirmLabel = 'Ištrinti', onConfirm, 
 }
 
 const UNIT_STATUS = {
-  sold: { label: 'Parduotas', tone: 'success' },
-  reserved: { label: 'Rezervuotas', tone: 'event' },
   free: { label: 'Laisvas', tone: 'neutral' },
+  reserved: { label: 'Rezervuotas', tone: 'event' },
+  sold: { label: 'Parduotas', tone: 'success' },
 }
 
 const PHOTO_COLS = ['#9bb7a4', '#c2b59b', '#8fa6b8', '#b7a99b', '#aeb8a0', '#a0aeb8', '#b7c4a0', '#a8b8c4']
@@ -166,20 +167,6 @@ function UnitDetailModal({ unit, idx, onClose, onSaveUnit }) {
   const iInp = { border: 'none', background: 'transparent', fontSize: 'var(--text-body)', fontWeight: 'var(--fw-medium)', color: 'var(--ink-900)', outline: 'none', fontFamily: 'var(--font-sans)', width: '100%' }
   const iSel = { border: 'none', background: 'transparent', fontSize: 'var(--text-body)', fontWeight: 'var(--fw-medium)', color: 'var(--ink-900)', outline: 'none', cursor: 'pointer', fontFamily: 'var(--font-sans)', width: '100%' }
   const inp = { border: 'none', background: 'transparent', textAlign: 'right', fontSize: 'var(--text-body)', fontWeight: 'var(--fw-medium)', color: 'var(--ink-900)', outline: 'none', fontFamily: 'var(--font-sans)', width: 120, minWidth: 0 }
-  const FieldBox = ({ label, disabled, onClick, children }) => (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-      <span style={{ fontSize: 'var(--text-small)', color: 'var(--ink-400)', fontWeight: 'var(--fw-medium)' }}>{label}</span>
-      <div style={{ display: 'flex', alignItems: 'center', height: 40, padding: '0 12px', background: 'var(--surface-card)', borderRadius: 'var(--radius-sm)', boxShadow: disabled ? 'inset 0 0 0 1px var(--line-100)' : 'inset 0 0 0 1px var(--line-200)', opacity: disabled ? 0.5 : 1, cursor: onClick ? 'pointer' : undefined, transition: 'box-shadow 150ms' }} onClick={onClick}>
-        {children}
-      </div>
-    </div>
-  )
-  const EditRow = ({ label, children }) => (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-      <span style={{ fontSize: 'var(--text-small)', color: 'var(--ink-400)' }}>{label}</span>
-      {children}
-    </div>
-  )
 
   const currentRooms = form.area <= 53 ? 1 : form.area <= 75 ? 2 : 3
 
@@ -345,7 +332,9 @@ function UnitDetailModal({ unit, idx, onClose, onSaveUnit }) {
             <div className="row__main">
               {isEditing
                 ? <input style={{ ...inp, textAlign: 'left', width: '100%', fontSize: 'var(--text-body)', fontWeight: 'var(--fw-semibold)' }} value={form.ownerName} onChange={(e) => set('ownerName', e.target.value)} placeholder="Vardas Pavardė" />
-                : <span className="row__title">{unit.st === 'free' ? '—' : owner?.name}</span>}
+                : unit.st === 'free'
+                  ? <span className="row__title">—</span>
+                  : <Link to={`/admin/gyventojas/${toSlug(owner?.name || '')}`} className="row__title" style={{ color: 'var(--brand-green)', textDecoration: 'none' }} onClick={onClose}>{owner?.name}</Link>}
               <span className="row__meta">{unit.st === 'free' ? 'Butas laisvas, savininko nėra' : `Savininkas nuo ${isEditing ? (form.ownerSince || '...') : owner?.since}`}</span>
             </div>
           </div>
@@ -463,6 +452,195 @@ const ORIENTATIONS = ['Pietų', 'Rytų', 'Šiaurės', 'Vakarų']
 const HEATINGS = ['Centrinis šildymas', 'Grindinis šildymas', 'Dujinis šildymas']
 const ENERGY_CLASSES = ['A++', 'A+', 'A', 'B', 'C', 'D']
 
+const MONTHS_LT = ['Sausis','Vasaris','Kovas','Balandis','Gegužė','Birželis','Liepa','Rugpjūtis','Rugsėjis','Spalis','Lapkritis','Gruodis']
+const DAYS_LT = ['P','A','T','K','Pn','Š','S']
+
+function DatePicker({ value, onChange, placeholder = 'Pasirinkite datą' }) {
+  const today = new Date()
+  const parsed = value ? new Date(value + 'T00:00:00') : null
+  const [open, setOpen] = React.useState(false)
+  const [rect, setRect] = React.useState(null)
+  const [viewYear, setViewYear] = React.useState(parsed?.getFullYear() || today.getFullYear())
+  const [viewMonth, setViewMonth] = React.useState(parsed?.getMonth() ?? today.getMonth())
+  const triggerRef = React.useRef(null)
+
+  const toggle = () => {
+    if (!open && triggerRef.current) setRect(triggerRef.current.getBoundingClientRect())
+    setOpen(v => !v)
+  }
+
+  React.useEffect(() => {
+    if (!open) return
+    const close = (e) => {
+      const cal = document.getElementById('miteda-datepicker-cal')
+      if (!triggerRef.current?.contains(e.target) && !cal?.contains(e.target)) setOpen(false)
+    }
+    document.addEventListener('mousedown', close)
+    return () => document.removeEventListener('mousedown', close)
+  }, [open])
+
+  const firstDay = new Date(viewYear, viewMonth, 1)
+  const startOffset = (firstDay.getDay() + 6) % 7
+  const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate()
+  const cells = []
+  for (let i = 0; i < startOffset; i++) cells.push(null)
+  for (let d = 1; d <= daysInMonth; d++) cells.push(d)
+  while (cells.length % 7 !== 0) cells.push(null)
+
+  const prevMonth = () => viewMonth === 0 ? (setViewMonth(11), setViewYear(y => y - 1)) : setViewMonth(m => m - 1)
+  const nextMonth = () => viewMonth === 11 ? (setViewMonth(0), setViewYear(y => y + 1)) : setViewMonth(m => m + 1)
+
+  const selectDay = (d) => {
+    onChange(`${viewYear}-${String(viewMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`)
+    setOpen(false)
+  }
+
+  const formatted = parsed
+    ? `${String(parsed.getDate()).padStart(2, '0')}.${String(parsed.getMonth() + 1).padStart(2, '0')}.${parsed.getFullYear()}`
+    : null
+
+  const isSelected = (d) => parsed && d === parsed.getDate() && viewMonth === parsed.getMonth() && viewYear === parsed.getFullYear()
+  const isToday = (d) => d === today.getDate() && viewMonth === today.getMonth() && viewYear === today.getFullYear()
+
+  const portalRoot = React.useMemo(() => document.getElementById('miteda-portal') || document.getElementById('root'), [])
+
+  const navBtn = { background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-500)', borderRadius: 'var(--radius-sm)', padding: '4px 8px', display: 'flex', alignItems: 'center', lineHeight: 1 }
+
+  return (
+    <div ref={triggerRef} style={{ width: '100%' }}>
+      <button type="button" onClick={toggle} style={{
+        display: 'flex', alignItems: 'center', gap: 8, width: '100%', height: 40,
+        padding: '0 12px', border: 'none', borderRadius: 'var(--radius-sm)',
+        background: 'var(--surface-card)', cursor: 'pointer', boxSizing: 'border-box',
+        boxShadow: `inset 0 0 0 1px ${open ? 'var(--line-300)' : 'var(--line-200)'}`,
+        fontFamily: 'var(--font-sans)', fontSize: 'var(--text-body)',
+        fontWeight: 'var(--fw-medium)', color: formatted ? 'var(--ink-900)' : 'var(--ink-300)',
+        outline: 'none', transition: 'box-shadow 0.15s',
+      }}>
+        <i className="ph ph-calendar-blank" style={{ fontSize: 15, color: 'var(--ink-400)', flexShrink: 0 }} />
+        <span style={{ flex: 1, textAlign: 'left' }}>{formatted || placeholder}</span>
+        {value && (
+          <span role="button" onClick={(e) => { e.stopPropagation(); onChange('') }}
+            style={{ display: 'flex', alignItems: 'center', color: 'var(--ink-300)', padding: 2, lineHeight: 1 }}>
+            <i className="ph ph-x" style={{ fontSize: 13 }} />
+          </span>
+        )}
+        <i className="ph ph-caret-down" style={{ fontSize: 13, color: 'var(--ink-300)', flexShrink: 0, marginLeft: 2 }} />
+      </button>
+
+      {open && rect && ReactDOM.createPortal(
+        <div id="miteda-datepicker-cal" style={{
+          position: 'fixed', bottom: window.innerHeight - rect.top + 6, left: rect.left,
+          width: 240, zIndex: 9999,
+          background: 'var(--surface-card)', borderRadius: 'var(--radius-md)',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.14), 0 2px 8px rgba(0,0,0,0.07)',
+          border: '1px solid var(--line-200)', padding: '10px 8px 8px',
+          userSelect: 'none',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10, paddingBottom: 10, borderBottom: '1px solid var(--line-100)' }}>
+            <button type="button" onClick={prevMonth} style={navBtn}
+              onMouseEnter={e => e.currentTarget.style.background = 'var(--surface-sunken)'}
+              onMouseLeave={e => e.currentTarget.style.background = 'none'}>
+              <i className="ph ph-caret-left" style={{ fontSize: 14 }} />
+            </button>
+            <span style={{ fontSize: 'var(--text-body)', fontWeight: 'var(--fw-semibold)', color: 'var(--ink-900)' }}>
+              {MONTHS_LT[viewMonth]} {viewYear}
+            </span>
+            <button type="button" onClick={nextMonth} style={navBtn}
+              onMouseEnter={e => e.currentTarget.style.background = 'var(--surface-sunken)'}
+              onMouseLeave={e => e.currentTarget.style.background = 'none'}>
+              <i className="ph ph-caret-right" style={{ fontSize: 14 }} />
+            </button>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 2, marginBottom: 6 }}>
+            {DAYS_LT.map(d => (
+              <div key={d} style={{ textAlign: 'center', fontSize: 11, fontWeight: 'var(--fw-medium)', color: 'var(--ink-400)', padding: '2px 0' }}>{d}</div>
+            ))}
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 2 }}>
+            {cells.map((d, i) => {
+              const sel = d && isSelected(d)
+              const tod = d && isToday(d)
+              return (
+                <button key={i} type="button" disabled={!d} onClick={() => d && selectDay(d)} style={{
+                  width: '100%', height: 28, border: 'none', padding: 0,
+                  borderRadius: 'var(--radius-sm)',
+                  background: sel ? 'var(--brand-green)' : 'transparent',
+                  color: sel ? '#fff' : tod ? 'var(--brand-green)' : d ? 'var(--ink-800)' : 'transparent',
+                  fontSize: 'var(--text-small)', fontFamily: 'var(--font-sans)',
+                  fontWeight: sel || tod ? 'var(--fw-semibold)' : 'var(--fw-regular)',
+                  cursor: d ? 'pointer' : 'default',
+                  outline: tod && !sel ? '1.5px solid var(--brand-green)' : 'none',
+                  outlineOffset: '-2px', transition: 'background 0.1s',
+                }}
+                  onMouseEnter={e => { if (d && !sel) e.currentTarget.style.background = 'var(--surface-sunken)' }}
+                  onMouseLeave={e => { if (d && !sel) e.currentTarget.style.background = 'transparent' }}
+                >{d || ''}</button>
+              )
+            })}
+          </div>
+        </div>,
+        portalRoot
+      )}
+    </div>
+  )
+}
+
+function Toggle({ checked, onChange }) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      onClick={(e) => { e.stopPropagation(); onChange(!checked) }}
+      style={{
+        position: 'relative', display: 'inline-flex', alignItems: 'center',
+        width: 36, height: 20, borderRadius: 999, border: 'none', cursor: 'pointer',
+        background: checked ? 'var(--brand-green)' : 'var(--line-300)',
+        transition: 'background 0.18s', flexShrink: 0, padding: 0,
+      }}
+    >
+      <span style={{
+        position: 'absolute', top: 2, left: checked ? 18 : 2,
+        width: 16, height: 16, borderRadius: '50%', background: '#fff',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.18)',
+        transition: 'left 0.18s',
+      }} />
+    </button>
+  )
+}
+
+function FieldBox({ label, error, disabled, onClick, wrapStyle, children }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 4, ...wrapStyle }}>
+      <span style={{ fontSize: 'var(--text-small)', color: error ? 'var(--orange)' : 'var(--ink-400)', fontWeight: 'var(--fw-medium)' }}>{error || label}</span>
+      <div style={{ display: 'flex', alignItems: 'center', height: 40, padding: '0 12px', background: 'var(--surface-card)', borderRadius: 'var(--radius-sm)', boxShadow: error ? 'inset 0 0 0 1.5px var(--orange)' : disabled ? 'inset 0 0 0 1px var(--line-100)' : 'inset 0 0 0 1px var(--line-200)', opacity: disabled ? 0.5 : 1, cursor: onClick ? 'pointer' : undefined, transition: 'box-shadow 150ms' }} onClick={onClick}>
+        {children}
+      </div>
+    </div>
+  )
+}
+
+function EditRow({ label, children }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+      <span style={{ fontSize: 'var(--text-small)', color: 'var(--ink-400)' }}>{label}</span>
+      {children}
+    </div>
+  )
+}
+
+const toSlug = (name) =>
+  name.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\s+/g, '-')
+
+function saveInvite(email, name) {
+  const invites = JSON.parse(localStorage.getItem('miteda_invites') || '{}')
+  invites[email] = { name, email, slug: toSlug(name), status: 'pending', sentAt: new Date().toISOString() }
+  localStorage.setItem('miteda_invites', JSON.stringify(invites))
+}
+
 function AddUnitModal({ units, onAdd, onClose, initial, onSave }) {
   const DS = window.MitedaDesignSystem_acc833
   const { Button, Badge } = DS
@@ -521,6 +699,7 @@ function AddUnitModal({ units, onAdd, onClose, initial, onSave }) {
   const [errors, setErrors] = useState({})
   const [ownerSearch, setOwnerSearch] = useState('')
   const [ownerDropOpen, setOwnerDropOpen] = useState(false)
+  const [inviteSent, setInviteSent] = useState(false)
 
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }))
 
@@ -535,31 +714,37 @@ function AddUnitModal({ units, onAdd, onClose, initial, onSave }) {
     return true
   }
 
+  const buildData = () => ({
+    id: form.id.trim(), floor: +form.floor, area: +form.area, st: form.st,
+    rooms: +form.rooms, orientation: form.orientation, heating: form.heating,
+    hasParking: form.hasParking, parkingNr: form.parkingNr, hasStorage: form.hasStorage,
+    year: form.year, energyClass: form.energyClass,
+    owner: form.ownerName ? { name: form.ownerName, phone: form.ownerPhone, email: form.ownerEmail, since: form.ownerSince } : null,
+    photos: form.photos, documents: form.documents,
+  })
+
   const submit = () => {
     if (!validate()) return
-    const data = {
-      id: form.id.trim(), floor: +form.floor, area: +form.area, st: form.st,
-      rooms: +form.rooms, orientation: form.orientation, heating: form.heating,
-      hasParking: form.hasParking, parkingNr: form.parkingNr, hasStorage: form.hasStorage,
-      year: form.year, energyClass: form.energyClass,
-      owner: form.ownerName ? { name: form.ownerName, phone: form.ownerPhone, email: form.ownerEmail, since: form.ownerSince } : null,
-      photos: form.photos, documents: form.documents,
-    }
+    const data = buildData()
     if (isEdit) onSave(data)
     else onAdd(data)
     onClose()
   }
 
+  const submitAndInvite = () => {
+    if (!validate()) return
+    const data = buildData()
+    if (isEdit) onSave(data)
+    else onAdd(data)
+    if (form.ownerEmail && form.ownerName) {
+      saveInvite(form.ownerEmail, form.ownerName)
+    }
+    setInviteSent(true)
+    setTimeout(() => onClose(), 1200)
+  }
+
   const iInp = { border: 'none', background: 'transparent', fontSize: 'var(--text-body)', fontWeight: 'var(--fw-medium)', color: 'var(--ink-900)', outline: 'none', fontFamily: 'var(--font-sans)', width: '100%' }
   const iSel = { border: 'none', background: 'transparent', fontSize: 'var(--text-body)', fontWeight: 'var(--fw-medium)', color: 'var(--ink-900)', outline: 'none', cursor: 'pointer', fontFamily: 'var(--font-sans)', width: '100%' }
-  const FieldBox = ({ label, error, disabled, onClick, wrapStyle, children }) => (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 4, ...wrapStyle }}>
-      <span style={{ fontSize: 'var(--text-small)', color: error ? 'var(--orange)' : 'var(--ink-400)', fontWeight: 'var(--fw-medium)' }}>{error || label}</span>
-      <div style={{ display: 'flex', alignItems: 'center', height: 40, padding: '0 12px', background: 'var(--surface-card)', borderRadius: 'var(--radius-sm)', boxShadow: error ? 'inset 0 0 0 1.5px var(--orange)' : disabled ? 'inset 0 0 0 1px var(--line-100)' : 'inset 0 0 0 1px var(--line-200)', opacity: disabled ? 0.5 : 1, cursor: onClick ? 'pointer' : undefined, transition: 'box-shadow 150ms' }} onClick={onClick}>
-        {children}
-      </div>
-    </div>
-  )
 
   const photoInputRef = React.useRef()
   const docInputRef = React.useRef()
@@ -577,10 +762,22 @@ function AddUnitModal({ units, onAdd, onClose, initial, onSave }) {
 
   return (
     <Modal title={isEdit ? `Redaguoti butą ${initial.id}` : 'Pridėti butą'} subtitle={isEdit ? 'Keisti buto duomenis' : 'Naujas butas šiame pastate'} onClose={onClose} width={680}
-      footer={<>
-        <Button variant="secondary" onClick={onClose}>Atšaukti</Button>
-        <Button variant="primary" iconLeft={isEdit ? 'ph ph-floppy-disk' : 'ph ph-plus'} onClick={submit}>{isEdit ? 'Išsaugoti' : 'Pridėti butą'}</Button>
-      </>}>
+      footer={
+        inviteSent
+          ? <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--brand-green)', fontWeight: 'var(--fw-medium)', fontSize: 'var(--text-body)' }}>
+              <i className="ph ph-check-circle" style={{ fontSize: 18 }} />
+              Pakvietimas išsiųstas
+            </div>
+          : <>
+              <Button variant="secondary" onClick={onClose}>Atšaukti</Button>
+              {isEdit
+                ? <Button variant="primary" iconLeft="ph ph-floppy-disk" onClick={submit}>Išsaugoti</Button>
+                : (!form.ownerEmail || !form.ownerName)
+                  ? <Button variant="primary" iconLeft="ph ph-plus" onClick={submit}>Pridėti butą</Button>
+                  : <Button variant="primary" iconLeft="ph ph-envelope" onClick={submitAndInvite}>Pakviesti ir pridėti butą</Button>
+              }
+            </>
+      }>
 
       {/* Header row — status */}
       <div className="between" style={{ marginBottom: 16 }}>
@@ -650,19 +847,17 @@ function AddUnitModal({ units, onAdd, onClose, initial, onSave }) {
           </div>
           <FieldBox label="Automobilio stovėjimas" onClick={() => set('hasParking', !form.hasParking)}>
             <span style={{ flex: 1, fontSize: 'var(--text-body)', fontWeight: 'var(--fw-medium)', color: 'var(--ink-900)' }}>{form.hasParking ? 'Taip' : 'Ne'}</span>
-            <input type="checkbox" checked={form.hasParking} onChange={(e) => set('hasParking', e.target.checked)} onClick={(e) => e.stopPropagation()}
-              style={{ width: 16, height: 16, accentColor: 'var(--brand-green)', cursor: 'pointer', flexShrink: 0 }} />
+            <Toggle checked={form.hasParking} onChange={(v) => set('hasParking', v)} />
           </FieldBox>
           <FieldBox label="Stovėjimo aikštelės Nr." disabled={!form.hasParking}>
             <input style={{ ...iInp, opacity: form.hasParking ? 1 : 0.35 }} disabled={!form.hasParking} placeholder="pvz. P-12" value={form.parkingNr || ''} onChange={(e) => set('parkingNr', e.target.value)} />
           </FieldBox>
-          <FieldBox label="Statybos metai">
-            <input style={iInp} type="number" min="1900" max="2100" value={form.year} onChange={(e) => set('year', e.target.value)} />
-          </FieldBox>
           <FieldBox label="Sandėliukas" onClick={() => set('hasStorage', !form.hasStorage)}>
             <span style={{ flex: 1, fontSize: 'var(--text-body)', fontWeight: 'var(--fw-medium)', color: 'var(--ink-900)' }}>{form.hasStorage ? 'Taip' : 'Ne'}</span>
-            <input type="checkbox" checked={form.hasStorage} onChange={(e) => set('hasStorage', e.target.checked)} onClick={(e) => e.stopPropagation()}
-              style={{ width: 16, height: 16, accentColor: 'var(--brand-green)', cursor: 'pointer', flexShrink: 0 }} />
+            <Toggle checked={form.hasStorage} onChange={(v) => set('hasStorage', v)} />
+          </FieldBox>
+          <FieldBox label="Statybos metai">
+            <input style={iInp} type="number" min="1900" max="2100" value={form.year} onChange={(e) => set('year', e.target.value)} />
           </FieldBox>
         </div>
       )}
@@ -721,9 +916,10 @@ function AddUnitModal({ units, onAdd, onClose, initial, onSave }) {
           <FieldBox label="El. paštas">
             <input style={iInp} type="email" value={form.ownerEmail} placeholder="vardas@gmail.com" onChange={(e) => set('ownerEmail', e.target.value)} />
           </FieldBox>
-          <FieldBox label="Savininkas nuo">
-            <input style={iInp} type="date" value={form.ownerSince} onChange={(e) => set('ownerSince', e.target.value)} />
-          </FieldBox>
+          <div style={{ gridColumn: '1 / -1', display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <span style={{ fontSize: 'var(--text-small)', color: 'var(--ink-400)', fontWeight: 'var(--fw-medium)' }}>Savininkas nuo</span>
+            <DatePicker value={form.ownerSince} onChange={(v) => set('ownerSince', v)} />
+          </div>
         </div>
       )}
 
@@ -1099,15 +1295,6 @@ function ResidentDetailModal({ resident, onClose, onSave }) {
   const saveEdit = () => { onSave({ ...resident, ...form }) }
 
   const inp = { border: 'none', background: 'transparent', fontSize: 'var(--text-body)', fontWeight: 'var(--fw-medium)', color: 'var(--ink-900)', outline: 'none', fontFamily: 'var(--font-sans)', width: '100%' }
-
-  const FieldBox = ({ label, disabled, children }) => (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-      <span style={{ fontSize: 'var(--text-small)', color: 'var(--ink-400)', fontWeight: 'var(--fw-medium)' }}>{label}</span>
-      <div style={{ display: 'flex', alignItems: 'center', height: 40, padding: '0 12px', background: 'var(--surface-card)', borderRadius: 'var(--radius-sm)', boxShadow: disabled ? 'inset 0 0 0 1px var(--line-100)' : 'inset 0 0 0 1px var(--line-200)', opacity: disabled ? 0.5 : 1, transition: 'box-shadow 150ms' }}>
-        {children}
-      </div>
-    </div>
-  )
 
   return (
     <Modal
